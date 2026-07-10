@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Controllers\Tickets\Action;
+
+use App\Controllers\BaseApi;
+use CodeIgniter\HTTP\ResponseInterface;
+
+class Attachments extends BaseApi
+{
+    public function add(string $encryptedTicketId): ResponseInterface
+    {
+        $ticketId = $this->resolveId($encryptedTicketId);
+        if (!$ticketId) {
+            return $this->JSONResponse('ID tiket tidak valid', null, 400);
+        }
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            return $this->JSONResponse('Unauthorized', null, 401);
+        }
+
+        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray();
+        if (!$ticket) {
+            return $this->JSONResponse('Tiket tidak ditemukan', null, 404);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $filename = trim($input['filename'] ?? '');
+        $storedName = trim($input['stored_name'] ?? '');
+        $mimeType = trim($input['mime_type'] ?? '');
+        $fileSize = (int) ($input['file_size'] ?? 0);
+
+        if (empty($filename) || empty($storedName) || empty($mimeType) || $fileSize <= 0) {
+            return $this->JSONResponse('Data lampiran tidak lengkap', null, 400);
+        }
+
+        $commentId = null;
+        if (!empty($input['comment_id'])) {
+            $commentId = $this->resolveId($input['comment_id']);
+            if (!$commentId) {
+                return $this->JSONResponse('ID komentar tidak valid', null, 400);
+            }
+            $comment = $this->db()->table('ticket_comments')
+                ->where('id', $commentId)
+                ->where('ticket_id', $ticketId)
+                ->get()
+                ->getRowArray();
+            if (!$comment) {
+                return $this->JSONResponse('Komentar tidak ditemukan', null, 404);
+            }
+        }
+
+        $this->db()->table('ticket_attachments')->insert([
+            'ticket_id'   => $ticketId,
+            'comment_id'  => $commentId,
+            'uploaded_by' => $userId,
+            'filename'    => $filename,
+            'stored_name' => $storedName,
+            'mime_type'   => $mimeType,
+            'file_size'   => $fileSize,
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+        $attachmentId = $this->db()->insertID();
+
+        return $this->JSONResponse('Lampiran ditambahkan', [
+            'id' => $this->api->encryptId($attachmentId),
+        ], 201);
+    }
+
+    public function delete($encryptedId = null): ResponseInterface
+    {
+        if (!$encryptedId) {
+            return $this->JSONResponse('ID tidak valid', null, 400);
+        }
+        $id = $this->resolveId($encryptedId);
+        if (!$id) {
+            return $this->JSONResponse('ID tidak valid', null, 400);
+        }
+
+        $attachment = $this->db()->table('ticket_attachments')->where('id', $id)->get()->getRowArray();
+        if (!$attachment) {
+            return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);
+        }
+
+        $this->db()->table('ticket_attachments')->delete(['id' => $id]);
+
+        return $this->JSONResponse('Lampiran dihapus', [
+            'stored_name' => $attachment['stored_name'],
+            'filename'    => $attachment['filename'],
+        ]);
+    }
+}

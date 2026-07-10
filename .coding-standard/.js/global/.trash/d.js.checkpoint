@@ -1,0 +1,163 @@
+// FILE INI DIGUNAKAN UNTUK MENAMPUNG GLOBAL FUNCTION UNTUK PENGAKSESAN DATA KE ROUTES SERTA STANDARISASI NOTIFIKASI
+
+
+toastr.options = {
+    closeButton: true,
+    debug: false,
+    newestOnTop: false,
+    progressBar: true,
+    positionClass: "toast-top-right", // Other option: "toast-top-right"
+    preventDuplicates: false,
+    onclick: null,
+    showDuration: "300",
+    hideDuration: "1000",
+    timeOut: "3000",
+    extendedTimeOut: "1000",
+    showEasing: "swing",
+    hideEasing: "linear",
+    showMethod: "fadeIn",
+    hideMethod: "fadeOut",
+};
+$.post = function (url, data, response, sender = null) {
+    /*
+    contoh penggunaan
+    $.post('<?= site_url('hiring/onjobtraining/task/action/update') ?>', {
+        id: 1,
+        is_active: 1,
+        token: '<?= $this->security->get_csrf_hash() ?>'
+    }, (res) => {
+        if (res.statuscode == 200) {
+            toastr.success(res.message, 'Berhasil')
+        } else {
+            toastr.error(res.message, 'Terjadi Kesalahan')
+        }
+    }, $("#btnUpdate"))
+    */
+    if (sender != null) {
+        $(sender).attr('disabled', 'true');
+        $(sender).html(`<span style='height:15px;width:15px' class="spinner-border spinner-border-reverse align-self-center loader-sm "></span> Memproses...`);
+    }
+
+    regenerate().then((token) => {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            dataType: 'JSON',
+            data: data,
+            headers: {
+                'X-CSRF-TOKEN': token[$("#i").val()]
+            },
+            success: (res) => {
+                if (sender != null) {
+                    if (res.statuscode == 200) {
+                        $(sender).attr("disabled", false);
+                        $(sender).html(sender.html());
+                    }
+                }
+
+                response(res)
+            },
+            error: (err) => {
+                Command: toastr["error"](err, 'Terjadi Kesalahan');
+            }
+        })
+    })
+
+}
+$.postForm = function (url, data, response, sender = null) {
+    var sender_text = null;
+    if (sender != null) {
+        sender_text = $(sender).html();
+        $(sender).attr('disabled', 'true');
+        $(sender).html(`<span style='height:15px;width:15px' class="spinner-border spinner-border-reverse align-self-center loader-sm "></span> Memproses...`);
+    }
+    regenerate().then((token) => {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            dataType: 'JSON',
+            data: data,
+            // Konfigurasi penting agar FormData bisa dikirim dengan benar
+            processData: false, // Mencegah jQuery memproses data (mengubah jadi string)
+            contentType: false, // Mencegah jQuery mengatur Content-Type header
+            headers: {
+                'X-CSRF-TOKEN': token[$("#i").val()]
+            },
+            success: (res) => {
+                if (sender != null) {
+                    if (res.statuscode == 200) {
+                        $(sender).attr("disabled", false);
+                        $(sender).html(sender_text);
+                    } else {
+                        $(sender).attr("disabled", false);
+                        $(sender).html(sender_text);
+                    }
+                }
+                return response(res)
+            },
+            error: (err) => {
+                Command: toastr["error"](err, 'Terjadi Kesalahan');
+
+            }
+        })
+    })
+
+}
+$.get = function (url, data, response) {
+    regenerate().then((token) => {
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: data,
+            dataType: 'JSON',
+            headers: {
+                'X-CSRF-TOKEN': token[$("#i").val()]
+            },
+            success: (res) => {
+                // if (res.statuscode == 200) 
+                {
+                    return response(res)
+                }
+            },
+            error: (err) => {
+
+                Command: toastr["error"](err, 'Terjadi Kesalahan');
+            }
+        });
+    })
+}
+
+$.getInputValue = function () {
+    return new Promise((resolve, reject) => {
+
+        // var data = {};
+        // var input = document.querySelectorAll('[data-input_type="select2"]');
+        // var inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"], textarea');
+        // inputs.forEach(input => {
+        //     data[input.id] = {
+        //         id: input.id,
+        //         value: input.value
+        //     }
+        // });
+
+
+
+        resolve(data);
+    })
+}
+const regenerate = () => {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${site_url}/request/get`,
+            type: 'GET',
+            dataType: 'JSON',
+            success: (res) => {
+                resolve(res)
+            },
+            error: (err) => {
+                reject()
+                toast_error('Terjadi kesalahan')
+            }
+        })
+    })
+}
