@@ -1,43 +1,42 @@
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="container" style="max-width:900px">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="<?= site_url('improvements') ?>">Improvements</a></li>
-            <li class="breadcrumb-item active">Create</li>
-        </ol>
-    </nav>
+    <div class="sap-breadcrumb mb-4">
+        <a href="<?= site_url('improvements') ?>">Improvements</a>
+        <span class="sep">/</span>
+        <span class="active">Create</span>
+    </div>
 
     <h1 class="mb-4">Create Improvement</h1>
 
-    <div class="card">
-        <div class="card-body">
+    <div class="sap-card">
+        <div class="sap-card-body">
             <form id="improvementForm">
-                <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--border)">
-                    <h5 class="mb-3" style="color:var(--text-meta);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
-                        <i class="bi bi-info-circle me-1"></i> General Information
+                <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">
+                    <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
+                        <i class="fas fa-info-circle me-1"></i> General Information
                     </h5>
                     <div class="mb-3">
-                        <label class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" required placeholder="e.g., Implement SSO Login">
+                        <label class="sap-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="sap-input" required placeholder="e.g., Implement SSO Login">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea name="description" class="form-control" rows="5" required placeholder="Describe the improvement in detail..."></textarea>
+                        <label class="sap-label">Description <span class="text-danger">*</span></label>
+                        <textarea name="description" class="sap-input" rows="5" required placeholder="Describe the improvement in detail..." style="min-height:120px"></textarea>
                     </div>
                 </div>
 
-                <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--border)">
-                    <h5 class="mb-3" style="color:var(--text-meta);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
-                        <i class="bi bi-graph-up me-1"></i> Business Details
+                <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">
+                    <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
+                        <i class="fas fa-chart-line me-1"></i> Business Details
                     </h5>
                     <div class="mb-3">
-                        <label class="form-label">Business Case <span class="text-danger">*</span></label>
-                        <textarea name="business_case" class="form-control" rows="3" required placeholder="Why is this improvement needed? What value will it bring?"></textarea>
+                        <label class="sap-label">Business Case <span class="text-danger">*</span></label>
+                        <textarea name="business_case" class="sap-input" rows="3" required placeholder="Why is this improvement needed? What value will it bring?" style="min-height:80px"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Priority</label>
-                        <select name="priority" class="form-select">
+                        <label class="sap-label">Priority</label>
+                        <select name="priority" class="sap-select">
                             <option value="0">Low</option>
                             <option value="1" selected>Medium</option>
                             <option value="2">High</option>
@@ -47,11 +46,11 @@
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-send"></i> Submit
+                    <button type="submit" class="sap-btn sap-btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit
                     </button>
-                    <a href="<?= site_url('improvements') ?>" class="btn btn-outline-secondary">
-                        <i class="bi bi-x"></i> Cancel
+                    <a href="<?= site_url('improvements') ?>" class="sap-btn sap-btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
                     </a>
                 </div>
             </form>
@@ -66,7 +65,7 @@ $(function() {
     $('#improvementForm').on('submit', function(e) {
         e.preventDefault();
         var btn = $(this).find('[type="submit"]');
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Submitting...');
+        btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Submitting...');
 
         $.post(site_url + '/improvements/create', $(this).serialize(), function(res) {
             if (res.status && res.redirect) {
@@ -74,7 +73,7 @@ $(function() {
                 setTimeout(function() { window.location.href = res.redirect; }, 500);
             } else {
                 toastr.error(res.message || 'Failed to create');
-                btn.prop('disabled', false).html('<i class="bi bi-send"></i> Submit');
+                btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit');
             }
         });
     });

@@ -48,6 +48,7 @@ class Auth extends BaseController
 
     public function loginPage()
     {
+        // echo base_url();die;
         helper('form');
         return $this->view('auth/login');
     }

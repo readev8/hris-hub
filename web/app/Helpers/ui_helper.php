@@ -14,7 +14,7 @@ if (!function_exists('status_badge')) {
         ];
         $cls = $map[$statusName] ?? 'closed';
         $name = esc($statusName);
-        return "<span class=\"status-badge {$cls}\"><span class=\"badge-dot\"></span>{$name}</span>";
+        return "<span class=\"sap-badge {$cls}\"><span class=\"badge-dot\"></span>{$name}</span>";
     }
 }
 
@@ -33,7 +33,7 @@ if (!function_exists('priority_dot')) {
 }
 
 if (!function_exists('avatar_initials')) {
-    function avatar_initials(string $name, string $size = 'sm', string $bg = '#0F4C81'): string
+    function avatar_initials(string $name, string $size = 'sm', string $bg = '#0070F2'): string
     {
         $initial = strtoupper(substr($name, 0, 1));
         $class = $size === 'lg' ? 'avatar-circle-lg' : ($size === 'sm' ? 'avatar-circle-sm' : '');

@@ -1,0 +1,230 @@
+/* ============================================================
+   SAP Fiori Horizon — Animations & Micro-interactions
+   ============================================================ */
+
+/* ── Page Transitions ────────────────────────────────────────── */
+.sap-page-enter {
+  animation: sapFadeInUp 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes sapFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sapFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sapSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes sapSlideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sapScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Counter / Number Animation ─────────────────────────────── */
+.sap-count-up {
+  animation: sapCountPulse 0.4s ease-out;
+}
+
+@keyframes sapCountPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ── Skeleton Shimmer ───────────────────────────────────────── */
+@keyframes sapShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Badge Pulse (for pending/active items) ─────────────────── */
+.sap-pulse {
+  animation: sapBadgePulse 2s ease-in-out infinite;
+}
+
+@keyframes sapBadgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 112, 242, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(0, 112, 242, 0); }
+}
+
+.sap-pulse-warning {
+  animation: sapPulseWarning 2s ease-in-out infinite;
+}
+
+@keyframes sapPulseWarning {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(231, 101, 0, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(231, 101, 0, 0); }
+}
+
+/* ── Stepper Active Glow ────────────────────────────────────── */
+@keyframes sapStepperGlow {
+  0%, 100% { box-shadow: 0 0 0 4px var(--sap-brand-light); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 112, 242, 0.2); }
+}
+
+/* ── Button Ripple ──────────────────────────────────────────── */
+.sap-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.sap-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 10%);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0%;
+  opacity: 0;
+  transition: none;
+}
+
+.sap-ripple:active::after {
+  animation: sapRippleAnim 0.4s ease-out;
+}
+
+@keyframes sapRippleAnim {
+  from {
+    background-size: 0%;
+    opacity: 1;
+  }
+  to {
+    background-size: 400%;
+    opacity: 0;
+  }
+}
+
+/* ── Spin ────────────────────────────────────────────────────── */
+@keyframes sapSpin {
+  to { transform: rotate(360deg); }
+}
+
+.sap-spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--sap-border);
+  border-top-color: var(--sap-brand);
+  border-radius: 50%;
+  animation: sapSpin 0.6s linear infinite;
+}
+
+.sap-spinner-sm { width: 12px; height: 12px; border-width: 1.5px; }
+.sap-spinner-lg { width: 24px; height: 24px; border-width: 3px; }
+
+/* ── Checkmark Draw (SVG) ──────────────────────────────────── */
+.sap-draw-check {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: sapDrawCheck 0.4s ease-out forwards;
+}
+
+@keyframes sapDrawCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Staggered List Items ──────────────────────────────────── */
+.sap-stagger > * {
+  opacity: 0;
+  animation: sapFadeInUp 300ms ease-out both;
+}
+
+.sap-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.sap-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.sap-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.sap-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.sap-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.sap-stagger > *:nth-child(6) { animation-delay: 250ms; }
+.sap-stagger > *:nth-child(7) { animation-delay: 300ms; }
+.sap-stagger > *:nth-child(8) { animation-delay: 350ms; }
+.sap-stagger > *:nth-child(9) { animation-delay: 400ms; }
+.sap-stagger > *:nth-child(10) { animation-delay: 450ms; }
+
+/* ── Toast Slide ────────────────────────────────────────────── */
+@keyframes sapToastIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sapToastOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* ── Utility Classes ────────────────────────────────────────── */
+.sap-animate-fade-in { animation: sapFadeIn 300ms ease-out both; }
+.sap-animate-slide-up { animation: sapFadeInUp 300ms ease-out both; }
+.sap-animate-slide-right { animation: sapSlideInRight 300ms ease-out both; }
+.sap-animate-scale-in { animation: sapScaleIn 200ms ease-out both; }
+.sap-animate-slide-down { animation: sapSlideInDown 200ms ease-out both; }
+
+/* ── Hover Micro-interactions ───────────────────────────────── */
+.sap-hover-lift {
+  transition: transform var(--sap-transition), box-shadow var(--sap-transition);
+}
+.sap-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sap-shadow);
+}
+
+.sap-hover-glow:hover {
+  box-shadow: 0 0 0 3px rgba(0, 112, 242, 0.15);
+}
+
+/* ── Dropzone Upload ────────────────────────────────────────── */
+.sap-dropzone-dragover {
+  animation: sapDropzonePulse 1s ease-in-out infinite;
+}
+
+@keyframes sapDropzonePulse {
+  0%, 100% { border-color: var(--sap-brand); background: var(--sap-brand-hover); }
+  50% { border-color: var(--sap-info); background: var(--sap-info-bg); }
+}
