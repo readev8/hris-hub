@@ -1,3 +1,12 @@
+window.AppEvent = {
+    dispatch: function(name, data) {
+        window.dispatchEvent(new CustomEvent(name, { detail: data || {} }));
+    },
+    on: function(name, callback) {
+        window.addEventListener(name, function(e) { callback(e.detail); });
+    }
+};
+
 function decodeEntity(inputStr) {
   var textarea = document.createElement("textarea");
   textarea.innerHTML = inputStr;
@@ -226,3 +235,17 @@ function filterMenu(searchQuery) {
     }
   });
 }
+
+$(window).on('scroll.appNavbar', function() {
+    $('.shell-bar').toggleClass('scrolled', window.scrollY > 10);
+});
+
+$(document).on('keydown', function(e) {
+    if (e.key === 'Escape') $('body').removeClass('sidebar-open');
+});
+
+$('.sidebar-nav li a').on('mouseenter', function() {
+    $(this).find('i').css('transform', 'scale(1.15)');
+}).on('mouseleave', function() {
+    $(this).find('i').css('transform', 'scale(1)');
+});

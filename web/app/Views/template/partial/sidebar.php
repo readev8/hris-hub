@@ -1,3 +1,10 @@
+<?php
+$perms = session('permissions') ?? [];
+$canApprove = !empty($perms['approvals']['can_view']);
+$canUsers = !empty($perms['users']['can_view']);
+$canMasterProjects = !empty($perms['master_projects']['can_view']);
+$canRoles = !empty($perms['roles']['can_view']);
+?>
 <aside class="sidebar">
     <div class="sidebar-group-label">Main Menu</div>
     <ul class="sidebar-nav">
@@ -9,7 +16,7 @@
         </li>
         <li>
             <a href="<?= site_url('tickets') ?>">
-                <i class="fas fa-ticket-alt"></i>
+                <i class="fas fa-ticket"></i>
                 <span>Tickets</span>
             </a>
         </li>
@@ -21,11 +28,10 @@
         </li>
     </ul>
 
-    <?php $role = (int) session('role'); ?>
-    <?php if (in_array($role, [3, 4, 5], true)): ?>
+    <?php if ($canApprove || $canUsers || $canMasterProjects || $canRoles): ?>
     <div class="sidebar-group-label">Management</div>
     <ul class="sidebar-nav">
-        <?php if (in_array($role, [3, 4, 5], true)): ?>
+        <?php if ($canApprove): ?>
         <li>
             <a href="<?= site_url('approvals') ?>">
                 <i class="fas fa-check-circle"></i>
@@ -33,7 +39,7 @@
             </a>
         </li>
         <?php endif; ?>
-        <?php if ($role === 5): ?>
+        <?php if ($canUsers): ?>
         <li>
             <a href="<?= site_url('users') ?>">
                 <i class="fas fa-users"></i>
@@ -41,24 +47,26 @@
             </a>
         </li>
         <?php endif; ?>
-        <?php if (in_array($role, [1, 5], true)): ?>
+        <?php if ($canMasterProjects): ?>
         <li>
             <a href="<?= site_url('master-projects') ?>">
-                <i class="fas fa-project-diagram"></i>
+                <i class="fas fa-folder-tree"></i>
                 <span>Master Projects</span>
             </a>
         </li>
         <?php endif; ?>
-    </ul>
-    <?php elseif (in_array($role, [1], true)): ?>
-    <div class="sidebar-group-label">Configuration</div>
-    <ul class="sidebar-nav">
+        <?php if ($canRoles): ?>
         <li>
-            <a href="<?= site_url('master-projects') ?>">
-                <i class="fas fa-project-diagram"></i>
-                <span>Master Projects</span>
+            <a href="<?= site_url('roles') ?>">
+                <i class="fas fa-user-shield"></i>
+                <span>Roles</span>
             </a>
         </li>
+        <?php endif; ?>
     </ul>
     <?php endif; ?>
+
+    <div class="sidebar-footer">
+        <span class="sidebar-footer-text">v<?= config('App')->assetVersion ?></span>
+    </div>
 </aside>

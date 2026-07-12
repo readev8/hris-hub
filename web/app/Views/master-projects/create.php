@@ -41,6 +41,7 @@ $(function() {
         $.post(site_url + '/master-projects/create', $(this).serialize(), function(res) {
             if (res.status && res.redirect) {
                 toastr.success('Project created');
+                window.AppEvent.dispatch('project:created', { id: res.id, name: res.name });
                 setTimeout(function() { window.location.href = res.redirect; }, 500);
             } else {
                 toastr.error(res.message || 'Failed to create');

@@ -23,7 +23,7 @@ abstract class BaseController extends Controller
         $this->userId = $user['id'] ?? null;
         $this->api->setUserId($this->userId);
 
-        helper(['url', 'ui']);
+        helper(['url', 'ui', 'permission']);
     }
 
     protected function view(string $name, array $data = []): string

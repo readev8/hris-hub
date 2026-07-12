@@ -109,6 +109,62 @@ class MasterProjectList extends BaseApi
         return $this->JSONResponse('OK', $result, 200);
     }
 
+    public function get_kanban(string $encryptedProjectId): ResponseInterface
+    {
+        $projectId = $this->resolveId($encryptedProjectId);
+        if (!$projectId) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $tickets = $this->db()->table('tickets')
+            ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name, pages.name as page_name')
+            ->join('pages', 'pages.id = tickets.page_id', 'left')
+            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
+            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
+            ->join('modules', 'modules.id = pages.module_id', 'left')
+            ->where('modules.master_project_id', $projectId)
+            ->where('tickets.status !=', Enums::TICKET_STATUS_REJECTED)
+            ->orderBy('tickets.priority', 'DESC')
+            ->orderBy('tickets.created_at', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $grouped = [
+            'open'        => [],
+            'in_progress' => [],
+            'resolved'    => [],
+            'closed'      => [],
+        ];
+
+        foreach ($tickets as $t) {
+            $item = [
+                'id'            => $this->api->encryptId($t['id']),
+                'title'         => $t['title'],
+                'status'        => (int) $t['status'],
+                'status_name'   => Enums::ticketStatusName((int) $t['status']),
+                'type'          => (int) $t['type'],
+                'type_name'     => Enums::ticketTypeName((int) $t['type']),
+                'priority'      => (int) $t['priority'],
+                'priority_name' => Enums::priorityName((int) $t['priority']),
+                'creator_name'  => $t['creator_name'],
+                'assignee_name' => $t['assignee_name'],
+                'page_name'     => $t['page_name'] ?? null,
+                'created_at'    => $t['created_at'],
+            ];
+
+            $status = (int) $t['status'];
+            if ($status === Enums::TICKET_STATUS_OPEN) {
+                $grouped['open'][] = $item;
+            } elseif ($status === Enums::TICKET_STATUS_APPROVED || $status === Enums::TICKET_STATUS_IN_PROGRESS) {
+                $grouped['in_progress'][] = $item;
+            } elseif ($status === Enums::TICKET_STATUS_RESOLVED) {
+                $grouped['resolved'][] = $item;
+            } elseif ($status === Enums::TICKET_STATUS_CLOSED) {
+                $grouped['closed'][] = $item;
+            }
+        }
+
+        return $this->JSONResponse('OK', $grouped, 200);
+    }
+
     public function get_bugs(string $encryptedPageId): ResponseInterface
     {
         $pageId = $this->resolveId($encryptedPageId);

@@ -27,6 +27,10 @@ class Projects extends BaseApi
         $description = trim($input['description'] ?? '');
         $businessCase = trim($input['business_case'] ?? '');
         $priority = (int) ($input['priority'] ?? Enums::PRIORITY_MEDIUM);
+        $category = trim($input['category'] ?? '');
+        $targetDate = !empty($input['target_date']) ? $input['target_date'] : null;
+        $assigneeId = !empty($input['assigned_to']) ? $this->resolveId($input['assigned_to']) : null;
+        $pageId = !empty($input['page_id']) ? $this->resolveId($input['page_id']) : null;
 
         if (empty($name)) {
             return $this->JSONResponse('Nama proyek wajib diisi', null, 400);
@@ -41,6 +45,10 @@ class Projects extends BaseApi
             'description'         => $description,
             'business_case'       => $businessCase,
             'priority'            => $priority,
+            'category'            => $category ?: null,
+            'assignee_id'         => $assigneeId,
+            'page_id'             => $pageId,
+            'target_date'         => $targetDate,
             'status'              => Enums::PROJECT_STATUS_DRAFT,
             'approval_workflow'   => json_encode(['stages' => ['it_manager', 'dept_head']]),
             'created_by'          => $userId,
@@ -57,6 +65,79 @@ class Projects extends BaseApi
         return $this->JSONResponse('Proyek berhasil dibuat', [
             'id' => $this->api->encryptId($projectId),
         ], 201);
+    }
+
+    public function update_improvement(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
+
+        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
+        $role = (int) ($user['role'] ?? 0);
+        if ((int) $project['created_by'] !== $userId && $role !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya pembuat proyek atau admin yang dapat mengubah', null, 403);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+
+        $update = [];
+        if (isset($input['name']))          $update['name'] = trim($input['name']);
+        if (isset($input['description']))   $update['description'] = trim($input['description']);
+        if (isset($input['business_case'])) $update['business_case'] = trim($input['business_case']);
+        if (isset($input['priority']))      $update['priority'] = (int) $input['priority'];
+        if (isset($input['category']))      $update['category'] = trim($input['category']);
+        if (isset($input['target_date']))   $update['target_date'] = $input['target_date'] ?: null;
+        if (isset($input['assigned_to']))   $update['assignee_id'] = $this->resolveId($input['assigned_to']);
+        if (isset($input['page_id']))        $update['page_id'] = $this->resolveId($input['page_id']);
+        $update['updated_at'] = date('Y-m-d H:i:s');
+
+        if (empty($update)) {
+            return $this->JSONResponse('Tidak ada data yang diubah', null, 400);
+        }
+
+        $this->db()->transStart();
+        $this->db()->table('projects')->update($update, ['id' => $id]);
+        $this->audit->log($userId, 'project', $id, 'update_improvement', null, $update);
+        $this->db()->transComplete();
+
+        return $this->JSONResponse('Proyek berhasil diperbarui', [
+            'id' => $this->api->encryptId($id),
+        ], 200);
+    }
+
+    public function delete_improvement(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
+
+        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
+        $role = (int) ($user['role'] ?? 0);
+        if ((int) $project['created_by'] !== $userId && $role !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya pembuat proyek atau admin yang dapat menghapus', null, 403);
+        }
+
+        if (!in_array((int) $project['status'], [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_REJECTED], true)) {
+            return $this->JSONResponse('Proyek hanya dapat dihapus pada status Draft atau Rejected', null, 400);
+        }
+
+        $this->db()->transStart();
+        $this->db()->table('projects')->delete(['id' => $id]);
+        $this->audit->log($userId, 'project', $id, 'delete_improvement', ['status' => $project['status']], null);
+        $this->db()->transComplete();
+
+        return $this->JSONResponse('Proyek berhasil dihapus', null, 200);
     }
 
     public function approve_it(string $encryptedId): ResponseInterface

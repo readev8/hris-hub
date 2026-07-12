@@ -1,16 +1,16 @@
 /* ============================================================
-   SAP Fiori Horizon — Animations & Micro-interactions
+   Enterprise Project Management — Animations & Micro-interactions
    ============================================================ */
 
 /* ── Page Transitions ────────────────────────────────────────── */
 .sap-page-enter {
-  animation: sapFadeInUp 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: sapFadeInUp 350ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 @keyframes sapFadeInUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -26,7 +26,7 @@
 @keyframes sapSlideInRight {
   from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateX(24px);
   }
   to {
     opacity: 1;
@@ -37,7 +37,7 @@
 @keyframes sapSlideInDown {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -58,12 +58,12 @@
 
 /* ── Counter / Number Animation ─────────────────────────────── */
 .sap-count-up {
-  animation: sapCountPulse 0.4s ease-out;
+  animation: sapCountPulse 0.5s ease-out;
 }
 
 @keyframes sapCountPulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
 
@@ -79,8 +79,8 @@
 }
 
 @keyframes sapBadgePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 112, 242, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(0, 112, 242, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(13, 148, 136, 0); }
 }
 
 .sap-pulse-warning {
@@ -88,14 +88,14 @@
 }
 
 @keyframes sapPulseWarning {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(231, 101, 0, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(231, 101, 0, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
 }
 
 /* ── Stepper Active Glow ────────────────────────────────────── */
 @keyframes sapStepperGlow {
   0%, 100% { box-shadow: 0 0 0 4px var(--sap-brand-light); }
-  50% { box-shadow: 0 0 0 8px rgba(0, 112, 242, 0.2); }
+  50% { box-shadow: 0 0 0 10px rgba(13, 148, 136, 0.15); }
 }
 
 /* ── Button Ripple ──────────────────────────────────────────── */
@@ -108,7 +108,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 10%);
+  background: radial-gradient(circle, rgba(255,255,255,0.35) 10%, transparent 10%);
   background-position: center;
   background-repeat: no-repeat;
   background-size: 0%;
@@ -138,15 +138,15 @@
 
 .sap-spinner {
   display: inline-block;
-  width: 16px; height: 16px;
+  width: 18px; height: 18px;
   border: 2px solid var(--sap-border);
   border-top-color: var(--sap-brand);
   border-radius: 50%;
-  animation: sapSpin 0.6s linear infinite;
+  animation: sapSpin 0.7s linear infinite;
 }
 
-.sap-spinner-sm { width: 12px; height: 12px; border-width: 1.5px; }
-.sap-spinner-lg { width: 24px; height: 24px; border-width: 3px; }
+.sap-spinner-sm { width: 14px; height: 14px; border-width: 1.5px; }
+.sap-spinner-lg { width: 28px; height: 28px; border-width: 3px; }
 
 /* ── Checkmark Draw (SVG) ──────────────────────────────────── */
 .sap-draw-check {
@@ -162,19 +162,19 @@
 /* ── Staggered List Items ──────────────────────────────────── */
 .sap-stagger > * {
   opacity: 0;
-  animation: sapFadeInUp 300ms ease-out both;
+  animation: sapFadeInUp 350ms ease-out both;
 }
 
 .sap-stagger > *:nth-child(1) { animation-delay: 0ms; }
-.sap-stagger > *:nth-child(2) { animation-delay: 50ms; }
-.sap-stagger > *:nth-child(3) { animation-delay: 100ms; }
-.sap-stagger > *:nth-child(4) { animation-delay: 150ms; }
-.sap-stagger > *:nth-child(5) { animation-delay: 200ms; }
-.sap-stagger > *:nth-child(6) { animation-delay: 250ms; }
-.sap-stagger > *:nth-child(7) { animation-delay: 300ms; }
-.sap-stagger > *:nth-child(8) { animation-delay: 350ms; }
-.sap-stagger > *:nth-child(9) { animation-delay: 400ms; }
-.sap-stagger > *:nth-child(10) { animation-delay: 450ms; }
+.sap-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.sap-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.sap-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.sap-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.sap-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.sap-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.sap-stagger > *:nth-child(8) { animation-delay: 420ms; }
+.sap-stagger > *:nth-child(9) { animation-delay: 480ms; }
+.sap-stagger > *:nth-child(10) { animation-delay: 540ms; }
 
 /* ── Toast Slide ────────────────────────────────────────────── */
 @keyframes sapToastIn {
@@ -200,23 +200,23 @@
 }
 
 /* ── Utility Classes ────────────────────────────────────────── */
-.sap-animate-fade-in { animation: sapFadeIn 300ms ease-out both; }
-.sap-animate-slide-up { animation: sapFadeInUp 300ms ease-out both; }
-.sap-animate-slide-right { animation: sapSlideInRight 300ms ease-out both; }
-.sap-animate-scale-in { animation: sapScaleIn 200ms ease-out both; }
-.sap-animate-slide-down { animation: sapSlideInDown 200ms ease-out both; }
+.sap-animate-fade-in { animation: sapFadeIn 350ms ease-out both; }
+.sap-animate-slide-up { animation: sapFadeInUp 350ms ease-out both; }
+.sap-animate-slide-right { animation: sapSlideInRight 350ms ease-out both; }
+.sap-animate-scale-in { animation: sapScaleIn 250ms ease-out both; }
+.sap-animate-slide-down { animation: sapSlideInDown 250ms ease-out both; }
 
 /* ── Hover Micro-interactions ───────────────────────────────── */
 .sap-hover-lift {
   transition: transform var(--sap-transition), box-shadow var(--sap-transition);
 }
 .sap-hover-lift:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--sap-shadow);
 }
 
 .sap-hover-glow:hover {
-  box-shadow: 0 0 0 3px rgba(0, 112, 242, 0.15);
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15);
 }
 
 /* ── Dropzone Upload ────────────────────────────────────────── */
@@ -227,4 +227,19 @@
 @keyframes sapDropzonePulse {
   0%, 100% { border-color: var(--sap-brand); background: var(--sap-brand-hover); }
   50% { border-color: var(--sap-info); background: var(--sap-info-bg); }
+}
+
+/* ── Focus Ring (Accessibility) ─────────────────────────────── */
+*:focus-visible {
+  outline: 3px solid var(--sap-brand);
+  outline-offset: 2px;
+}
+
+/* ── Reduced Motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

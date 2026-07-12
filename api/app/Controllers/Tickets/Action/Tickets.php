@@ -51,17 +51,20 @@ class Tickets extends BaseApi
 
         $this->db()->transStart();
         $this->db()->table('tickets')->insert([
-            'title'       => $title,
-            'description' => $description,
-            'type'        => $type,
-            'priority'    => $priority,
-            'status'      => Enums::TICKET_STATUS_OPEN,
-            'creator_id'  => $userId,
-            'page_id'     => $pageId,
-            'created_at'  => date('Y-m-d H:i:s'),
-            'updated_at'  => date('Y-m-d H:i:s'),
+            'title'          => $title,
+            'description'    => $description,
+            'type'           => $type,
+            'priority'       => $priority,
+            'status'         => Enums::TICKET_STATUS_OPEN,
+            'creator_id'     => $userId,
+            'page_id'        => $pageId,
+            'tracking_code'  => 'TKT-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2))),
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
         ]);
         $ticketId = $this->db()->insertID();
+
+        $trackingCode = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray()['tracking_code'];
 
         $this->audit->log($userId, 'ticket', $ticketId, 'create_ticket', null, [
             'title' => $title, 'type' => $type, 'priority' => $priority, 'page_id' => $pageId,
@@ -69,7 +72,8 @@ class Tickets extends BaseApi
         $this->db()->transComplete();
 
         return $this->JSONResponse('Ticket berhasil dibuat', [
-            'id' => $this->api->encryptId($ticketId),
+            'id'            => $this->api->encryptId($ticketId),
+            'tracking_code' => $trackingCode,
         ], 201);
     }
 
@@ -253,6 +257,45 @@ class Tickets extends BaseApi
         return $this->JSONResponse('Komentar ditambahkan', [
             'id' => $this->api->encryptId($commentId),
         ], 201);
+    }
+
+    public function move_ticket(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $newStatus = (int) ($input['new_status'] ?? -1);
+
+        $validStatuses = [
+            Enums::TICKET_STATUS_OPEN,
+            Enums::TICKET_STATUS_IN_PROGRESS,
+            Enums::TICKET_STATUS_RESOLVED,
+            Enums::TICKET_STATUS_CLOSED,
+        ];
+        if (!in_array($newStatus, $validStatuses, true)) {
+            return $this->JSONResponse('Status tidak valid', null, 400);
+        }
+
+        return $this->transition($id, $newStatus, function ($ticket, $userId) use ($newStatus) {
+            $update = [
+                'status'     => $newStatus,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+
+            if ($newStatus === Enums::TICKET_STATUS_IN_PROGRESS) {
+                $update['assignee_id'] = $userId;
+            }
+
+            $this->db()->table('tickets')->update($update, ['id' => $ticket['id']]);
+
+            $this->audit->log($userId, 'ticket', $ticket['id'], 'move_ticket', ['status' => $ticket['status']], ['status' => $newStatus]);
+
+            return 'Ticket dipindahkan ke ' . Enums::ticketStatusName($newStatus);
+        });
     }
 
     private function transition(int $id, int $targetStatus, callable $onSuccess): ResponseInterface

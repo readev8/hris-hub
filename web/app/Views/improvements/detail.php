@@ -167,13 +167,56 @@
                         <dd class="col-7"><?= esc($improvement['creator_name'] ?? '') ?></dd>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Created</dt>
                         <dd class="col-7"><?= esc($improvement['created_at']) ?></dd>
+                        <?php if (!empty($improvement['category'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Category</dt>
+                        <dd class="col-7"><span class="sap-badge info"><?= esc($improvement['category']) ?></span></dd>
+                        <?php endif; ?>
                         <?php if (!empty($improvement['department_name'])): ?>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Department</dt>
                         <dd class="col-7"><?= esc($improvement['department_name']) ?></dd>
                         <?php endif; ?>
+                        <?php if (!empty($improvement['assignee_name'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Assignee</dt>
+                        <dd class="col-7"><?= esc($improvement['assignee_name']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($improvement['target_date'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Target Date</dt>
+                        <dd class="col-7"><?= esc($improvement['target_date']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($improvement['page_name'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Scope</dt>
+                        <dd class="col-7" style="font-size:13px"><?= esc($improvement['project_name'] ?? '') ?> &rarr; <?= esc($improvement['module_name'] ?? '') ?> &rarr; <?= esc($improvement['page_name'] ?? '') ?></dd>
+                        <?php endif; ?>
                     </dl>
                 </div>
             </div>
+
+            <?php if (!empty($improvement['attachments'])): ?>
+            <div class="sap-card mb-3">
+                <div class="sap-card-header">
+                    <i class="fas fa-paperclip"></i> Attachments
+                </div>
+                <div class="sap-card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <?php foreach ($improvement['attachments'] as $att): ?>
+                        <a href="<?= site_url('uploads/improvements/' . $att['stored_name']) ?>" target="_blank">
+                            <?php if (strpos($att['mime_type'] ?? '', 'image/') === 0): ?>
+                            <img src="<?= site_url('uploads/improvements/' . $att['stored_name']) ?>"
+                                 alt="<?= esc($att['filename']) ?>"
+                                 style="max-width:120px;max-height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)"
+                                 class="sap-hover-lift">
+                            <?php else: ?>
+                            <div style="padding:12px 16px;background:var(--sap-background);border-radius:6px;border:1px solid var(--sap-border);font-size:13px">
+                                <i class="fas fa-file-pdf" style="color:var(--sap-error);margin-right:6px"></i>
+                                <?= esc($att['filename']) ?>
+                            </div>
+                            <?php endif; ?>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <div class="sap-card">
                 <div class="sap-card-header">
@@ -191,6 +234,11 @@
                     <?php endif; ?>
                     <?php if ($st === 3): ?>
                         <button class="sap-btn sap-btn-warning sap-btn-sm" onclick="doAction('resubmit')"><i class="fas fa-undo"></i> Resubmit</button>
+                    <?php endif; ?>
+                    <hr class="my-1">
+                    <?php if ($st === -1 || $st === 0): ?>
+                    <a href="<?= site_url('improvements/' . $token . '/edit') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                    <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="confirmDelete()"><i class="fas fa-trash"></i> Delete</button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -238,17 +286,40 @@ function promptReject() {
     });
 }
 
+function confirmDelete() {
+    Swal.fire({
+        title: 'Delete Improvement?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        confirmButtonColor: '#AA0808',
+        cancelButtonColor: '#758CA4',
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            $.post(site_url + '/improvements/' + token + '/delete', {}, function(res) {
+                if (res.status) {
+                    toastr.success('Improvement deleted');
+                    setTimeout(function() { window.location.href = site_url + '/improvements'; }, 800);
+                } else {
+                    toastr.error(res.data.message || 'Failed to delete');
+                }
+            });
+        }
+    });
+}
+
 $('#commentForm').on('submit', function(e) {
     e.preventDefault();
     var text = $('#commentText').val();
     if (!text.trim()) return;
     $.post(site_url + '/improvements/' + token + '/comments', { content: text }, function(res) {
         if (res.status) {
-            toastr_success('Comment added');
+            toastr.success('Comment added');
             $('#commentText').val('');
             setTimeout(function() { location.reload(); }, 500);
         } else {
-            toastr_error(res.data.message || 'Failed');
+            toastr.error(res.data.message || 'Failed');
         }
     });
 });

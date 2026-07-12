@@ -10,12 +10,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.14.5/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.min.css">
-    <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('public/assets/css/global/animations.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/assets/css/global/animations.css?v=' . config('App')->assetVersion) ?>">
     <?= $this->renderSection('styles') ?>
 </head>
 <body>
@@ -28,39 +30,73 @@
         <?= $this->renderSection('content') ?>
     </main>
 
+    <?= $this->renderSection('modals') ?>
+
+    <?= $this->include('template/partial/footer') ?>
+
     <input type="hidden" id="i" value="<?= csrf_token() ?>">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.14.5/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 
     <script>
-        var base_url = '<?= base_url() ?>';
-        var site_url = '<?= site_url() ?>';
+        var base_url = '<?= rtrim(base_url(), '/') ?>';
+        var site_url = '<?= rtrim(site_url(), '/') ?>';
+        var userPermissions = <?= json_encode(session('permissions') ?? []) ?>;
     </script>
 
-    <script src="<?= base_url('public/assets/js/global/gc.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/d.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/custom.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/populate.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/sanitize.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/secure-ajax.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/select2.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/toastr.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/sweetalert.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/c.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/e.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/f.js') ?>"></script>
-    <script src="<?= base_url('public/assets/js/global/h.js') ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/gc.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/d.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/custom.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/populate.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/sanitize.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/secure-ajax.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/select2.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/toastr.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/sweetalert.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/c.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/e.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/f.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/assets/js/global/h.js?v=' . config('App')->assetVersion) ?>"></script>
 
     <script>
     $(function() {
+        // Dark mode toggle
+        const darkModeToggle = $('#darkModeToggle');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('theme');
+        
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            $('body').addClass('dark-mode');
+            darkModeToggle.find('i').removeClass('fa-moon').addClass('fa-sun');
+        }
+        
+        darkModeToggle.on('click', function() {
+            $('body').toggleClass('dark-mode');
+            const isDark = $('body').hasClass('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            $(this).find('i').toggleClass('fa-moon fa-sun');
+        });
+
+        // Sidebar toggle
         $('[data-toggle="sidebar"]').on('click', function() {
             $('body').toggleClass('sidebar-open');
         });
@@ -69,6 +105,16 @@
         });
         $('.dropdown-toggle').dropdown();
 
+        $('#sidebarToggle').on('click', function() {
+            $('body').toggleClass('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', $('body').hasClass('sidebar-collapsed'));
+        });
+
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            $('body').addClass('sidebar-collapsed');
+        }
+
+        // Active menu item
         var path = window.location.pathname;
         $('.sidebar-nav li a').each(function() {
             var href = $(this).attr('href');
@@ -81,6 +127,7 @@
             }
         });
 
+        // Counter animation
         $('.sap-count-up').each(function() {
             var $el = $(this);
             var target = parseInt($el.text().replace(/\D/g, '')) || 0;
@@ -95,6 +142,15 @@
                     if (progress < 1) requestAnimationFrame(step);
                 }
                 requestAnimationFrame(step);
+            }
+        });
+
+        // Navbar scroll effect
+        $(window).on('scroll', function() {
+            if ($(this).scrollTop() > 10) {
+                $('.shell-bar').addClass('scrolled');
+            } else {
+                $('.shell-bar').removeClass('scrolled');
             }
         });
     });

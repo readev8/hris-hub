@@ -11,6 +11,9 @@ $routes->get('/logout', 'Auth::logout');
 
 $routes->get('/request/get', 'Request::get');
 
+$routes->get('/track', 'Tracking::index');
+$routes->get('/track/(:any)', 'Tracking::lookup/$1');
+
 $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/dashboard', 'Dashboard::index');
 
@@ -27,6 +30,10 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/tickets/(:any)/comments', 'Tickets::addComment/$1');
     $routes->post('/tickets/(:any)/upload-attachment', 'Tickets::uploadAttachment/$1');
     $routes->get('/uploads/tickets/(:any)', 'Tickets::serveFile/$1');
+    $routes->get('/tickets/(:any)/edit', 'Tickets::edit/$1');
+    $routes->post('/tickets/(:any)/update', 'Tickets::update/$1');
+    $routes->post('/tickets/(:any)/delete', 'Tickets::delete/$1');
+    $routes->post('/tickets/(:any)/assign', 'Tickets::assign/$1');
     $routes->get('/tickets/(:any)', 'Tickets::detail/$1');
 
     $routes->get('/improvements', 'Improvements::index');
@@ -38,7 +45,14 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/improvements/(:any)/reject', 'Improvements::reject/$1');
     $routes->post('/improvements/(:any)/resubmit', 'Improvements::resubmit/$1');
     $routes->post('/improvements/(:any)/comments', 'Improvements::addComment/$1');
+    $routes->get('/improvements/(:any)/edit', 'Improvements::edit/$1');
+    $routes->post('/improvements/(:any)/update', 'Improvements::update/$1');
+    $routes->post('/improvements/(:any)/delete', 'Improvements::delete/$1');
+    $routes->post('/improvements/(:any)/attachments', 'Improvements::uploadAttachment/$1');
     $routes->get('/improvements/(:any)', 'Improvements::detail/$1');
+
+    // Serve uploaded improvement attachments
+    $routes->get('/uploads/improvements/(:any)', 'Improvements::serveFile/$1');
 
     $routes->get('/approvals', 'Approvals::index');
     $routes->get('/approvals/ajax-list', 'Approvals::ajaxList');
@@ -52,6 +66,7 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/master-projects/create',       'MasterProjects::create');
     $routes->post('/master-projects/create',      'MasterProjects::create');
     $routes->get('/master-projects/active',       'MasterProjects::getActive');
+    $routes->get('/master-projects/(:any)/kanban','MasterProjects::getKanban/$1');
     $routes->get('/master-projects/(:any)/modules','MasterProjects::getModules/$1');
     $routes->get('/master-projects/(:any)/detail-json','MasterProjects::getDetail/$1');
     $routes->post('/master-projects/(:any)/update','MasterProjects::update/$1');
@@ -65,4 +80,15 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/pages/(:any)/update',         'MasterProjects::updatePage/$1');
     $routes->post('/pages/(:any)/delete',         'MasterProjects::deletePage/$1');
     $routes->get('/pages/(:any)/bugs',            'MasterProjects::getBugList/$1');
+    $routes->post('/tickets/(:any)/move',         'Tickets::move/$1');
+
+    // Roles & Permissions
+    $routes->get('/roles',                        'Roles::index');
+    $routes->get('/roles/ajax-list',              'Roles::ajaxList');
+    $routes->post('/roles/create',                'Roles::create');
+    $routes->post('/roles/(:any)/update',         'Roles::update/$1');
+    $routes->post('/roles/(:any)/delete',         'Roles::delete/$1');
+    $routes->get('/roles/(:any)/permissions',     'Roles::permissions/$1');
+    $routes->post('/roles/(:any)/permissions',    'Roles::savePermissions/$1');
+    $routes->post('/roles/(:any)/toggle',         'Roles::toggleActive/$1');
 });

@@ -11,12 +11,15 @@
             <?= $greeting ?>, <?= esc(session('user')['full_name'] ?? 'User') ?>
         </p>
     </div>
-    <div class="filter-bar">
-        <input type="date" id="startDate" value="<?= date('Y-m-01') ?>">
+    <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
+        <input type="date" id="startDate" value="<?= $startDate ?? date('Y-m-01') ?>">
         <span class="text-muted" style="font-size:13px">to</span>
-        <input type="date" id="endDate" value="<?= date('Y-m-d') ?>">
+        <input type="date" id="endDate" value="<?= $endDate ?? date('Y-m-d') ?>">
         <button class="sap-btn sap-btn-primary sap-btn-sm" id="filterBtn">
             <i class="fas fa-filter"></i> Apply
+        </button>
+        <button class="sap-btn sap-btn-secondary sap-btn-sm" id="refreshToggle" title="Auto-refresh every 30s">
+            <i class="fas fa-sync-alt"></i> <span id="refreshLabel">Auto</span>
         </button>
     </div>
 </div>
@@ -60,7 +63,7 @@
     </div>
 </div>
 
-<div class="row g-3 mb-3">
+<div class="row g-2 mb-3">
     <div class="col-md-6">
         <div class="sap-card">
             <div class="sap-card-header">
@@ -84,6 +87,19 @@
         </div>
     </div>
 </div>
+
+<?php $trend = $stats['weekly_trend'] ?? []; ?>
+<?php if (!empty($trend)): ?>
+<div class="sap-card mb-3">
+    <div class="sap-card-header">
+        <i class="fas fa-chart-line" style="color:var(--sap-brand);font-size:18px"></i>
+        Weekly Ticket Trend
+    </div>
+    <div class="sap-card-body">
+        <canvas id="trendChart" height="80"></canvas>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php $bugsByProject = $stats['bugs_by_project'] ?? []; ?>
 <?php if (!empty($bugsByProject)): ?>
@@ -167,6 +183,9 @@
 $(function() {
     var statusData = <?= json_encode($stats['by_status'] ?? []) ?>;
     var typeData = <?= json_encode($stats['by_type'] ?? []) ?>;
+    var trendData = <?= json_encode($stats['weekly_trend'] ?? []) ?>;
+    var autoRefresh = false;
+    var refreshTimer = null;
 
     var statusColors = {
         'Open': '#E76500',
@@ -176,7 +195,7 @@ $(function() {
         'Closed': '#556B82',
         'Rejected': '#AA0808'
     };
-    var typeColors = ['#0070F2', '#256F3A', '#E76500'];
+    var typeColors = ['#0070F2', '#256F3A', '#E76500', '#8B5CF6'];
 
     if (Object.keys(statusData).length) {
         new Chart(document.getElementById('statusChart'), {
@@ -222,6 +241,35 @@ $(function() {
         });
     }
 
+    if (trendData.length && document.getElementById('trendChart')) {
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: trendData.map(function(t) { return t.week; }),
+                datasets: [{
+                    label: 'Tickets Created',
+                    data: trendData.map(function(t) { return t.total; }),
+                    borderColor: '#0070F2',
+                    backgroundColor: 'rgba(0,112,242,0.08)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } },
+                    x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
+                },
+                animation: { duration: 600 }
+            }
+        });
+    }
+
     var bugsByProject = <?= json_encode($stats['bugs_by_project'] ?? []) ?>;
     if (bugsByProject.length && document.getElementById('bugProjectChart')) {
         var bpLabels = bugsByProject.map(function(b) { return b.project_name; });
@@ -254,6 +302,26 @@ $(function() {
 
     $('#filterBtn').on('click', function() {
         location.href = site_url + '/dashboard?start_date=' + $('#startDate').val() + '&end_date=' + $('#endDate').val();
+    });
+
+    $('#refreshToggle').on('click', function() {
+        autoRefresh = !autoRefresh;
+        if (autoRefresh) {
+            $('#refreshLabel').text('ON');
+            $(this).addClass('sap-btn-primary').removeClass('sap-btn-secondary');
+            refreshTimer = setInterval(function() {
+                location.reload();
+            }, 30000);
+            toastr.info('Auto-refresh enabled (30s)');
+        } else {
+            $('#refreshLabel').text('Auto');
+            $(this).removeClass('sap-btn-primary').addClass('sap-btn-secondary');
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+            toastr.info('Auto-refresh disabled');
+        }
     });
 });
 </script>

@@ -33,6 +33,34 @@ class Auth extends BaseApi
         $user['token'] = $this->api->encryptId($user['id']);
         $user['role_name'] = \App\Config\Enums::roleName($user['role']);
 
+        // Use role_id if available, fallback to role int
+        $user['role_id'] = $user['role_id'] ?? $user['role'];
+
+        // Load permissions for session (graceful if table doesn't exist yet)
+        $permissions = [];
+        try {
+            if ($this->db()->tableExists('role_permissions')) {
+                $permissions = $this->db()->table('role_permissions')
+                    ->where('role_id', $user['role_id'])
+                    ->get()
+                    ->getResultArray();
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Permissions load failed: ' . $e->getMessage());
+        }
+
+        $permMap = [];
+        foreach ($permissions as $p) {
+            $permMap[$p['module_slug']] = [
+                'can_view'    => (int) $p['can_view'],
+                'can_create'  => (int) $p['can_create'],
+                'can_update'  => (int) $p['can_update'],
+                'can_delete'  => (int) $p['can_delete'],
+                'can_approve' => (int) $p['can_approve'],
+            ];
+        }
+        $user['permissions'] = $permMap;
+
         return $this->JSONResponse('Login berhasil', $user, 200);
     }
 

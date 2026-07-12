@@ -28,6 +28,7 @@
                             <option value="2">Task</option>
                             <option value="1">Issue</option>
                             <option value="0">Bug</option>
+                            <option value="3">Change Request</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -39,6 +40,13 @@
                             <button type="button" class="seg-option" data-value="3">Critical</button>
                         </div>
                         <input type="hidden" name="priority" id="priorityValue" value="1">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="sap-label">Due Date</label>
+                        <input type="date" name="due_date" class="sap-input">
                     </div>
                 </div>
 
@@ -103,6 +111,10 @@
 
 <?= $this->section('scripts') ?>
 <script>
+var projectsCache = null;
+var activeModuleReq = null;
+var activePageReq = null;
+
 $(function() {
     $('#prioritySegments .seg-option').on('click', function() {
         $('#prioritySegments .seg-option').removeClass('active');
@@ -117,21 +129,45 @@ $(function() {
         } else {
             $('#bugTraceSection').slideUp(200);
             $('#pageIdValue').val('');
+            $('#projectSelect').val('');
+            $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
+            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
         }
     });
 
     function loadProjects() {
+        if (projectsCache) {
+            populateProjects(projectsCache);
+            return;
+        }
         $('#projectSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        $.get(site_url + '/master-projects/active', function(res) {
-            var html = '<option value="">Select Project...</option>';
-            for (var i = 0; i < res.length; i++) {
-                html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+        $.ajax({
+            url: site_url + '/master-projects/active',
+            type: 'GET',
+            timeout: 10000,
+            success: function(res) {
+                if (!Array.isArray(res)) { $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false); return; }
+                projectsCache = res;
+                populateProjects(res);
+            },
+            error: function() {
+                toastr.error('Failed to load projects');
+                $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false);
+                $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
+                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
             }
-            $('#projectSelect').html(html).prop('disabled', false);
-            $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-            $('#pageIdValue').val('');
         });
+    }
+
+    function populateProjects(res) {
+        var html = '<option value="">Select Project...</option>';
+        for (var i = 0; i < res.length; i++) {
+            html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+        }
+        $('#projectSelect').html(html).prop('disabled', false);
+        $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
+        $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
+        $('#pageIdValue').val('');
     }
 
     $('#projectSelect').on('change', function() {
@@ -142,15 +178,26 @@ $(function() {
             $('#pageIdValue').val('');
             return;
         }
+        if (activeModuleReq) activeModuleReq.abort();
         $('#moduleSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        $.get(site_url + '/master-projects/' + pid + '/modules', function(res) {
-            var html = '<option value="">Select Module...</option>';
-            for (var i = 0; i < res.length; i++) {
-                html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+        activeModuleReq = $.ajax({
+            url: site_url + '/master-projects/' + pid + '/modules',
+            type: 'GET',
+            timeout: 10000,
+            success: function(res) {
+                if (!Array.isArray(res)) { $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', false); return; }
+                var html = '<option value="">Select Module...</option>';
+                for (var i = 0; i < res.length; i++) {
+                    html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+                }
+                $('#moduleSelect').html(html).prop('disabled', false);
+                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
+                $('#pageIdValue').val('');
+            },
+            error: function() {
+                toastr.error('Failed to load modules');
+                $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', false);
             }
-            $('#moduleSelect').html(html).prop('disabled', false);
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-            $('#pageIdValue').val('');
         });
     });
 
@@ -161,14 +208,24 @@ $(function() {
             $('#pageIdValue').val('');
             return;
         }
+        if (activePageReq) activePageReq.abort();
         $('#pageSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        $.get(site_url + '/modules/' + mid + '/pages', function(res) {
-            var html = '<option value="">Select Page...</option>';
-            for (var i = 0; i < res.length; i++) {
-                html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+        activePageReq = $.ajax({
+            url: site_url + '/modules/' + mid + '/pages',
+            type: 'GET',
+            timeout: 10000,
+            success: function(res) {
+                if (!Array.isArray(res)) { $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false); return; }
+                var html = '<option value="">Select Page...</option>';
+                for (var i = 0; i < res.length; i++) {
+                    html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+                }
+                $('#pageSelect').html(html).prop('disabled', false);
+            },
+            error: function() {
+                toastr.error('Failed to load pages');
+                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false);
             }
-            $('#pageSelect').html(html).prop('disabled', false);
-            $('#pageIdValue').val('');
         });
     });
 
@@ -232,10 +289,19 @@ $(function() {
             contentType: false,
             success: function(res) {
                 if (res.status && res.redirect) {
-                    toastr.success('Ticket created successfully');
-                    setTimeout(function() { window.location.href = res.redirect; }, 500);
+                    var msg = 'Ticket created successfully';
+                    if (res.tracking_code) {
+                        msg += '\nTracking code: ' + res.tracking_code;
+                    }
+                    toastr.success(msg, '', { timeOut: 5000 });
+                    setTimeout(function() { window.location.href = res.redirect; }, 1500);
                 } else {
-                    toastr.error(res.message || 'Failed to create ticket');
+                    var msg = res.message || 'Failed to create ticket';
+                    if (res.errors && typeof res.errors === 'object') {
+                        var details = Object.values(res.errors).join(', ');
+                        msg += ': ' + details;
+                    }
+                    toastr.error(msg);
                     btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit');
                 }
             },

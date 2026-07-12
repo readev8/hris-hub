@@ -33,6 +33,8 @@ class Auth extends BaseController
             $session->set('user', $user);
             $session->set('user_id', $user['id']);
             $session->set('role', $user['role']);
+            $session->set('role_id', $user['role_id'] ?? $user['role']);
+            $session->set('permissions', $user['permissions'] ?? []);
 
             return redirect()->to('/dashboard');
         }

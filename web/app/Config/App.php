@@ -201,4 +201,10 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
+
+    /**
+     * Asset version for cache busting
+     * Update this on each deploy to force browsers to fetch new files
+     */
+    public string $assetVersion = '1.0.4';
 }

@@ -12,9 +12,10 @@ abstract class Enums
     const ADMIN      = 5;
 
     // Ticket types
-    const TICKET_TYPE_BUG   = 0;
-    const TICKET_TYPE_ISSUE = 1;
-    const TICKET_TYPE_TASK  = 2;
+    const TICKET_TYPE_BUG            = 0;
+    const TICKET_TYPE_ISSUE          = 1;
+    const TICKET_TYPE_TASK           = 2;
+    const TICKET_TYPE_CHANGE_REQUEST = 3;
 
     // Priorities
     const PRIORITY_LOW      = 0;
@@ -76,10 +77,11 @@ abstract class Enums
     public static function ticketTypeName(int $type): string
     {
         return match ($type) {
-            self::TICKET_TYPE_BUG   => 'Bug',
-            self::TICKET_TYPE_ISSUE => 'Issue',
-            self::TICKET_TYPE_TASK  => 'Task',
-            default                 => 'Unknown',
+            self::TICKET_TYPE_BUG            => 'Bug',
+            self::TICKET_TYPE_ISSUE          => 'Issue',
+            self::TICKET_TYPE_TASK           => 'Task',
+            self::TICKET_TYPE_CHANGE_REQUEST => 'Change Request',
+            default                          => 'Unknown',
         };
     }
 

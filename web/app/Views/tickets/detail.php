@@ -128,6 +128,25 @@
                         <dd class="col-7"><?= esc($ticket['assignee_name'] ?? '-') ?></dd>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Created</dt>
                         <dd class="col-7"><?= esc($ticket['created_at']) ?></dd>
+                        <?php if (!empty($ticket['due_date'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Due Date</dt>
+                        <dd class="col-7">
+                            <span style="<?= strtotime($ticket['due_date']) < time() && !in_array($status, [4, 5]) ? 'color:var(--sap-error);font-weight:600' : '' ?>">
+                                <?= esc($ticket['due_date']) ?>
+                                <?php if (strtotime($ticket['due_date']) < time() && !in_array($status, [4, 5])): ?>
+                                <i class="fas fa-exclamation-triangle" title="Overdue"></i>
+                                <?php endif; ?>
+                            </span>
+                        </dd>
+                        <?php endif; ?>
+                        <?php if (!empty($ticket['started_at'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Started</dt>
+                        <dd class="col-7"><?= esc($ticket['started_at']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($ticket['resolved_at'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Resolved</dt>
+                        <dd class="col-7"><?= esc($ticket['resolved_at']) ?></dd>
+                        <?php endif; ?>
                         <?php if ($ticket['closed_at']): ?>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Closed</dt>
                         <dd class="col-7"><?= esc($ticket['closed_at']) ?></dd>
@@ -162,8 +181,13 @@
                     <?php
                     $status = (int)($ticket['status'] ?? -1);
                     $userId = session('user_id');
+                    $perms = session('permissions') ?? [];
+                    $ticketPerms = $perms['tickets'] ?? [];
+                    $canUpdate = !empty($ticketPerms['can_update']);
+                    $canApprove = !empty($ticketPerms['can_approve']);
+                    $canDelete = !empty($ticketPerms['can_delete']);
                     ?>
-                    <?php if ($status === 0): ?>
+                    <?php if ($status === 0 && $canApprove): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve')"><i class="fas fa-check"></i> Approve</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reject','Rejection note')"><i class="fas fa-times"></i> Reject</button>
                     <?php endif; ?>
@@ -176,6 +200,16 @@
                     <?php if ($status === 3): ?>
                         <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="doAction('close')"><i class="fas fa-lock"></i> Close</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                    <?php endif; ?>
+                    <hr class="my-1">
+                    <?php if ($canApprove): ?>
+                    <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="showAssignModal()"><i class="fas fa-user-plus"></i> Assign</button>
+                    <?php endif; ?>
+                    <?php if ($canUpdate): ?>
+                    <a href="<?= site_url('tickets/' . $token . '/edit') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                    <?php endif; ?>
+                    <?php if ($canDelete): ?>
+                    <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="confirmDelete()"><i class="fas fa-trash"></i> Delete</button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -229,13 +263,73 @@ function promptAction(action, label) {
     });
 }
 
+function showAssignModal() {
+    $.get(site_url + '/users/ajax-list', function(res) {
+        var users = res.data || [];
+        var options = '<option value="">Select user...</option>';
+        for (var i = 0; i < users.length; i++) {
+            options += '<option value="' + users[i].id + '">' + (users[i].full_name || users[i].name) + '</option>';
+        }
+        Swal.fire({
+            title: 'Assign Ticket',
+            html: '<select id="swal-assign" class="sap-select" style="width:100%">' + options + '</select>',
+            showCancelButton: true,
+            confirmButtonText: 'Assign',
+            confirmButtonColor: '#0070F2',
+            cancelButtonColor: '#758CA4',
+            preConfirm: function() {
+                var val = $('#swal-assign').val();
+                if (!val) {
+                    Swal.showValidationMessage('Please select a user');
+                    return false;
+                }
+                return val;
+            }
+        }).then(function(result) {
+            if (result.isConfirmed && result.value) {
+                $.post(site_url + '/tickets/' + token + '/assign', {assignee_id: result.value}, function(res) {
+                    if (res.status) {
+                        toastr.success('Ticket assigned');
+                        setTimeout(function() { location.reload(); }, 800);
+                    } else {
+                        toastr.error(res.data.message || 'Failed to assign');
+                    }
+                });
+            }
+        });
+    });
+}
+
+function confirmDelete() {
+    Swal.fire({
+        title: 'Delete Ticket?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        confirmButtonColor: '#AA0808',
+        cancelButtonColor: '#758CA4',
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            $.post(site_url + '/tickets/' + token + '/delete', {}, function(res) {
+                if (res.status) {
+                    toastr.success('Ticket deleted');
+                    setTimeout(function() { window.location.href = site_url + '/tickets'; }, 800);
+                } else {
+                    toastr.error(res.data.message || 'Failed to delete');
+                }
+            });
+        }
+    });
+}
+
 $(function() {
     $('#commentForm input[name="images[]"]').on('change', function() {
         var preview = $('#commentImagePreview');
         preview.empty();
         var files = this.files;
-        if (files.length > 3) {
-            toastr.warning('Maximum 3 images');
+        if (files.length > 5) {
+            toastr.warning('Maximum 5 files');
             $(this).val('');
             return;
         }
@@ -262,18 +356,18 @@ $(function() {
             contentType: false,
             success: function(res) {
                 if (res.status) {
-                    toastr_success('Comment added');
+                    toastr.success('Comment added');
                     $('#commentText').val('');
                     $('#commentImagePreview').empty();
                     $('#commentForm input[name="images[]"]').val('');
                     setTimeout(function() { location.reload(); }, 500);
                 } else {
-                    toastr_error(res.data.message || 'Failed');
+                    toastr.error(res.data.message || 'Failed');
                     btn.prop('disabled', false).html('Send');
                 }
             },
             error: function() {
-                toastr_error('Request failed');
+                toastr.error('Request failed');
                 btn.prop('disabled', false).html('Send');
             }
         });
