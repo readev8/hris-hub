@@ -21,12 +21,8 @@ class TicketsCheck_model
 
         return match ($current) {
             Enums::TICKET_STATUS_OPEN => match ($target) {
-                Enums::TICKET_STATUS_APPROVED => $isCreator && $userRole === Enums::REQUESTER,
-                Enums::TICKET_STATUS_REJECTED => $isCreator,
-                default => false,
-            },
-            Enums::TICKET_STATUS_APPROVED => match ($target) {
                 Enums::TICKET_STATUS_IN_PROGRESS => $userRole === Enums::DEVELOPER,
+                Enums::TICKET_STATUS_REJECTED    => $isCreator,
                 default => false,
             },
             Enums::TICKET_STATUS_IN_PROGRESS => match ($target) {
@@ -34,7 +30,7 @@ class TicketsCheck_model
                 default => false,
             },
             Enums::TICKET_STATUS_RESOLVED => match ($target) {
-                Enums::TICKET_STATUS_CLOSED => $isCreator || $userRole === Enums::REQUESTER,
+                Enums::TICKET_STATUS_CLOSED => $isAssignee,
                 Enums::TICKET_STATUS_OPEN   => $isCreator || $userRole === Enums::REQUESTER,
                 default => false,
             },

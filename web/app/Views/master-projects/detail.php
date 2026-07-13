@@ -862,5 +862,25 @@ function moveTicket(ticketId, newStatus, oldStatus, cardEl) {
         }
     });
 }
+
+$(document).on('dblclick', '.kanban-card', function() {
+    var cardId = $(this).data('id');
+    var cardTitle = $(this).find('.kanban-card-title a').text();
+    var cardUrl = site_url + '/tickets/' + cardId;
+
+    Swal.fire({
+        title: 'Buka Ticket?',
+        html: '<strong>' + escHtml(cardTitle) + '</strong>',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0070F2',
+        confirmButtonText: 'Buka di Tab Baru',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.open(cardUrl, '_blank');
+        }
+    });
+});
 </script>
 <?= $this->endSection() ?>

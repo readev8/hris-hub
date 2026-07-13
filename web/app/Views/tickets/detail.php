@@ -200,25 +200,31 @@
                     $ticketPerms = $perms['tickets'] ?? [];
                     $canUpdate = !empty($ticketPerms['can_update']);
                     $canDelete = !empty($ticketPerms['can_delete']);
+                    $isAssignee = isset($ticket['assignee_id']) && (string)$ticket['assignee_id'] === (string)$userId;
+                    $isCreator = isset($ticket['creator_id']) && (string)$ticket['creator_id'] === (string)$userId;
+                    $roleId = session('role_id');
+                    $isAdmin = $roleId == 5;
                     ?>
                     <?php if ($status === 0 && $canUpdate): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve')"><i class="fas fa-check"></i> Approve</button>
+                        <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reject','Rejection note')"><i class="fas fa-times"></i> Reject</button>
                     <?php endif; ?>
-                    <?php if ($status === 1 && $canUpdate): ?>
-                        <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
-                    <?php endif; ?>
-                    <?php if ($status === 2 && $canUpdate): ?>
+                    <?php if ($status === 2 && $isAssignee): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="promptAction('resolve','Resolution note')"><i class="fas fa-check-double"></i> Resolve</button>
                     <?php endif; ?>
-                    <?php if ($status === 3 && $canUpdate): ?>
+                    <?php if ($status === 3 && $isAssignee): ?>
                         <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="doAction('close')"><i class="fas fa-lock"></i> Close</button>
+                    <?php endif; ?>
+                    <?php if ($status === 3 && ($isCreator || $roleId == 2)): ?>
+                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                    <?php endif; ?>
+                    <?php if ($status === 4 && ($isCreator || $roleId == 2 || $isAdmin)): ?>
+                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                    <?php endif; ?>
+                    <?php if ($status === 5 && ($isCreator || $isAdmin)): ?>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
                     <?php endif; ?>
                     <hr class="my-1">
-                    <?php if ($canUpdate): ?>
-                    <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="showAssignModal()"><i class="fas fa-user-plus"></i> Assign</button>
-                    <?php endif; ?>
                     <?php if ($canUpdate): ?>
                     <a href="<?= site_url('tickets/' . $token . '/edit') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>
                     <?php endif; ?>

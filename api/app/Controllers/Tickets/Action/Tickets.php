@@ -128,6 +128,17 @@ class Tickets extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+
+        $assigneeId = $ticket['assignee_id'] ? (int) $ticket['assignee_id'] : null;
+        if ($assigneeId !== $userId && $this->getCurrentUserRole() !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya assignee yang dapat menutup ticket ini', null, 403);
+        }
+
         return $this->transition($id, Enums::TICKET_STATUS_CLOSED, function ($ticket, $userId) {
             $this->db()->table('tickets')->update([
                 'status'     => Enums::TICKET_STATUS_CLOSED,
@@ -232,6 +243,10 @@ class Tickets extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('tickets', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk comment', null, 403);
+        }
+
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $content = trim($input['content'] ?? '');
 
@@ -241,10 +256,6 @@ class Tickets extends BaseApi
 
         $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
-
-        if (!$this->checkTicketOwnership($id)) {
-            return $this->JSONResponse('Anda tidak memiliki akses ke ticket ini', null, 403);
-        }
 
         $this->db()->transStart();
         $this->db()->table('ticket_comments')->insert([
