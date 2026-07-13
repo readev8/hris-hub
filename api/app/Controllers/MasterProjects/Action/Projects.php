@@ -13,9 +13,8 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || !in_array((int) $user['role'], [Enums::DEVELOPER, Enums::ADMIN], true)) {
-            return $this->JSONResponse('Forbidden', null, 403);
+        if (!$this->checkPermission('master_projects', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk membuat project', null, 403);
         }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -48,9 +47,8 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || !in_array((int) $user['role'], [Enums::DEVELOPER, Enums::ADMIN], true)) {
-            return $this->JSONResponse('Forbidden', null, 403);
+        if (!$this->checkPermission('master_projects', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah project', null, 403);
         }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -73,9 +71,8 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || !in_array((int) $user['role'], [Enums::DEVELOPER, Enums::ADMIN], true)) {
-            return $this->JSONResponse('Forbidden', null, 403);
+        if (!$this->checkPermission('master_projects', 'can_delete')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus project', null, 403);
         }
 
         $this->db()->table('master_projects')->delete(['id' => $id]);

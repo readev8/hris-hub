@@ -32,7 +32,6 @@ class Auth extends BaseController
             $session = service('session');
             $session->set('user', $user);
             $session->set('user_id', $user['id']);
-            $session->set('role', $user['role']);
             $session->set('role_id', $user['role_id'] ?? $user['role']);
             $session->set('permissions', $user['permissions'] ?? []);
 
@@ -50,8 +49,33 @@ class Auth extends BaseController
 
     public function loginPage()
     {
-        // echo base_url();die;
         helper('form');
         return $this->view('auth/login');
+    }
+
+    public function refreshPermissions()
+    {
+        $session = service('session');
+        $userId = $session->get('user_id');
+
+        if (!$userId) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Not logged in']);
+        }
+
+        $result = $this->api->get_data('auth/me');
+
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Failed to refresh']);
+        }
+
+        $user = $result['data']['result'];
+        $session->set('permissions', $user['permissions'] ?? []);
+        $session->set('role_id', $user['role_id'] ?? $user['role']);
+
+        return $this->response->setJSON([
+            'status'      => true,
+            'message'     => 'Permissions refreshed',
+            'permissions' => $user['permissions'] ?? [],
+        ]);
     }
 }

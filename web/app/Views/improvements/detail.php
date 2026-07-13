@@ -199,19 +199,24 @@
                 <div class="sap-card-body">
                     <div class="d-flex flex-wrap gap-2">
                         <?php foreach ($improvement['attachments'] as $att): ?>
-                        <a href="<?= site_url('uploads/improvements/' . $att['stored_name']) ?>" target="_blank">
                             <?php if (strpos($att['mime_type'] ?? '', 'image/') === 0): ?>
+                        <a href="<?= site_url('uploads/improvements/' . $att['stored_name']) ?>"
+                           class="glightbox improvement-attachment-link"
+                           data-gallery="improvement-<?= $improvement['id'] ?>"
+                           data-description="<?= esc($att['filename']) ?>">
                             <img src="<?= site_url('uploads/improvements/' . $att['stored_name']) ?>"
                                  alt="<?= esc($att['filename']) ?>"
-                                 style="max-width:120px;max-height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)"
+                                 style="max-width:120px;max-height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border);cursor:pointer"
                                  class="sap-hover-lift">
+                        </a>
                             <?php else: ?>
+                        <a href="<?= site_url('uploads/improvements/' . $att['stored_name']) ?>" target="_blank">
                             <div style="padding:12px 16px;background:var(--sap-background);border-radius:6px;border:1px solid var(--sap-border);font-size:13px">
                                 <i class="fas fa-file-pdf" style="color:var(--sap-error);margin-right:6px"></i>
                                 <?= esc($att['filename']) ?>
                             </div>
-                            <?php endif; ?>
                         </a>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -223,22 +228,33 @@
                     <i class="fas fa-bolt"></i> Actions
                 </div>
                 <div class="sap-card-body d-flex flex-column gap-2">
-                    <?php $st = (int)($improvement['status'] ?? -1); ?>
-                    <?php if ($st === 0): ?>
+                    <?php
+                    $st = (int)($improvement['status'] ?? -1);
+                    $impPerms = (session('permissions') ?? [])['improvements'] ?? [];
+                    $impCanApprove = !empty($impPerms['can_approve']);
+                    $impCanCreate  = !empty($impPerms['can_create']);
+                    $impCanUpdate  = !empty($impPerms['can_update']);
+                    $impCanDelete  = !empty($impPerms['can_delete']);
+                    ?>
+                    <?php if ($st === 0 && $impCanApprove): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve-it')"><i class="fas fa-check"></i> Approve (IT)</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptReject()"><i class="fas fa-times"></i> Reject</button>
                     <?php endif; ?>
-                    <?php if ($st === 1): ?>
+                    <?php if ($st === 1 && $impCanApprove): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve-dept')"><i class="fas fa-check"></i> Approve (Dept)</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptReject()"><i class="fas fa-times"></i> Reject</button>
                     <?php endif; ?>
-                    <?php if ($st === 3): ?>
+                    <?php if ($st === 3 && $impCanCreate): ?>
                         <button class="sap-btn sap-btn-warning sap-btn-sm" onclick="doAction('resubmit')"><i class="fas fa-undo"></i> Resubmit</button>
                     <?php endif; ?>
                     <hr class="my-1">
-                    <?php if ($st === -1 || $st === 0): ?>
+                    <?php if (($st === -1 || $st === 0) && ($impCanUpdate || $impCanDelete)): ?>
+                    <?php if ($impCanUpdate): ?>
                     <a href="<?= site_url('improvements/' . $token . '/edit') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                    <?php endif; ?>
+                    <?php if ($impCanDelete): ?>
                     <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="confirmDelete()"><i class="fas fa-trash"></i> Delete</button>
+                    <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -322,6 +338,15 @@ $('#commentForm').on('submit', function(e) {
             toastr.error(res.data.message || 'Failed');
         }
     });
+});
+
+// GLightbox init for improvements
+var improvementLightbox = GLightbox({
+    selector: '.improvement-attachment-link',
+    touchNavigation: true,
+    keyboardNavigation: true,
+    loop: false,
+    preload: true
 });
 </script>
 <?= $this->endSection() ?>

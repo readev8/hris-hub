@@ -4,9 +4,9 @@ namespace App\Controllers;
 
 class Roles extends BaseController
 {
-    private function guard(): bool
+    private function guard(string $action = 'can_view'): bool
     {
-        return has_permission('roles', 'can_view');
+        return has_permission('roles', $action);
     }
 
     public function index()
@@ -38,7 +38,7 @@ class Roles extends BaseController
 
     public function create()
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_create')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -49,7 +49,7 @@ class Roles extends BaseController
 
     public function update(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_update')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -60,7 +60,7 @@ class Roles extends BaseController
 
     public function delete(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_delete')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -89,7 +89,7 @@ class Roles extends BaseController
 
     public function savePermissions(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_update')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -104,7 +104,7 @@ class Roles extends BaseController
 
     public function toggleActive(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_update')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 

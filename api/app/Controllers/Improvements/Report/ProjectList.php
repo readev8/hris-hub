@@ -48,10 +48,9 @@ class ProjectList extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user) return $this->JSONResponse('User tidak ditemukan', null, 404);
+        $role = $this->getCurrentUserRole();
+        if (!$role) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
-        $role = (int) $user['role'];
         $projects = [];
 
         if ($role === \App\Config\Enums::IT_MANAGER || $role === \App\Config\Enums::ADMIN) {

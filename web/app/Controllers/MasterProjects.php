@@ -4,10 +4,9 @@ namespace App\Controllers;
 
 class MasterProjects extends BaseController
 {
-    private function guard(): bool
+    private function guard(string $action = 'can_view'): bool
     {
-        $perms = session('permissions') ?? [];
-        return !empty($perms['master_projects']['can_view']);
+        return has_permission('master_projects', $action);
     }
 
     public function index()
@@ -41,8 +40,8 @@ class MasterProjects extends BaseController
 
     public function create()
     {
-        if (!$this->guard()) {
-            return redirect()->to('/dashboard');
+        if (!$this->guard('can_create')) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
         if ($this->request->getMethod() === 'POST') {
@@ -83,7 +82,7 @@ class MasterProjects extends BaseController
 
     public function update(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_update')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -94,7 +93,7 @@ class MasterProjects extends BaseController
 
     public function delete(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_delete')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -104,7 +103,7 @@ class MasterProjects extends BaseController
 
     public function createModule(string $encryptedProjectId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_create')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -115,7 +114,7 @@ class MasterProjects extends BaseController
 
     public function updateModule(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_update')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -126,7 +125,7 @@ class MasterProjects extends BaseController
 
     public function deleteModule(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_delete')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -136,7 +135,7 @@ class MasterProjects extends BaseController
 
     public function createPage(string $encryptedModuleId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_create')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -147,7 +146,7 @@ class MasterProjects extends BaseController
 
     public function updatePage(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_update')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
@@ -158,7 +157,7 @@ class MasterProjects extends BaseController
 
     public function deletePage(string $encryptedId)
     {
-        if (!$this->guard()) {
+        if (!$this->guard('can_delete')) {
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 

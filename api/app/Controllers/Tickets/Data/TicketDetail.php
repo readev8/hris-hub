@@ -16,6 +16,7 @@ class TicketDetail extends BaseApi
 
         $ticket = $this->db()->table('tickets')
             ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name,
+                      tickets.assignee_id as assignee_raw_id,
                       pages.name as page_name, modules.name as module_name, master_projects.name as project_name,
                       master_projects.id as project_raw_id')
             ->join('users as creator', 'creator.id = tickets.creator_id', 'left')

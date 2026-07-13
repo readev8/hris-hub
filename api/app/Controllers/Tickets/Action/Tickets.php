@@ -27,11 +27,16 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
+        if (!$this->checkPermission('tickets', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk membuat ticket', null, 403);
+        }
+
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $title = trim($input['title'] ?? '');
         $description = trim($input['description'] ?? '');
         $type = (int) ($input['type'] ?? Enums::TICKET_TYPE_ISSUE);
         $priority = (int) ($input['priority'] ?? Enums::PRIORITY_MEDIUM);
+        $dueDate = !empty($input['due_date']) ? $input['due_date'] : null;
 
         $pageId = null;
         if (!empty($input['page_id'])) {
@@ -58,13 +63,15 @@ class Tickets extends BaseApi
             'status'         => Enums::TICKET_STATUS_OPEN,
             'creator_id'     => $userId,
             'page_id'        => $pageId,
+            'due_date'       => $dueDate,
             'tracking_code'  => 'TKT-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2))),
             'created_at'     => date('Y-m-d H:i:s'),
             'updated_at'     => date('Y-m-d H:i:s'),
         ]);
         $ticketId = $this->db()->insertID();
 
-        $trackingCode = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray()['tracking_code'];
+        $row = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray();
+        $trackingCode = $row['tracking_code'] ?? null;
 
         $this->audit->log($userId, 'ticket', $ticketId, 'create_ticket', null, [
             'title' => $title, 'type' => $type, 'priority' => $priority, 'page_id' => $pageId,
@@ -164,31 +171,21 @@ class Tickets extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
-        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
-
-        if ((int) $ticket['status'] !== Enums::TICKET_STATUS_OPEN) {
-            return $this->JSONResponse('Hanya ticket dengan status Open yang dapat di-approve', null, 400);
+        if (!$this->checkTicketOwnership($id)) {
+            return $this->JSONResponse('Anda tidak memiliki akses ke ticket ini', null, 403);
         }
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || !in_array((int) $user['role'], [Enums::REQUESTER, Enums::IT_MANAGER, Enums::ADMIN], true)) {
-            return $this->JSONResponse('Anda tidak memiliki izin untuk approve ticket', null, 403);
-        }
-
-        if ($ticket['creator_id'] != $userId && (int) $user['role'] !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya pembuat ticket atau admin yang dapat approve', null, 403);
-        }
-
-        $this->db()->transStart();
-        $this->db()->table('tickets')->update([
-            'status'     => Enums::TICKET_STATUS_APPROVED,
-            'updated_at' => date('Y-m-d H:i:s'),
-        ], ['id' => $id]);
-        $this->audit->log($userId, 'ticket', $id, 'approve_ticket', ['status' => Enums::TICKET_STATUS_OPEN], ['status' => Enums::TICKET_STATUS_APPROVED]);
-        $this->db()->transComplete();
-
-        return $this->JSONResponse('Ticket berhasil di-approve');
+        return $this->transition($id, Enums::TICKET_STATUS_APPROVED, function ($ticket, $userId) {
+            $this->db()->table('tickets')->update([
+                'status'     => Enums::TICKET_STATUS_APPROVED,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ], ['id' => $ticket['id']]);
+            $this->audit->log($userId, 'ticket', $ticket['id'], 'approve_ticket',
+                ['status' => Enums::TICKET_STATUS_OPEN],
+                ['status' => Enums::TICKET_STATUS_APPROVED]
+            );
+            return 'Ticket berhasil di-approve';
+        });
     }
 
     public function reject_ticket(string $encryptedId): ResponseInterface
@@ -202,27 +199,29 @@ class Tickets extends BaseApi
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $note = trim($input['rejection_note'] ?? '');
 
+        if (empty($note)) {
+            return $this->JSONResponse('Catatan penolakan wajib diisi', null, 400);
+        }
+
         $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
-        if ((int) $ticket['status'] !== Enums::TICKET_STATUS_OPEN) {
-            return $this->JSONResponse('Hanya ticket dengan status Open yang dapat di-reject', null, 400);
-        }
-
-        if ((int) $ticket['creator_id'] !== $userId) {
+        if ((int) $ticket['creator_id'] !== $userId && $this->getCurrentUserRole() !== Enums::ADMIN) {
             return $this->JSONResponse('Hanya pembuat ticket yang dapat me-reject', null, 403);
         }
 
-        $this->db()->transStart();
-        $this->db()->table('tickets')->update([
-            'status'         => Enums::TICKET_STATUS_REJECTED,
-            'rejection_note' => $note,
-            'updated_at'     => date('Y-m-d H:i:s'),
-        ], ['id' => $id]);
-        $this->audit->log($userId, 'ticket', $id, 'reject_ticket', ['status' => Enums::TICKET_STATUS_OPEN], ['status' => Enums::TICKET_STATUS_REJECTED]);
-        $this->db()->transComplete();
-
-        return $this->JSONResponse('Ticket berhasil di-reject');
+        return $this->transition($id, Enums::TICKET_STATUS_REJECTED, function ($ticket, $userId) use ($note) {
+            $this->db()->table('tickets')->update([
+                'status'         => Enums::TICKET_STATUS_REJECTED,
+                'rejection_note' => $note,
+                'updated_at'     => date('Y-m-d H:i:s'),
+            ], ['id' => $ticket['id']]);
+            $this->audit->log($userId, 'ticket', $ticket['id'], 'reject_ticket',
+                ['status' => Enums::TICKET_STATUS_OPEN],
+                ['status' => Enums::TICKET_STATUS_REJECTED, 'rejection_note' => $note]
+            );
+            return 'Ticket berhasil di-reject';
+        });
     }
 
     public function add_comment(string $encryptedId): ResponseInterface
@@ -242,6 +241,10 @@ class Tickets extends BaseApi
 
         $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+
+        if (!$this->checkTicketOwnership($id)) {
+            return $this->JSONResponse('Anda tidak memiliki akses ke ticket ini', null, 403);
+        }
 
         $this->db()->transStart();
         $this->db()->table('ticket_comments')->insert([
@@ -266,6 +269,10 @@ class Tickets extends BaseApi
 
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkTicketOwnership($id)) {
+            return $this->JSONResponse('Anda tidak memiliki akses ke ticket ini', null, 403);
+        }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $newStatus = (int) ($input['new_status'] ?? -1);
@@ -298,6 +305,66 @@ class Tickets extends BaseApi
         });
     }
 
+    public function update_ticket(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+
+        if (!$this->checkTicketOwnership($id)) {
+            return $this->JSONResponse('Anda tidak memiliki akses ke ticket ini', null, 403);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+
+        $title = trim($input['title'] ?? $ticket['title']);
+        $description = trim($input['description'] ?? $ticket['description']);
+        $type = (int) ($input['type'] ?? $ticket['type']);
+        $priority = (int) ($input['priority'] ?? $ticket['priority']);
+        $dueDate = $input['due_date'] ?? $ticket['due_date'];
+        $assigneeId = isset($input['assignee_id']) ? ($input['assignee_id'] !== '' ? $this->resolveId($input['assignee_id']) : null) : $ticket['assignee_id'];
+
+        if ($type === Enums::TICKET_TYPE_BUG && empty($input['page_id']) && empty($ticket['page_id'])) {
+            return $this->JSONResponse('Untuk Bug, wajib memilih halaman yang bermasalah', null, 400);
+        }
+
+        if (strlen($title) < 5) {
+            return $this->JSONResponse('Judul minimal 5 karakter', null, 400);
+        }
+        if (empty($description)) {
+            return $this->JSONResponse('Deskripsi wajib diisi', null, 400);
+        }
+
+        $pageId = $ticket['page_id'];
+        if (isset($input['page_id'])) {
+            $pageId = !empty($input['page_id']) ? $this->resolveId($input['page_id']) : null;
+        }
+
+        $old = [
+            'title' => $ticket['title'], 'description' => $ticket['description'],
+            'type' => $ticket['type'], 'priority' => $ticket['priority'],
+            'due_date' => $ticket['due_date'], 'assignee_id' => $ticket['assignee_id'],
+        ];
+        $new = [
+            'title' => $title, 'description' => $description,
+            'type' => $type, 'priority' => $priority,
+            'due_date' => $dueDate, 'assignee_id' => $assigneeId,
+            'page_id' => $pageId, 'updated_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->db()->transStart();
+        $this->db()->table('tickets')->update($new, ['id' => $id]);
+        $this->audit->log($userId, 'ticket', $id, 'update_ticket', $old, $new);
+        $this->db()->transComplete();
+
+        return $this->JSONResponse('Ticket berhasil diupdate');
+    }
+
     private function transition(int $id, int $targetStatus, callable $onSuccess): ResponseInterface
     {
         $userId = $this->getCurrentUserId();
@@ -310,15 +377,15 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
         }
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user) {
+        $role = $this->getCurrentUserRole();
+        if (!$role) {
             return $this->JSONResponse('User tidak ditemukan', null, 404);
         }
 
         $error = $this->check->validateTransition(
             (int) $ticket['status'],
             $targetStatus,
-            (int) $user['role'],
+            $role,
             $userId,
             (int) $ticket['creator_id'],
             $ticket['assignee_id'] ? (int) $ticket['assignee_id'] : null,

@@ -6,7 +6,7 @@ use CodeIgniter\Router\RouteCollection;
 
 // Public routes (no auth)
 $routes->post('auth/login', 'Auth\Action\Auth::login');
-$routes->get('tickets/track/(:any)', 'Tickets\Report\TicketTracking::get_by_code/$1');
+$routes->get('tickets/track/(:any)', 'Tickets\Report\TicketTracking::get_by_code/$1', ['filter' => 'ratelimit']);
 
 // Protected API routes
 $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($routes) {
@@ -15,6 +15,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
 
     // Tickets
     $routes->post('tickets/create',              'Tickets\Action\Tickets::create_ticket');
+    $routes->post('tickets/(:any)/update',       'Tickets\Action\Tickets::update_ticket/$1');
     $routes->post('tickets/(:any)/approve',      'Tickets\Action\Tickets::approve_ticket/$1');
     $routes->post('tickets/(:any)/reject',       'Tickets\Action\Tickets::reject_ticket/$1');
     $routes->post('tickets/(:any)/take',         'Tickets\Action\Tickets::take_ticket/$1');

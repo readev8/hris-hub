@@ -4,8 +4,16 @@ namespace App\Controllers;
 
 class Approvals extends BaseController
 {
+    private function guard(string $action = 'can_view'): bool
+    {
+        return has_permission('approvals', $action);
+    }
+
     public function index(): string
     {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
         return $this->view('approvals/main_page', [
             'title' => 'Approval Center',
         ]);
@@ -13,6 +21,10 @@ class Approvals extends BaseController
 
     public function ajaxList()
     {
+        if (!$this->guard()) {
+            return $this->response->setJSON(['data' => []]);
+        }
+
         $type = $this->request->getGet('type');
 
         if ($type === 'tickets') {

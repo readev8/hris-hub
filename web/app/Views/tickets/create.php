@@ -79,8 +79,12 @@
                     <label class="sap-label">Images <span style="font-weight:400;color:var(--sap-text-muted)">(optional, max 3, JPG/PNG, max 2MB each)</span></label>
                     <div style="border:2px dashed var(--sap-border);border-radius:var(--sap-radius);padding:24px;text-align:center;transition:all var(--sap-transition);cursor:pointer" id="dropzone">
                         <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:var(--sap-text-muted);display:block;margin-bottom:8px"></i>
-                        <p class="mb-0 text-secondary" style="font-size:13px">Drop images here or click to browse</p>
-                        <input type="file" name="images[]" accept="image/jpeg,image/png" multiple hidden>
+                        <p class="mb-2 text-secondary" style="font-size:13px">Drop images here or</p>
+                        <label class="sap-btn sap-btn-secondary sap-btn-sm" style="cursor:pointer" onclick="event.stopPropagation()">
+                            <i class="fas fa-images"></i> Choose Files
+                            <input type="file" name="images[]" accept="image/jpeg,image/png" multiple hidden>
+                        </label>
+                        <p class="mb-0 mt-1 text-muted" style="font-size:11px">JPG or PNG, max 2MB each</p>
                     </div>
                     <div class="d-flex flex-wrap gap-2 mt-2" id="imagePreview"></div>
                 </div>
@@ -233,9 +237,7 @@ $(function() {
         $('#pageIdValue').val($(this).val());
     });
 
-    $('#dropzone').on('click', function() {
-        $(this).find('input[type="file"]').click();
-    }).on('dragover', function(e) {
+    $('#dropzone').on('dragover', function(e) {
         e.preventDefault();
         $(this).css('border-color', 'var(--sap-brand)').css('background', 'var(--sap-brand-hover)');
     }).on('dragleave', function() {
@@ -305,8 +307,15 @@ $(function() {
                     btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit');
                 }
             },
-            error: function() {
-                toastr.error('Request failed');
+            error: function(xhr) {
+                var res = null;
+                try { res = JSON.parse(xhr.responseText); } catch(e) {}
+                if (res && res.redirect) {
+                    window.location.href = res.redirect;
+                    return;
+                }
+                var msg = res && res.message ? res.message : 'Request failed (HTTP ' + xhr.status + ')';
+                toastr.error(msg);
                 btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit');
             }
         });

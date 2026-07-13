@@ -848,7 +848,13 @@ function moveTicket(ticketId, newStatus, oldStatus, cardEl) {
                 initKanbanSortables();
             }
         },
-        error: function() {
+        error: function(xhr) {
+            var res = null;
+            try { res = JSON.parse(xhr.responseText); } catch(e) {}
+            if (res && res.redirect) {
+                window.location.href = res.redirect;
+                return;
+            }
             $card.css('background', '').css('opacity', '');
             toastr.error('Gagal memindahkan ticket');
             renderKanban();

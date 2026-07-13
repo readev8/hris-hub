@@ -17,6 +17,8 @@ $routes->get('/track/(:any)', 'Tracking::lookup/$1');
 $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/dashboard', 'Dashboard::index');
 
+    $routes->post('/auth/refresh-permissions', 'Auth::refreshPermissions');
+
     $routes->get('/tickets', 'Tickets::index');
     $routes->get('/tickets/ajax-list', 'Tickets::ajaxList');
     $routes->get('/tickets/create', 'Tickets::create');
@@ -29,6 +31,7 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/tickets/(:any)/reject', 'Tickets::reject/$1');
     $routes->post('/tickets/(:any)/comments', 'Tickets::addComment/$1');
     $routes->post('/tickets/(:any)/upload-attachment', 'Tickets::uploadAttachment/$1');
+    $routes->post('/attachments/(:any)/delete', 'Tickets::deleteAttachment/$1');
     $routes->get('/uploads/tickets/(:any)', 'Tickets::serveFile/$1');
     $routes->get('/tickets/(:any)/edit', 'Tickets::edit/$1');
     $routes->post('/tickets/(:any)/update', 'Tickets::update/$1');

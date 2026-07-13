@@ -27,6 +27,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'apikeyauth'    => \App\Filters\ApiKeyAuthFilter::class,
         'corsfilter'    => \App\Filters\CorsFilter::class,
+        'ratelimit'     => \App\Filters\RateLimitFilter::class,
     ];
 
     public array $required = [

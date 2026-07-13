@@ -16,9 +16,8 @@ class Pages extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || !in_array((int) $user['role'], [Enums::DEVELOPER, Enums::ADMIN], true)) {
-            return $this->JSONResponse('Forbidden', null, 403);
+        if (!$this->checkPermission('master_projects', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk membuat halaman', null, 403);
         }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -61,9 +60,8 @@ class Pages extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || !in_array((int) $user['role'], [Enums::DEVELOPER, Enums::ADMIN], true)) {
-            return $this->JSONResponse('Forbidden', null, 403);
+        if (!$this->checkPermission('master_projects', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah halaman', null, 403);
         }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -86,9 +84,8 @@ class Pages extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || !in_array((int) $user['role'], [Enums::DEVELOPER, Enums::ADMIN], true)) {
-            return $this->JSONResponse('Forbidden', null, 403);
+        if (!$this->checkPermission('master_projects', 'can_delete')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus halaman', null, 403);
         }
 
         $this->db()->table('pages')->delete(['id' => $id]);

@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Config\Enums;
+use App\Models\Roles\PermissionCheck_model;
 
 abstract class BaseApi extends ResourceController
 {
@@ -12,6 +14,7 @@ abstract class BaseApi extends ResourceController
     protected array $model_map = [];
     private array $instances = [];
     protected ?\App\Libraries\IdEncryption $api = null;
+    private ?PermissionCheck_model $permModel = null;
 
     public function initController($request, $response, $logger)
     {
@@ -83,5 +86,46 @@ abstract class BaseApi extends ResourceController
     protected function db(): \CodeIgniter\Database\BaseConnection
     {
         return \Config\Database::connect();
+    }
+
+    protected function getCurrentUserRole(): ?int
+    {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return null;
+        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
+        return $user ? (int)($user['role_id'] ?? $user['role']) : null;
+    }
+
+    protected function getCurrentUserRecord(): ?array
+    {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return null;
+        return $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
+    }
+
+    protected function checkPermission(string $module, string $action = 'can_view'): bool
+    {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return false;
+        if (!$this->permModel) {
+            $this->permModel = new PermissionCheck_model();
+        }
+        return $this->permModel->hasPermission($userId, $module, $action);
+    }
+
+    protected function checkTicketOwnership(int $ticketId): bool
+    {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return false;
+
+        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray();
+        if (!$ticket) return false;
+
+        $role = $this->getCurrentUserRole();
+        if ($role === Enums::ADMIN) return true;
+        if ((int)$ticket['creator_id'] === $userId) return true;
+        if (isset($ticket['assignee_id']) && $ticket['assignee_id'] && (int)$ticket['assignee_id'] === $userId) return true;
+
+        return false;
     }
 }

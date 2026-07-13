@@ -293,8 +293,15 @@ $(function() {
                     btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit');
                 }
             },
-            error: function() {
-                toastr.error('Request failed');
+            error: function(xhr) {
+                var res = null;
+                try { res = JSON.parse(xhr.responseText); } catch(e) {}
+                if (res && res.redirect) {
+                    window.location.href = res.redirect;
+                    return;
+                }
+                var msg = res && res.message ? res.message : 'Request failed (HTTP ' + xhr.status + ')';
+                toastr.error(msg);
                 btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit');
             }
         });

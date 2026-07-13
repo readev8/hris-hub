@@ -15,20 +15,19 @@ class Users extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || (int) $user['role'] !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya admin yang dapat mengakses data users', null, 403);
+        if (!$this->checkPermission('users', 'can_view')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk melihat data users', null, 403);
         }
 
         $rows = $this->db()->table('users')
-            ->select('id, full_name, email, role, is_active, created_at, updated_at')
+            ->select('id, full_name, email, role_id, is_active, created_at, updated_at')
             ->orderBy('id', 'ASC')
             ->get()
             ->getResultArray();
 
         foreach ($rows as &$r) {
             $r['id'] = $this->api->encryptId($r['id']);
-            $r['role_name'] = Enums::roleName((int) $r['role']);
+            $r['role_name'] = Enums::roleName((int) $r['role_id']);
         }
 
         return $this->JSONResponse('OK', $rows, 200);
@@ -41,16 +40,15 @@ class Users extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user || (int) $user['role'] !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya admin yang dapat membuat user', null, 403);
+        if (!$this->checkPermission('users', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk membuat user', null, 403);
         }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $fullName = trim($input['full_name'] ?? '');
         $email = trim($input['email'] ?? '');
         $password = $input['password'] ?? '';
-        $role = (int) ($input['role'] ?? Enums::DEVELOPER);
+        $roleId = (int) ($input['role_id'] ?? $input['role'] ?? Enums::DEVELOPER);
 
         if (empty($fullName) || empty($email) || empty($password)) {
             return $this->JSONResponse('Nama, email, dan password wajib diisi', null, 400);
@@ -69,7 +67,7 @@ class Users extends BaseApi
             'full_name' => $fullName,
             'email'     => $email,
             'password'  => password_hash($password, PASSWORD_DEFAULT),
-            'role'      => $role,
+            'role_id'   => $roleId,
             'is_active' => 1,
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
@@ -88,9 +86,8 @@ class Users extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $admin = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$admin || (int) $admin['role'] !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya admin yang dapat mengubah status user', null, 403);
+        if (!$this->checkPermission('users', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah status user', null, 403);
         }
 
         $target = $this->db()->table('users')->where('id', $id)->get()->getRowArray();

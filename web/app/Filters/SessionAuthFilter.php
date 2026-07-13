@@ -12,6 +12,21 @@ class SessionAuthFilter implements FilterInterface
     {
         $session = service('session');
         if (!$session->has('user')) {
+            $isAjax = $request->hasHeader('X-Requested-With')
+                && $request->getHeader('X-Requested-With')->getValue() === 'XMLHttpRequest';
+
+            if ($isAjax || $request->getMethod() === 'POST') {
+                $response = service('response');
+                $response->setStatusCode(401);
+                $response->setContentType('application/json');
+                $response->setBody(json_encode([
+                    'status'  => false,
+                    'message' => 'Sesi telah berakhir, silakan login kembali',
+                    'redirect' => '/login',
+                ]));
+                return $response;
+            }
+
             $currentUrl = current_url();
             return redirect()->to('/login?redirect=' . urlencode($currentUrl));
         }

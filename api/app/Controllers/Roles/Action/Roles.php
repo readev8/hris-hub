@@ -21,6 +21,10 @@ class Roles extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('roles', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk membuat role', null, 403);
+        }
+
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $name = trim($input['name'] ?? '');
         $slug = trim($input['slug'] ?? '');
@@ -60,6 +64,10 @@ class Roles extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('roles', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah role', null, 403);
+        }
+
         $role = $this->db()->table('roles')->where('id', $id)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
         if ($role['is_system']) return $this->JSONResponse('Role sistem tidak dapat diubah', null, 400);
@@ -90,6 +98,10 @@ class Roles extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('roles', 'can_delete')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus role', null, 403);
+        }
+
         $role = $this->db()->table('roles')->where('id', $id)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
         if ($role['is_system']) return $this->JSONResponse('Role sistem tidak dapat dihapus', null, 400);
@@ -112,6 +124,10 @@ class Roles extends BaseApi
 
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('roles', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menyimpan permissions', null, 403);
+        }
 
         $role = $this->db()->table('roles')->where('id', $id)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
@@ -155,6 +171,10 @@ class Roles extends BaseApi
 
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('roles', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah status role', null, 403);
+        }
 
         $role = $this->db()->table('roles')->where('id', $id)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);

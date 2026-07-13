@@ -22,6 +22,10 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('improvements', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk membuat improvement', null, 403);
+        }
+
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $name = trim($input['name'] ?? '');
         $description = trim($input['description'] ?? '');
@@ -75,11 +79,14 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('improvements', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah improvement', null, 403);
+        }
+
         $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        $role = (int) ($user['role'] ?? 0);
+        $role = $this->getCurrentUserRole();
         if ((int) $project['created_by'] !== $userId && $role !== Enums::ADMIN) {
             return $this->JSONResponse('Hanya pembuat proyek atau admin yang dapat mengubah', null, 403);
         }
@@ -119,11 +126,14 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('improvements', 'can_delete')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus improvement', null, 403);
+        }
+
         $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        $role = (int) ($user['role'] ?? 0);
+        $role = $this->getCurrentUserRole();
         if ((int) $project['created_by'] !== $userId && $role !== Enums::ADMIN) {
             return $this->JSONResponse('Hanya pembuat proyek atau admin yang dapat menghapus', null, 403);
         }
@@ -142,6 +152,9 @@ class Projects extends BaseApi
 
     public function approve_it(string $encryptedId): ResponseInterface
     {
+        if (!$this->checkPermission('improvements', 'can_approve')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk approve improvement', null, 403);
+        }
         return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_IT, function ($project, $userId) {
             $this->db()->table('projects')->update([
                 'status'     => Enums::PROJECT_STATUS_PENDING,
@@ -168,6 +181,9 @@ class Projects extends BaseApi
 
     public function approve_dept(string $encryptedId): ResponseInterface
     {
+        if (!$this->checkPermission('improvements', 'can_approve')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk approve improvement', null, 403);
+        }
         return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_DEPT, function ($project, $userId) {
             $this->db()->table('projects')->update([
                 'status'     => Enums::PROJECT_STATUS_APPROVED,
@@ -200,6 +216,10 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('improvements', 'can_approve')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk reject improvement', null, 403);
+        }
+
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $notes = trim($input['notes'] ?? '');
 
@@ -214,12 +234,21 @@ class Projects extends BaseApi
             return $this->JSONResponse('Proyek tidak dapat di-reject pada status ini', null, 400);
         }
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user) return $this->JSONResponse('User tidak ditemukan', null, 404);
+        $role = $this->getCurrentUserRole();
+        if (!$role) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
-        $role = (int) $user['role'];
-        if ($role !== Enums::IT_MANAGER && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
-            return $this->JSONResponse('Anda tidak memiliki izin untuk reject', null, 403);
+        $projectStatus = (int) $project['status'];
+
+        if ($projectStatus === Enums::PROJECT_STATUS_DRAFT) {
+            if ($role !== Enums::IT_MANAGER && $role !== Enums::ADMIN) {
+                return $this->JSONResponse('Hanya IT Manager yang dapat me-reject pada tahap ini', null, 403);
+            }
+            $stageSeq = Enums::STAGE_PENDING_IT;
+        } else {
+            if ($role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
+                return $this->JSONResponse('Hanya Department Head yang dapat me-reject pada tahap ini', null, 403);
+            }
+            $stageSeq = Enums::STAGE_PENDING_DEPT;
         }
 
         $this->db()->transStart();
@@ -228,7 +257,6 @@ class Projects extends BaseApi
             'updated_at' => date('Y-m-d H:i:s'),
         ], ['id' => $id]);
 
-        $stageSeq = $role === Enums::IT_MANAGER ? Enums::STAGE_PENDING_IT : Enums::STAGE_PENDING_DEPT;
         $this->db()->table('approval_requests')->insert([
             'project_id'      => $id,
             'requester_id'    => $project['created_by'],
@@ -301,6 +329,10 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('improvements', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menambah komentar', null, 403);
+        }
+
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $content = trim($input['content'] ?? '');
 
@@ -338,10 +370,9 @@ class Projects extends BaseApi
         $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
-        if (!$user) return $this->JSONResponse('User tidak ditemukan', null, 404);
+        $role = $this->getCurrentUserRole();
+        if (!$role) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
-        $role = (int) $user['role'];
         if ($expectedStage === Enums::STAGE_PENDING_IT && $role !== Enums::IT_MANAGER && $role !== Enums::ADMIN) {
             return $this->JSONResponse('Hanya IT Manager yang dapat approve tahap ini', null, 403);
         }

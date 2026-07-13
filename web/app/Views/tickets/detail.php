@@ -46,11 +46,15 @@
                         <h5 style="font-size:13px;color:var(--sap-text-secondary);text-transform:uppercase;letter-spacing:0.04em">Attachments</h5>
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             <?php foreach ($ticket['attachments'] as $att): ?>
-                            <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>" target="_blank">
+                            <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
+                               class="glightbox ticket-attachment-link"
+                               data-gallery="ticket-main"
+                               data-description="<?= esc($att['filename']) ?>">
                                 <img src="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
                                      alt="<?= esc($att['filename']) ?>"
-                                     style="max-width:160px;max-height:120px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)"
-                                     class="sap-hover-lift">
+                                     style="max-width:160px;max-height:120px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border);cursor:pointer;transition:transform 0.2s ease,box-shadow 0.2s ease"
+                                     class="sap-hover-lift"
+                                     loading="lazy">
                             </a>
                             <?php endforeach; ?>
                         </div>
@@ -82,13 +86,17 @@
                             </div>
                             <div class="sap-comment-body"><?= nl2br(esc($comment['content'])) ?></div>
                             <?php if (!empty($comment['attachments'])): ?>
-                            <div class="sap-comment-images d-flex flex-wrap gap-1 mt-2">
+                            <div class="d-flex flex-wrap gap-1 mt-2">
                                 <?php foreach ($comment['attachments'] as $att): ?>
-                                <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>" target="_blank">
+                                <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
+                                   class="glightbox comment-attachment-link"
+                                   data-gallery="comment-<?= $comment['id'] ?>"
+                                   data-description="<?= esc($att['filename']) ?>">
                                     <img src="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
                                          alt="<?= esc($att['filename']) ?>"
-                                         style="max-width:100px;max-height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--sap-border)"
-                                         class="sap-hover-lift">
+                                         style="max-width:100px;max-height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--sap-border);cursor:pointer;transition:transform 0.2s ease"
+                                         class="sap-hover-lift"
+                                         loading="lazy">
                                 </a>
                                 <?php endforeach; ?>
                             </div>
@@ -122,12 +130,20 @@
                 </div>
                 <div class="sap-card-body" style="font-size:14px">
                     <dl class="row mb-0" style="gap:4px 0">
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Tracking</dt>
+                        <dd class="col-7">
+                            <div class="d-flex align-items-center gap-1">
+                                <code style="font-size:13px;background:var(--sap-background);padding:2px 8px;border-radius:4px;font-family:'SF Mono',Monaco,Consolas,monospace"><?= esc($ticket['tracking_code'] ?? '') ?></code>
+                                <button class="sap-btn sap-btn-secondary sap-btn-sm" style="padding:2px 6px;font-size:11px" onclick="copyTrackingCode('<?= esc($ticket['tracking_code'] ?? '') ?>')" title="Copy tracking code"><i class="fas fa-copy"></i></button>
+                            </div>
+                        </dd>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Creator</dt>
                         <dd class="col-7"><?= esc($ticket['creator_name'] ?? '') ?></dd>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Assignee</dt>
                         <dd class="col-7"><?= esc($ticket['assignee_name'] ?? '-') ?></dd>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Created</dt>
                         <dd class="col-7"><?= esc($ticket['created_at']) ?></dd>
+                        <?php $status = (int)($ticket['status'] ?? -1); ?>
                         <?php if (!empty($ticket['due_date'])): ?>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Due Date</dt>
                         <dd class="col-7">
@@ -179,30 +195,28 @@
                 </div>
                 <div class="sap-card-body d-flex flex-column gap-2">
                     <?php
-                    $status = (int)($ticket['status'] ?? -1);
                     $userId = session('user_id');
                     $perms = session('permissions') ?? [];
                     $ticketPerms = $perms['tickets'] ?? [];
                     $canUpdate = !empty($ticketPerms['can_update']);
-                    $canApprove = !empty($ticketPerms['can_approve']);
                     $canDelete = !empty($ticketPerms['can_delete']);
                     ?>
-                    <?php if ($status === 0 && $canApprove): ?>
+                    <?php if ($status === 0 && $canUpdate): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve')"><i class="fas fa-check"></i> Approve</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reject','Rejection note')"><i class="fas fa-times"></i> Reject</button>
                     <?php endif; ?>
-                    <?php if ($status === 1): ?>
+                    <?php if ($status === 1 && $canUpdate): ?>
                         <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
                     <?php endif; ?>
-                    <?php if ($status === 2): ?>
+                    <?php if ($status === 2 && $canUpdate): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="promptAction('resolve','Resolution note')"><i class="fas fa-check-double"></i> Resolve</button>
                     <?php endif; ?>
-                    <?php if ($status === 3): ?>
+                    <?php if ($status === 3 && $canUpdate): ?>
                         <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="doAction('close')"><i class="fas fa-lock"></i> Close</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
                     <?php endif; ?>
                     <hr class="my-1">
-                    <?php if ($canApprove): ?>
+                    <?php if ($canUpdate): ?>
                     <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="showAssignModal()"><i class="fas fa-user-plus"></i> Assign</button>
                     <?php endif; ?>
                     <?php if ($canUpdate): ?>
@@ -222,6 +236,12 @@
 <?= $this->section('scripts') ?>
 <script>
 var token = '<?= esc($token) ?>';
+
+function copyTrackingCode(code) {
+    navigator.clipboard.writeText(code).then(function() {
+        toastr.success('Tracking code copied!');
+    });
+}
 
 function doAction(action) {
     var btn = event && event.target ? $(event.target).closest('button') : null;
@@ -366,12 +386,28 @@ $(function() {
                     btn.prop('disabled', false).html('Send');
                 }
             },
-            error: function() {
-                toastr.error('Request failed');
+            error: function(xhr) {
+                var res = null;
+                try { res = JSON.parse(xhr.responseText); } catch(e) {}
+                if (res && res.redirect) {
+                    window.location.href = res.redirect;
+                    return;
+                }
+                var msg = res && res.message ? res.message : 'Request failed (HTTP ' + xhr.status + ')';
+                toastr.error(msg);
                 btn.prop('disabled', false).html('Send');
             }
         });
     });
+});
+
+// GLightbox initialization
+var ticketLightbox = GLightbox({
+    selector: '.ticket-attachment-link',
+    touchNavigation: true,
+    keyboardNavigation: true,
+    loop: false,
+    preload: true
 });
 </script>
 <?= $this->endSection() ?>

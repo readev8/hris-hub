@@ -5,9 +5,11 @@
         <h1 class="mb-1">Improvements</h1>
         <p class="text-secondary mb-0" style="font-size:13px">Feature requests and change proposals</p>
     </div>
+    <?php if (has_permission('improvements', 'can_create')): ?>
     <a href="<?= site_url('improvements/create') ?>" class="sap-btn sap-btn-primary">
         <i class="fas fa-plus"></i> New Improvement
     </a>
+    <?php endif; ?>
 </div>
 
 <div class="sap-card">

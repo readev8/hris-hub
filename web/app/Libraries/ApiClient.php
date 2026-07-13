@@ -34,6 +34,12 @@ class ApiClient
         return $this->request('POST', $url, $params);
     }
 
+    public function delete_data(string $endpoint, array $params = []): ?array
+    {
+        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
+        return $this->request('DELETE', $url, $params);
+    }
+
     private function request(string $method, string $url, ?array $data = null): ?array
     {
         $headers = [
@@ -56,6 +62,11 @@ class ApiClient
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             if ($data !== null) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            }
+        } elseif ($method === 'DELETE') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            if (!empty($data)) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
             }
         }

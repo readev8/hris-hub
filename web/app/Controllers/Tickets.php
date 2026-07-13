@@ -6,8 +6,21 @@ use CodeIgniter\HTTP\Files\UploadedFile;
 
 class Tickets extends BaseController
 {
+    private function guard(string $action = 'can_view'): bool
+    {
+        return has_permission('tickets', $action);
+    }
+
+    private function denyResponse()
+    {
+        return $this->response->setJSON(['status' => false, 'message' => 'Anda tidak memiliki izin']);
+    }
+
     public function index(): string
     {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
         return $this->view('tickets/main_page', [
             'title' => 'Tickets',
         ]);
@@ -15,6 +28,9 @@ class Tickets extends BaseController
 
     public function ajaxList()
     {
+        if (!$this->guard()) {
+            return $this->response->setJSON(['data' => [], 'recordsTotal' => 0, 'recordsFiltered' => 0]);
+        }
         $params = $this->request->getGet();
         $result = $this->api->get_data('tickets', $params);
 
@@ -33,89 +49,100 @@ class Tickets extends BaseController
 
     public function create()
     {
+        if (!$this->guard('can_create')) {
+            return $this->denyResponse();
+        }
         helper('form');
 
         if ($this->request->getMethod() === 'POST') {
-            $post = $this->request->getPost();
+            try {
+                $post = $this->request->getPost();
 
-            $post['type'] = (string) ($post['type'] ?? '');
-            $post['priority'] = (string) ($post['priority'] ?? '');
+                $post['type'] = (string) ($post['type'] ?? '');
+                $post['priority'] = (string) ($post['priority'] ?? '');
 
-            $rules = [
-                'title'       => 'required|min_length[5]|max_length[255]',
-                'description' => 'required|min_length[10]',
-                'type'        => 'required|in_list[0,1,2,3]',
-                'priority'    => 'required|in_list[0,1,2,3]',
-            ];
-            if (($post['type'] ?? '') === '0') {
-                $rules['page_id'] = 'required';
-            }
-            if (!$this->validate($rules)) {
-                log_message('error', 'Ticket create validation failed: ' . json_encode($this->validator->getErrors()) . ' POST: ' . json_encode($post));
-                return $this->response->setJSON([
-                    'status'  => false,
-                    'message' => 'Validation failed',
-                    'errors'  => $this->validator->getErrors(),
-                ]);
-            }
-
-            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-            });
-
-            $savedFiles = [];
-            if (!empty($files)) {
-                $error = $this->validateUploadedFiles($files);
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                $rules = [
+                    'title'       => 'required|min_length[5]|max_length[255]',
+                    'description' => 'required|min_length[10]',
+                    'type'        => 'required|in_list[0,1,2,3]',
+                    'priority'    => 'required|in_list[0,1,2,3]',
+                ];
+                if (($post['type'] ?? '') === '0') {
+                    $rules['page_id'] = 'required';
                 }
-                $savedFiles = $this->saveUploadedFiles($files);
-            }
+                if (!$this->validate($rules)) {
+                    log_message('error', 'Ticket create validation failed: ' . json_encode($this->validator->getErrors()) . ' POST: ' . json_encode($post));
+                    return $this->response->setJSON([
+                        'status'  => false,
+                        'message' => 'Validation failed',
+                        'errors'  => $this->validator->getErrors(),
+                    ]);
+                }
 
-            $result = $this->api->post_data('tickets/create', $post);
+                $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
 
-            if (!$result) {
-                log_message('error', 'Ticket create API unreachable for data: ' . json_encode($post));
-                return $this->response->setJSON([
-                    'status'  => false,
-                    'message' => 'Server API tidak terjangkau',
-                ]);
-            }
+                $savedFiles = [];
+                if (!empty($files)) {
+                    $error = $this->validateUploadedFiles($files);
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                }
 
-            if ($result['status'] ?? false) {
-                $ticketId = $result['data']['result']['id'] ?? null;
-                $trackingCode = $result['data']['result']['tracking_code'] ?? null;
+                $result = $this->api->post_data('tickets/create', $post);
 
-                if ($ticketId && !empty($savedFiles)) {
-                    foreach ($savedFiles as $sf) {
-                        $attResult = $this->api->post_data('tickets/' . $ticketId . '/attachments', $sf);
-                        if (!$attResult || !($attResult['status'] ?? false)) {
-                            $this->deleteUploadedFiles($savedFiles);
-                            log_message('error', 'Ticket attachment metadata save failed for ' . $ticketId);
-                            return $this->response->setJSON([
-                                'status'  => false,
-                                'message' => 'Gagal menyimpan metadata lampiran',
-                            ]);
+                if (!$result) {
+                    log_message('error', 'Ticket create API unreachable for data: ' . json_encode($post));
+                    return $this->response->setJSON([
+                        'status'  => false,
+                        'message' => 'Server API tidak terjangkau',
+                    ]);
+                }
+
+                if ($result['status'] ?? false) {
+                    $ticketId = $result['data']['result']['id'] ?? null;
+                    $trackingCode = $result['data']['result']['tracking_code'] ?? null;
+
+                    if ($ticketId && !empty($savedFiles)) {
+                        foreach ($savedFiles as $sf) {
+                            $attResult = $this->api->post_data('tickets/' . $ticketId . '/attachments', $sf);
+                            if (!$attResult || !($attResult['status'] ?? false)) {
+                                $this->deleteUploadedFiles($savedFiles);
+                                log_message('error', 'Ticket attachment metadata save failed for ' . $ticketId);
+                                return $this->response->setJSON([
+                                    'status'  => false,
+                                    'message' => 'Gagal menyimpan metadata lampiran',
+                                ]);
+                            }
                         }
                     }
+
+                    return $this->response->setJSON([
+                        'status'        => true,
+                        'redirect'      => site_url('tickets'),
+                        'tracking_code' => $trackingCode,
+                    ]);
                 }
 
+                if (!empty($savedFiles)) {
+                    $this->deleteUploadedFiles($savedFiles);
+                }
+
+                log_message('error', 'Tickets create API failed: ' . json_encode($result));
                 return $this->response->setJSON([
-                    'status'        => true,
-                    'redirect'      => site_url('tickets'),
-                    'tracking_code' => $trackingCode,
+                    'status'  => false,
+                    'message' => $result['data']['message'] ?? 'Failed to create ticket',
+                ]);
+            } catch (\Throwable $e) {
+                log_message('error', 'Ticket create exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+                return $this->response->setJSON([
+                    'status'  => false,
+                    'message' => 'Terjadi kesalahan server: ' . $e->getMessage(),
                 ]);
             }
-
-            if (!empty($savedFiles)) {
-                $this->deleteUploadedFiles($savedFiles);
-            }
-
-            log_message('error', 'Tickets create API failed: ' . json_encode($result));
-            return $this->response->setJSON([
-                'status'  => false,
-                'message' => $result['data']['message'] ?? 'Failed to create ticket',
-            ]);
         }
 
         return $this->view('tickets/create', ['title' => 'Create Ticket']);
@@ -123,7 +150,17 @@ class Tickets extends BaseController
 
     public function update(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $post = $this->request->getPost();
+        if (empty($post)) {
+            $rawBody = $this->request->getBody();
+            $decoded = json_decode($rawBody, true);
+            if (is_array($decoded)) {
+                $post = $decoded;
+            }
+        }
 
         $rules = [
             'title'       => 'permit_empty|min_length[5]|max_length[255]',
@@ -150,6 +187,9 @@ class Tickets extends BaseController
 
     public function delete(string $encryptedId)
     {
+        if (!$this->guard('can_delete')) {
+            return $this->denyResponse();
+        }
         $result = $this->api->post_data('tickets/' . $encryptedId . '/delete');
 
         if (!$result || !($result['status'] ?? false)) {
@@ -161,6 +201,9 @@ class Tickets extends BaseController
 
     public function assign(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $post = $this->request->getPost();
 
         if (empty($post['assignee_id'])) {
@@ -178,6 +221,9 @@ class Tickets extends BaseController
 
     public function detail(string $encryptedId): string
     {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
         $result = $this->api->get_data('tickets/' . $encryptedId);
 
         if (!$result || !($result['status'] ?? false)) {
@@ -193,6 +239,9 @@ class Tickets extends BaseController
 
     public function edit(string $encryptedId): string
     {
+        if (!$this->guard('can_update')) {
+            return redirect()->to('/dashboard');
+        }
         $result = $this->api->get_data('tickets/' . $encryptedId);
 
         if (!$result || !($result['status'] ?? false)) {
@@ -208,6 +257,9 @@ class Tickets extends BaseController
 
     public function take(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $result = $this->api->post_data('tickets/' . $encryptedId . '/take');
 
         if (!$result || !($result['status'] ?? false)) {
@@ -219,6 +271,9 @@ class Tickets extends BaseController
 
     public function resolve(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $data = $this->request->getPost();
 
         if (empty(trim($data['resolution_note'] ?? ''))) {
@@ -236,6 +291,9 @@ class Tickets extends BaseController
 
     public function close(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $result = $this->api->post_data('tickets/' . $encryptedId . '/close');
 
         if (!$result || !($result['status'] ?? false)) {
@@ -247,6 +305,9 @@ class Tickets extends BaseController
 
     public function reopen(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $data = $this->request->getPost();
 
         if (empty(trim($data['rejection_note'] ?? ''))) {
@@ -264,6 +325,9 @@ class Tickets extends BaseController
 
     public function approve(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $result = $this->api->post_data('tickets/' . $encryptedId . '/approve');
 
         if (!$result || !($result['status'] ?? false)) {
@@ -275,6 +339,9 @@ class Tickets extends BaseController
 
     public function reject(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $data = $this->request->getPost();
 
         if (empty(trim($data['rejection_note'] ?? ''))) {
@@ -292,6 +359,9 @@ class Tickets extends BaseController
 
     public function addComment(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $content = $this->request->getPost('content');
 
         if (empty(trim($content ?? ''))) {
@@ -345,6 +415,9 @@ class Tickets extends BaseController
 
     public function uploadAttachment(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
             return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
         });
@@ -399,8 +472,23 @@ class Tickets extends BaseController
             ->setBody(file_get_contents($filePath));
     }
 
+    public function deleteAttachment(string $encryptedId)
+    {
+        if (!$this->guard('can_delete')) {
+            return $this->denyResponse();
+        }
+        $result = $this->api->delete_data('attachments/' . $encryptedId);
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets deleteAttachment API failed for ' . $encryptedId . ': ' . json_encode($result));
+        }
+        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+    }
+
     public function move(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $post = $this->request->getPost();
 
         if (!isset($post['new_status'])) {

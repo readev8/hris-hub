@@ -3,6 +3,7 @@
 namespace App\Controllers\Tickets\Action;
 
 use App\Controllers\BaseApi;
+use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class Attachments extends BaseApi
@@ -22,6 +23,10 @@ class Attachments extends BaseApi
         $ticket = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray();
         if (!$ticket) {
             return $this->JSONResponse('Tiket tidak ditemukan', null, 404);
+        }
+
+        if (!$this->checkTicketOwnership($ticketId)) {
+            return $this->JSONResponse('Anda tidak memiliki akses ke ticket ini', null, 403);
         }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -77,9 +82,26 @@ class Attachments extends BaseApi
             return $this->JSONResponse('ID tidak valid', null, 400);
         }
 
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            return $this->JSONResponse('Unauthorized', null, 401);
+        }
+
         $attachment = $this->db()->table('ticket_attachments')->where('id', $id)->get()->getRowArray();
         if (!$attachment) {
             return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);
+        }
+
+        // Check ownership: uploader, ticket creator, or admin
+        $isUploader = (int)$attachment['uploaded_by'] === $userId;
+        $isTicketCreator = $this->db()->table('tickets')
+            ->where('id', $attachment['ticket_id'])
+            ->where('creator_id', $userId)
+            ->countAllResults() > 0;
+        $isAdmin = $this->getCurrentUserRole() === Enums::ADMIN;
+
+        if (!$isUploader && !$isTicketCreator && !$isAdmin) {
+            return $this->JSONResponse('Anda tidak memiliki akses untuk menghapus lampiran ini', null, 403);
         }
 
         $this->db()->table('ticket_attachments')->delete(['id' => $id]);

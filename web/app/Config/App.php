@@ -206,5 +206,5 @@ class App extends BaseConfig
      * Asset version for cache busting
      * Update this on each deploy to force browsers to fetch new files
      */
-    public string $assetVersion = '1.0.4';
+    public string $assetVersion = '1.0.6';
 }

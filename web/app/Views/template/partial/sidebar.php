@@ -1,32 +1,43 @@
 <?php
 $perms = session('permissions') ?? [];
-$canApprove = !empty($perms['approvals']['can_view']);
-$canUsers = !empty($perms['users']['can_view']);
+$canDashboard      = !empty($perms['dashboard']['can_view']);
+$canTickets        = !empty($perms['tickets']['can_view']);
+$canImprovements   = !empty($perms['improvements']['can_view']);
+$canApprove        = !empty($perms['approvals']['can_view']);
+$canUsers          = !empty($perms['users']['can_view']);
 $canMasterProjects = !empty($perms['master_projects']['can_view']);
-$canRoles = !empty($perms['roles']['can_view']);
+$canRoles          = !empty($perms['roles']['can_view']);
 ?>
 <aside class="sidebar">
+    <?php if ($canDashboard || $canTickets || $canImprovements): ?>
     <div class="sidebar-group-label">Main Menu</div>
     <ul class="sidebar-nav">
+        <?php if ($canDashboard): ?>
         <li>
             <a href="<?= site_url('dashboard') ?>">
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
         </li>
+        <?php endif; ?>
+        <?php if ($canTickets): ?>
         <li>
             <a href="<?= site_url('tickets') ?>">
                 <i class="fas fa-ticket"></i>
                 <span>Tickets</span>
             </a>
         </li>
+        <?php endif; ?>
+        <?php if ($canImprovements): ?>
         <li>
             <a href="<?= site_url('improvements') ?>">
                 <i class="fas fa-rocket"></i>
                 <span>Improvements</span>
             </a>
         </li>
+        <?php endif; ?>
     </ul>
+    <?php endif; ?>
 
     <?php if ($canApprove || $canUsers || $canMasterProjects || $canRoles): ?>
     <div class="sidebar-group-label">Management</div>

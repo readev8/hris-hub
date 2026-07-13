@@ -38,6 +38,14 @@ class TicketsCheck_model
                 Enums::TICKET_STATUS_OPEN   => $isCreator || $userRole === Enums::REQUESTER,
                 default => false,
             },
+            Enums::TICKET_STATUS_CLOSED => match ($target) {
+                Enums::TICKET_STATUS_OPEN => $isCreator || $userRole === Enums::REQUESTER || $userRole === Enums::ADMIN,
+                default => false,
+            },
+            Enums::TICKET_STATUS_REJECTED => match ($target) {
+                Enums::TICKET_STATUS_OPEN => $isCreator || $userRole === Enums::ADMIN,
+                default => false,
+            },
             default => false,
         };
     }

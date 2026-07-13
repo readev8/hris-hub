@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.14.5/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/glightbox/3.3.1/css/glightbox.min.css">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css?v=' . config('App')->assetVersion) ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/animations.css?v=' . config('App')->assetVersion) ?>">
     <?= $this->renderSection('styles') ?>
@@ -56,6 +57,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/glightbox/3.3.1/js/glightbox.min.js"></script>
 
     <script>
         var base_url = '<?= rtrim(base_url(), '/') ?>';
@@ -153,6 +155,31 @@
                 $('.shell-bar').removeClass('scrolled');
             }
         });
+    });
+
+    // Global AJAX 403 handler — refresh permissions on forbidden
+    $(document).on('ajaxError', function(event, jqXHR, settings, thrownError) {
+        if (jqXHR.status === 403) {
+            var msg = 'Anda tidak memiliki izin untuk aksi ini';
+            try {
+                var res = JSON.parse(jqXHR.responseText);
+                if (res.data && res.data.message) msg = res.data.message;
+            } catch(e) {}
+
+            if (!window._permRefreshing) {
+                window._permRefreshing = true;
+                toastr.error(msg);
+                $.post(site_url + '/auth/refresh-permissions', function(res) {
+                    if (res.status) {
+                        userPermissions = res.permissions;
+                        toastr.info('Permissions diperbarui. Memuat ulang...');
+                        setTimeout(function() { location.reload(); }, 1500);
+                    }
+                }).always(function() {
+                    window._permRefreshing = false;
+                });
+            }
+        }
     });
     </script>
 

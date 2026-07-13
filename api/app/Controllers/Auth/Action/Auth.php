@@ -31,10 +31,8 @@ class Auth extends BaseApi
 
         unset($user['password']);
         $user['token'] = $this->api->encryptId($user['id']);
-        $user['role_name'] = \App\Config\Enums::roleName($user['role']);
-
-        // Use role_id if available, fallback to role int
         $user['role_id'] = $user['role_id'] ?? $user['role'];
+        $user['role_name'] = \App\Config\Enums::roleName((int) $user['role_id']);
 
         // Load permissions for session (graceful if table doesn't exist yet)
         $permissions = [];
@@ -83,7 +81,11 @@ class Auth extends BaseApi
 
         unset($user['password']);
         $user['token'] = $this->api->encryptId($user['id']);
-        $user['role_name'] = \App\Config\Enums::roleName($user['role']);
+        $user['role_id'] = $user['role_id'] ?? $user['role'];
+        $user['role_name'] = \App\Config\Enums::roleName((int) $user['role_id']);
+
+        $permModel = new \App\Models\Roles\PermissionCheck_model();
+        $user['permissions'] = $permModel->getUserPermissions($userId);
 
         return $this->JSONResponse('OK', $user, 200);
     }

@@ -6,8 +6,21 @@ use CodeIgniter\HTTP\Files\UploadedFile;
 
 class Improvements extends BaseController
 {
+    private function guard(string $action = 'can_view'): bool
+    {
+        return has_permission('improvements', $action);
+    }
+
+    private function denyResponse()
+    {
+        return $this->response->setJSON(['status' => false, 'message' => 'Anda tidak memiliki izin']);
+    }
+
     public function index(): string
     {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
         return $this->view('improvements/main_page', [
             'title' => 'Improvements',
         ]);
@@ -15,6 +28,9 @@ class Improvements extends BaseController
 
     public function ajaxList()
     {
+        if (!$this->guard()) {
+            return $this->response->setJSON(['data' => [], 'recordsTotal' => 0, 'recordsFiltered' => 0]);
+        }
         $params = $this->request->getGet();
         $result = $this->api->get_data('improvements', $params);
 
@@ -33,6 +49,9 @@ class Improvements extends BaseController
 
     public function create()
     {
+        if (!$this->guard('can_create')) {
+            return $this->denyResponse();
+        }
         helper('form');
 
         if ($this->request->getMethod() === 'POST') {
@@ -101,6 +120,9 @@ class Improvements extends BaseController
 
     public function detail(string $encryptedId): string
     {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
         $result = $this->api->get_data('improvements/' . $encryptedId);
 
         if (!$result || !($result['status'] ?? false)) {
@@ -116,6 +138,9 @@ class Improvements extends BaseController
 
     public function edit(string $encryptedId): string
     {
+        if (!$this->guard('can_update')) {
+            return redirect()->to('/dashboard');
+        }
         $result = $this->api->get_data('improvements/' . $encryptedId);
 
         if (!$result || !($result['status'] ?? false)) {
@@ -131,6 +156,9 @@ class Improvements extends BaseController
 
     public function update(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $post = $this->request->getPost();
 
         $validationRules = [
@@ -158,6 +186,9 @@ class Improvements extends BaseController
 
     public function delete(string $encryptedId)
     {
+        if (!$this->guard('can_delete')) {
+            return $this->denyResponse();
+        }
         $detail = $this->api->get_data('improvements/' . $encryptedId);
         $attachments = $detail['data']['result']['attachments'] ?? [];
 
@@ -176,6 +207,9 @@ class Improvements extends BaseController
 
     public function uploadAttachment(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $files = $this->request->getFileMultiple('images') ?? [];
         if (empty($files)) {
             return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
@@ -230,6 +264,9 @@ class Improvements extends BaseController
 
     public function approveIt(string $encryptedId)
     {
+        if (!$this->guard('can_approve')) {
+            return $this->denyResponse();
+        }
         $result = $this->api->post_data('improvements/' . $encryptedId . '/approve-it');
 
         if (!$result || !($result['status'] ?? false)) {
@@ -241,6 +278,9 @@ class Improvements extends BaseController
 
     public function approveDept(string $encryptedId)
     {
+        if (!$this->guard('can_approve')) {
+            return $this->denyResponse();
+        }
         $result = $this->api->post_data('improvements/' . $encryptedId . '/approve-dept');
 
         if (!$result || !($result['status'] ?? false)) {
@@ -252,6 +292,9 @@ class Improvements extends BaseController
 
     public function reject(string $encryptedId)
     {
+        if (!$this->guard('can_approve')) {
+            return $this->denyResponse();
+        }
         $data = $this->request->getPost();
 
         if (empty($data['notes'])) {
@@ -269,6 +312,9 @@ class Improvements extends BaseController
 
     public function resubmit(string $encryptedId)
     {
+        if (!$this->guard('can_create')) {
+            return $this->denyResponse();
+        }
         $data = $this->request->getPost();
         $result = $this->api->post_data('improvements/' . $encryptedId . '/resubmit', $data);
 
@@ -281,6 +327,9 @@ class Improvements extends BaseController
 
     public function addComment(string $encryptedId)
     {
+        if (!$this->guard('can_update')) {
+            return $this->denyResponse();
+        }
         $data = $this->request->getPost();
 
         if (empty(trim($data['content'] ?? ''))) {
