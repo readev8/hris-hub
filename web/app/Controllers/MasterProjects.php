@@ -80,6 +80,35 @@ class MasterProjects extends BaseController
         ]);
     }
 
+    public function moduleDetail(string $encryptedProjectId, string $encryptedModuleId)
+    {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
+
+        // Fetch project for breadcrumb and header
+        $projectResult = $this->api->get_data('master-projects/' . $encryptedProjectId);
+        $project = $projectResult['data']['result'] ?? null;
+
+        if (!$project) {
+            return redirect()->to('/master-projects');
+        }
+
+        // Fetch module detail from new API endpoint
+        $moduleResult = $this->api->get_data('modules/' . $encryptedModuleId);
+        $module = $moduleResult['data']['result'] ?? null;
+
+        if (!$module) {
+            return redirect()->to('/master-projects/' . $encryptedProjectId);
+        }
+
+        return $this->view('master-projects/module_detail', [
+            'title'   => esc($module['name']),
+            'project' => $project,
+            'module'  => $module,
+        ]);
+    }
+
     public function update(string $encryptedId)
     {
         if (!$this->guard('can_update')) {
@@ -89,6 +118,35 @@ class MasterProjects extends BaseController
         $post = $this->request->getPost();
         $result = $this->api->post_data('master-projects/' . $encryptedId . '/update', $post);
         return $this->response->setJSON($result);
+    }
+
+    public function edit(string $encryptedId)
+    {
+        if (!$this->guard('can_update')) {
+            return redirect()->to('/dashboard');
+        }
+
+        if ($this->request->getMethod() === 'POST') {
+            $post = $this->request->getPost();
+            $result = $this->api->post_data('master-projects/' . $encryptedId . '/update', $post);
+
+            if ($result && ($result['status'] ?? false)) {
+                return $this->response->setJSON([
+                    'status'   => true,
+                    'redirect' => site_url('master-projects/' . $encryptedId),
+                ]);
+            }
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => $result['data']['message'] ?? 'Failed to update',
+            ]);
+        }
+
+        $result = $this->api->get_data('master-projects/' . $encryptedId);
+        return $this->view('master-projects/edit', [
+            'title'   => 'Edit Master Project',
+            'project' => $result['data']['result'] ?? null,
+        ]);
     }
 
     public function delete(string $encryptedId)

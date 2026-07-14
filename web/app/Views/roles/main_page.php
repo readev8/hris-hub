@@ -97,6 +97,9 @@ function loadRoles() {
         dataType: 'json',
         success: function(res) {
             renderRolesTable(res.data || []);
+        },
+        error: function(xhr) {
+            toastr.error('Gagal memuat daftar role (HTTP ' + xhr.status + ')');
         }
     });
 }
@@ -162,6 +165,8 @@ $('#roleForm').on('submit', function(e) {
         } else {
             toastr.error(res.data?.message || 'Failed');
         }
+    }).fail(function(xhr) {
+        toastr.error('Gagal menyimpan role (HTTP ' + xhr.status + ')');
     });
 });
 
@@ -179,6 +184,8 @@ function deleteRole(id) {
             $.post(site_url + '/roles/' + id + '/delete', function(res) {
                 if (res.status) { toastr.success('Role deleted'); loadRoles(); }
                 else { toastr.error(res.data?.message || 'Failed'); }
+            }).fail(function(xhr) {
+                toastr.error('Gagal menghapus role (HTTP ' + xhr.status + ')');
             });
         }
     });
@@ -188,6 +195,8 @@ function toggleRole(id) {
     $.post(site_url + '/roles/' + id + '/toggle', function(res) {
         if (res.status) { toastr.success(res.data?.message || 'Updated'); loadRoles(); }
         else { toastr.error(res.data?.message || 'Failed'); }
+    }).fail(function(xhr) {
+        toastr.error('Gagal mengubah status role (HTTP ' + xhr.status + ')');
     });
 }
 

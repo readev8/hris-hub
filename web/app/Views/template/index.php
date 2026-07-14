@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'Project Management' ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.14.5/sweetalert2.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/glightbox/3.3.1/css/glightbox.min.css">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/fonts/plus-jakarta-sans.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/bootstrap/5.3.3/css/bootstrap.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/font-awesome/6.6.0/css/all.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/datatables/1.13.6/css/jquery.dataTables.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/datatables/1.13.6/css/dataTables.bootstrap5.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/datatables-responsive/2.5.0/css/responsive.bootstrap5.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/datatables-buttons/2.4.2/css/buttons.bootstrap5.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/toastr/2.1.4/css/toastr.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/sweetalert2/11.14.5/css/sweetalert2.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/select2/4.1.0-rc.0/css/select2.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= base_url('public/vendor/glightbox/3.3.1/css/glightbox.min.css?v=' . config('App')->assetVersion) ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css?v=' . config('App')->assetVersion) ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/animations.css?v=' . config('App')->assetVersion) ?>">
     <?= $this->renderSection('styles') ?>
@@ -37,27 +36,27 @@
 
     <input type="hidden" id="i" value="<?= csrf_token() ?>">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.14.5/sweetalert2.all.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/glightbox/3.3.1/js/glightbox.min.js"></script>
+    <script src="<?= base_url('public/vendor/jquery/3.7.1/jquery.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables/1.13.6/js/jquery.dataTables.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables/1.13.6/js/dataTables.bootstrap5.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables-responsive/2.5.0/js/dataTables.responsive.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables-responsive/2.5.0/js/responsive.bootstrap5.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables-buttons/2.4.2/js/dataTables.buttons.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables-buttons/2.4.2/js/buttons.bootstrap5.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables-buttons/2.4.2/js/buttons.html5.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables-buttons/2.4.2/js/buttons.print.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/datatables-buttons/2.4.2/js/buttons.colVis.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/jszip/3.10.1/jszip.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/pdfmake/0.2.7/pdfmake.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/pdfmake/0.2.7/vfs_fonts.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/chart.js/4.4.0/chart.umd.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/toastr/2.1.4/js/toastr.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/sweetalert2/11.14.5/js/sweetalert2.all.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/select2/4.1.0-rc.0/js/select2.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/sortablejs/1.15.6/Sortable.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= base_url('public/vendor/glightbox/3.3.1/js/glightbox.min.js?v=' . config('App')->assetVersion) ?>"></script>
 
     <script>
         var base_url = '<?= rtrim(base_url(), '/') ?>';

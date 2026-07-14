@@ -19,6 +19,7 @@ class RoleList extends BaseApi
         foreach ($roles as $r) {
             $userCount = $this->db()->table('users')->where('role_id', $r['id'])->countAllResults();
             $result[] = [
+                'raw_id'      => (int) $r['id'],
                 'id'          => $this->api->encryptId($r['id']),
                 'name'        => $r['name'],
                 'slug'        => $r['slug'],

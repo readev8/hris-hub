@@ -62,6 +62,14 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
 
     $routes->get('/users', 'Users::index');
     $routes->get('/users/ajax-list', 'Users::ajaxList');
+    $routes->get('/users/add', 'Users::addUserPage');
+    $routes->post('/users/ajax-lookup', 'Users::ajaxLookupUser');
+    $routes->post('/users/ajax-add-by-userid', 'Users::ajaxAddByUserid');
+    $routes->get('/users/ajax-detail', 'Users::ajaxDetail');
+    $routes->get('/users/ajax-search-hris', 'Users::ajaxSearchHris');
+    $routes->post('/users/ajax-update', 'Users::ajaxUpdate');
+    $routes->post('/users/ajax-toggle', 'Users::ajaxToggle');
+    $routes->post('/users/ajax-delete', 'Users::ajaxDelete');
 
     // Master Projects — static routes must precede wildcards
     $routes->get('/master-projects',              'MasterProjects::index');
@@ -75,7 +83,10 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/master-projects/(:any)/update','MasterProjects::update/$1');
     $routes->post('/master-projects/(:any)/delete','MasterProjects::delete/$1');
     $routes->post('/master-projects/(:any)/modules','MasterProjects::createModule/$1');
-    $routes->get('/master-projects/(:any)',       'MasterProjects::detail/$1');
+    $routes->get('/master-projects/(:any)/edit',  'MasterProjects::edit/$1');
+    $routes->post('/master-projects/(:any)/edit', 'MasterProjects::edit/$1');
+    $routes->get('/master-projects/(:any)/modules/(:any)', 'MasterProjects::moduleDetail/$1/$2');
+    $routes->get('/master-projects/(:any)',        'MasterProjects::detail/$1');
     $routes->post('/modules/(:any)/update',       'MasterProjects::updateModule/$1');
     $routes->post('/modules/(:any)/delete',       'MasterProjects::deleteModule/$1');
     $routes->post('/modules/(:any)/pages',        'MasterProjects::createPage/$1');

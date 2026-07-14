@@ -356,11 +356,8 @@ $(document).ready(function () {
   };
   // Log initialization for debugging
   if (typeof console !== "undefined" && console.log) {
-    console.log(
-      "✅ Button selectors initialized:",
-      Object.keys(CONSTANTS.BUTTON_SELECTORS).length,
-      "buttons"
-    );
+    // Debug logging removed for production
+  }
   }
 });
 

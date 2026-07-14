@@ -137,6 +137,8 @@ function saveAllPermissions() {
         } else {
             toastr.error(res.data?.message || 'Failed to save permissions');
         }
+    }).fail(function(xhr) {
+        toastr.error('Gagal menyimpan permissions (HTTP ' + xhr.status + ')');
     });
 }
 

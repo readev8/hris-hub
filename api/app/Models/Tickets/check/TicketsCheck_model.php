@@ -30,7 +30,7 @@ class TicketsCheck_model
                 default => false,
             },
             Enums::TICKET_STATUS_RESOLVED => match ($target) {
-                Enums::TICKET_STATUS_CLOSED => $isAssignee,
+                Enums::TICKET_STATUS_CLOSED => $isCreator,
                 Enums::TICKET_STATUS_OPEN   => $isCreator || $userRole === Enums::REQUESTER,
                 default => false,
             },

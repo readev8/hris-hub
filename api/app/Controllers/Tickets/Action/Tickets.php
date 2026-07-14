@@ -134,9 +134,9 @@ class Tickets extends BaseApi
         $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
-        $assigneeId = $ticket['assignee_id'] ? (int) $ticket['assignee_id'] : null;
-        if ($assigneeId !== $userId && $this->getCurrentUserRole() !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya assignee yang dapat menutup ticket ini', null, 403);
+        $creatorId = (int) $ticket['creator_id'];
+        if ($creatorId !== $userId && $this->getCurrentUserRole() !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya pembuat ticket yang dapat menutup ticket ini', null, 403);
         }
 
         return $this->transition($id, Enums::TICKET_STATUS_CLOSED, function ($ticket, $userId) {

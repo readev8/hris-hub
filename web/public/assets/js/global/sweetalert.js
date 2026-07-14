@@ -144,7 +144,6 @@ $(document).ready(function () {
   window.closeLoading = function () {
     if (chartFinish >= chartCount) {
       swal.close();
-      console.log(new Date().toLocaleTimeString());
       // console.log(chartCount);
       // console.log(chartFinish);
       // console.log("##");

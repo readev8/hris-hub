@@ -115,7 +115,13 @@ class Improvements extends BaseController
             ]);
         }
 
-        return $this->view('improvements/create', ['title' => 'Create Improvement']);
+        $usersResult = $this->api->get_data('users');
+        $usersList = $usersResult['data']['result'] ?? [];
+
+        return $this->view('improvements/create', [
+            'title' => 'Create Improvement',
+            'users' => $usersList,
+        ]);
     }
 
     public function detail(string $encryptedId): string
@@ -147,10 +153,14 @@ class Improvements extends BaseController
             log_message('error', 'Improvements edit API failed for ' . $encryptedId . ': ' . json_encode($result));
         }
 
+        $usersResult = $this->api->get_data('users');
+        $usersList = $usersResult['data']['result'] ?? [];
+
         return $this->view('improvements/edit', [
             'title'       => 'Edit Improvement',
             'improvement' => $result['data']['result'] ?? null,
             'token'       => $encryptedId,
+            'users'       => $usersList,
         ]);
     }
 
@@ -347,8 +357,8 @@ class Improvements extends BaseController
 
     private function validateUploadedFiles(array $files): ?string
     {
-        $maxFiles = 3;
-        $maxSize  = 5 * 1024 * 1024;
+        $maxFiles = 5;
+        $maxSize  = 500 * 1024;
         $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
         if (count($files) > $maxFiles) {
@@ -366,7 +376,7 @@ class Improvements extends BaseController
             }
 
             if ($file->getSize() > $maxSize) {
-                return 'File ' . $file->getClientName() . ' melebihi batas ' . ($maxSize / 1024 / 1024) . 'MB';
+                return 'File ' . $file->getClientName() . ' melebihi batas ' . ($maxSize / 1024) . 'KB';
             }
         }
 

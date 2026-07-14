@@ -164,6 +164,44 @@ class Roles extends BaseApi
         return $this->JSONResponse('Permissions berhasil disimpan');
     }
 
+    /**
+     * Get permissions by raw role_id (not encrypted).
+     * Called by web Auth controller during login flow.
+     * Requires API key auth but NOT user auth.
+     */
+    public function get_permissions_by_id(string $roleId): ResponseInterface
+    {
+        $id = (int) $roleId;
+        if ($id <= 0) {
+            return $this->JSONResponse('ID tidak valid', null, 400);
+        }
+
+        $permissions = [];
+        try {
+            if ($this->db()->tableExists('role_permissions')) {
+                $permissions = $this->db()->table('role_permissions')
+                    ->where('role_id', $id)
+                    ->get()
+                    ->getResultArray();
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Permissions load failed: ' . $e->getMessage());
+        }
+
+        $permMap = [];
+        foreach ($permissions as $p) {
+            $permMap[$p['module_slug']] = [
+                'can_view'    => (int) $p['can_view'],
+                'can_create'  => (int) $p['can_create'],
+                'can_update'  => (int) $p['can_update'],
+                'can_delete'  => (int) $p['can_delete'],
+                'can_approve' => (int) $p['can_approve'],
+            ];
+        }
+
+        return $this->JSONResponse('OK', $permMap, 200);
+    }
+
     public function toggle_active(string $encryptedId): ResponseInterface
     {
         $id = $this->resolveId($encryptedId);

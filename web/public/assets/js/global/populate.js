@@ -21,7 +21,6 @@ $.populateSelect2MultiSelect = function (
   placeholder = null,
   preserveSelection = false,
 ) {
-  console.log(data);
   const idSelector = id.startsWith("#") ? id : "#" + id;
   const $element = $(idSelector);
 
@@ -88,7 +87,6 @@ $.populateSelect2MultiSelect = function (
 
 var select2_checkbox_clicked = false;
 $(document).on("click", ".select2-results__option", function (e) {
-  console.log("row clicked");
   if (!select2_checkbox_clicked) {
     var checkbox = $(this).find("input");
     if (checkbox.prop("checked")) {
@@ -105,7 +103,6 @@ $(document).on(
   function (e) {
     select2_checkbox_clicked = true;
     // e.preventDefault();
-    console.log("checkbox clicked");
   },
 );
 // Fungsi tambahan untuk update data tanpa destroy
@@ -176,7 +173,6 @@ $.populateRadioButton = function (panelid, data) {
 };
 $.populateError = function (data) {
   // data error menggunakan standard error dari code igniter 4
-  console.log(data);
   $(".error-notification").remove();
   var total = 0;
   for (const key in data) {

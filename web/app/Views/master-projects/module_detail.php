@@ -1,12 +1,10 @@
 <?= $this->extend('template/index') ?>
 <?= $this->section('styles') ?>
 <style>
-/* Tab pane */
 .tab-pane-container { position: relative; }
 .tab-content { animation: fadeTabIn 250ms ease; }
 @keyframes fadeTabIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Kanban Board */
 .kanban-board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -59,53 +57,50 @@
     font-size: 11px;
     font-weight: 700;
     padding: 2px 8px;
-    border-radius: var(--sap-radius-pill);
-    min-width: 24px;
-    text-align: center;
+    border-radius: 99px;
 }
 
 .kanban-cards {
     padding: 10px;
-    min-height: 100px;
+    min-height: 120px;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-/* Kanban Card */
 .kanban-card {
     background: var(--sap-surface);
-    border: 1px solid var(--sap-border);
+    border: 1px solid var(--sap-border-light);
     border-radius: var(--sap-radius);
-    padding: 12px 14px;
+    padding: 12px;
     cursor: grab;
-    transition: box-shadow var(--sap-transition), transform var(--sap-transition), border-color var(--sap-transition);
+    transition: all var(--sap-transition);
     position: relative;
 }
 .kanban-card:hover {
-    box-shadow: var(--sap-shadow);
     border-color: var(--sap-brand);
+    box-shadow: var(--sap-shadow-sm);
+    transform: translateY(-1px);
 }
-.kanban-card:active {
-    cursor: grabbing;
-    box-shadow: var(--sap-shadow-lg);
-    transform: rotate(1.5deg) scale(1.02);
-}
-
+.kanban-card:active { cursor: grabbing; }
 .kanban-card.sortable-ghost {
     opacity: 0.4;
     border: 2px dashed var(--sap-brand);
+    background: var(--sap-brand-light);
 }
-
 .kanban-card.sortable-chosen {
-    box-shadow: var(--sap-shadow-xl);
-    z-index: 10;
+    box-shadow: var(--sap-shadow-lg);
+    border-color: var(--sap-brand);
+}
+.kanban-card.sortable-drag {
+    opacity: 0.9;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
 .kanban-card-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 8px;
 }
 
@@ -115,95 +110,61 @@
     border-radius: 50%;
     flex-shrink: 0;
 }
-.kanban-priority-dot.critical { background: var(--sap-critical); box-shadow: 0 0 0 2px rgba(220,38,38,0.2); }
-.kanban-priority-dot.high { background: var(--sap-high); }
-.kanban-priority-dot.medium { background: var(--sap-medium); }
-.kanban-priority-dot.low { background: var(--sap-low); }
+.kanban-priority-dot.critical { background: #DC2626; }
+.kanban-priority-dot.high { background: #F97316; }
+.kanban-priority-dot.medium { background: #EAB308; }
+.kanban-priority-dot.low { background: #22C55E; }
 
 .kanban-type-badge {
     font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: var(--sap-radius-pill);
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
 }
-.kanban-type-badge.bug { background: var(--sap-error-bg); color: var(--sap-error); }
-.kanban-type-badge.issue { background: var(--sap-warning-bg); color: var(--sap-warning); }
-.kanban-type-badge.task { background: var(--sap-info-bg); color: var(--sap-info); }
-.kanban-type-badge.change-request { background: var(--sap-success-bg); color: var(--sap-success); }
+.kanban-type-badge.bug { background: #FEE2E2; color: #991B1B; }
+.kanban-type-badge.issue { background: #FEF3C7; color: #92400E; }
+.kanban-type-badge.change-request { background: #DBEAFE; color: #1E40AF; }
+.kanban-type-badge.task { background: #E0E7FF; color: #3730A3; }
 
 .kanban-card-title {
     font-size: 13px;
     font-weight: 600;
-    color: var(--sap-text);
     line-height: 1.4;
     margin-bottom: 8px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 .kanban-card-title a {
-    color: inherit;
+    color: var(--sap-text);
     text-decoration: none;
-    transition: color var(--sap-transition);
 }
-.kanban-card-title a:hover { color: var(--sap-brand); }
+.kanban-card-title a:hover {
+    color: var(--sap-brand);
+}
 
 .kanban-card-meta {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     font-size: 11px;
-    color: var(--sap-text-muted);
-    flex-wrap: wrap;
+    color: var(--sap-text-secondary);
 }
-
-.kanban-card-meta i { font-size: 10px; }
-
-.kanban-card-assignee {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.kanban-card-page {
-    font-size: 11px;
-    color: var(--sap-text-muted);
-    background: var(--sap-background);
-    padding: 2px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
+.kanban-card-assignee i,
+.kanban-card-page i {
+    margin-right: 3px;
 }
 
 .kanban-empty {
-    text-align: center;
-    padding: 24px 12px;
-    color: var(--sap-text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    color: var(--sap-text-tertiary);
     font-size: 13px;
+    gap: 8px;
 }
-.kanban-empty i {
-    display: block;
-    font-size: 24px;
-    margin-bottom: 8px;
-    opacity: 0.4;
-}
-
-@media (max-width: 1024px) {
-    .kanban-board { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 640px) {
-    .kanban-board { grid-template-columns: 1fr; }
-}
-.sap-btn-xs { padding: 4px 10px; font-size: 12px; }
-
-/* === Enhanced Tables === */
-.sap-table-compact td { padding: 10px 14px; font-size: 13px; }
-.sap-table-compact thead th { padding: 10px 14px; }
+.kanban-empty i { font-size: 24px; opacity: 0.5; }
 
 .page-icon-wrapper {
     display: inline-flex;
@@ -220,205 +181,61 @@
 
 .table-code {
     font-size: 12px;
-    padding: 3px 8px;
+    padding: 2px 6px;
     border-radius: 4px;
-    background: var(--sap-background);
+    background: var(--sap-surface);
     border: 1px solid var(--sap-border-light);
     color: var(--sap-text-secondary);
-}
-
-.sap-btn-group {
-    display: inline-flex;
-    gap: 2px;
-}
-
-.sap-btn-ghost {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--sap-text-secondary);
-    transition: all 150ms ease;
-}
-.sap-btn-ghost:hover {
-    background: var(--sap-brand-hover);
-    border-color: var(--sap-border);
-    color: var(--sap-brand);
-}
-
-.sap-btn-danger-ghost:hover {
-    background: rgba(170,8,8,0.08);
-    border-color: rgba(170,8,8,0.2);
-    color: #AA0808;
 }
 
 .module-footer {
-    padding: 8px 14px;
-    border-top: 1px solid var(--sap-border-light);
-    background: var(--sap-background);
     display: flex;
-    gap: 4px;
-}
-
-.sap-table tbody tr:hover td {
-    color: var(--sap-text);
-}
-
-.dark-mode .page-icon-wrapper {
-    background: rgba(13,148,136,0.15);
-    color: #5EEAD4;
-}
-.dark-mode .table-code {
-    background: var(--sap-dark-surface);
-    border-color: #475569;
-    color: #CBD5E1;
-}
-.dark-mode .sap-btn-ghost:hover {
-    background: rgba(13,148,136,0.15);
-    color: #5EEAD4;
-}
-.dark-mode .sap-btn-danger-ghost:hover {
-    background: rgba(220,38,38,0.12);
-    color: #FCA5A5;
-}
-.dark-mode .module-card-footer {
-    background: var(--sap-dark-surface);
-    border-color: #475569;
-}
-.dark-mode .module-card-link:hover {
-    color: #5EEAD4;
-}
-
-/* === Accordion Enhancements === */
-.accordion-collapse {
-    transition: max-height 300ms ease;
-}
-.accordion-body-page-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--sap-text-muted);
-    background: var(--sap-background);
-    padding: 2px 8px;
-    border-radius: var(--sap-radius-pill);
-}
-
-/* Module Card Grid */
-.module-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
-}
-
-.module-card {
-    background: var(--sap-surface);
-    border: 1px solid var(--sap-border-light);
-    border-radius: var(--sap-radius-lg);
-    transition: border-color var(--sap-transition), box-shadow var(--sap-transition);
-}
-.module-card:hover {
-    border-color: var(--sap-border);
-}
-
-.module-card-footer {
-    padding: 12px 20px;
+    gap: 8px;
+    padding-top: 12px;
     border-top: 1px solid var(--sap-border-light);
-    background: var(--sap-background);
-    border-radius: 0 0 var(--sap-radius-lg) var(--sap-radius-lg);
+    margin-top: 8px;
 }
 
-.module-card-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--sap-brand);
-    text-decoration: none;
-    transition: color 150ms ease, gap 150ms ease;
+@media (max-width: 991px) {
+    .kanban-board { grid-template-columns: 1fr 1fr; }
 }
-.module-card-link:hover {
-    color: var(--sap-brand-hover);
-    gap: 10px;
-    text-decoration: none;
-}
-.module-card-link i {
-    font-size: 11px;
-    transition: transform 150ms ease;
-}
-.module-card-link:hover i {
-    transform: translateX(2px);
-}
-
-.module-card-body {
-    padding: 20px;
-}
-
-.module-card-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--sap-radius);
-    background: var(--sap-brand-light);
-    color: var(--sap-brand);
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.module-card-stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    color: var(--sap-text-secondary);
-    font-weight: 500;
-}
-.module-card-stat i { font-size: 11px; }
-.module-card-stat--open {
-    color: var(--sap-error);
-}
-
-@media (max-width: 640px) {
-    .module-grid { grid-template-columns: 1fr; }
+@media (max-width: 575px) {
+    .kanban-board { grid-template-columns: 1fr; }
 }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="container">
-    <?php if (!$project): ?>
-        <div class="sap-empty">
-            <i class="fas fa-exclamation-triangle" style="color:var(--sap-error)"></i>
-            <h4>Project not found</h4>
-            <a href="<?= site_url('master-projects') ?>" class="sap-btn sap-btn-secondary mt-3">Back</a>
-        </div>
-    <?php else: ?>
     <div class="sap-breadcrumb mb-4">
         <a href="<?= site_url('master-projects') ?>">Master Projects</a>
         <span class="sep">/</span>
-        <span class="active"><?= esc($project['name']) ?></span>
+        <a href="<?= site_url('master-projects/' . $project['id']) ?>"><?= esc($project['name']) ?></a>
+        <span class="sep">/</span>
+        <span class="active"><?= esc($module['name']) ?></span>
     </div>
 
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <h1 class="mb-1"><?= esc($project['name']) ?></h1>
+            <h1 class="mb-1"><?= esc($module['name']) ?></h1>
             <p class="text-secondary mb-0" style="font-size:13px">
-                <?= esc($project['description']) ?>
-                <?php if ($project['creator_name']): ?> &middot; Created by <?= esc($project['creator_name']) ?><?php endif; ?>
+                <?= esc($module['description'] ?? '') ?>
             </p>
         </div>
-        <div>
-            <span class="sap-badge <?= $project['status'] === 1 ? 'approved' : 'closed' ?>">
-                <span class="badge-dot"></span><?= esc($project['status_name']) ?>
-            </span>
+        <div class="d-flex align-items-center gap-2">
+            <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="editModule('<?= $module['id'] ?>', '<?= esc(addslashes($module['name'])) ?>', '<?= esc(addslashes($module['description'] ?? '')) ?>')">
+                <i class="fas fa-pencil-alt"></i> Edit Module
+            </button>
+            <button class="sap-btn sap-btn-ghost sap-btn-sm sap-btn-danger-ghost" onclick="deleteModule('<?= $module['id'] ?>')">
+                <i class="fas fa-trash-alt"></i>
+            </button>
         </div>
     </div>
 
     <div class="sap-tabs" id="detailTabs">
-        <button class="sap-tab active" data-tab="modules" onclick="switchDetailTab('modules')">
-            <i class="fas fa-puzzle-piece"></i> Modules & Pages
+        <button class="sap-tab active" data-tab="pages" onclick="switchDetailTab('pages')">
+            <i class="fas fa-file-alt"></i> Pages
+            <span class="sap-badge closed" style="margin-left:6px"><?= count($module['pages']) ?></span>
         </button>
         <button class="sap-tab" data-tab="kanban" onclick="switchDetailTab('kanban')">
             <i class="fas fa-columns"></i> Kanban Board
@@ -426,55 +243,68 @@
     </div>
 
     <div class="tab-pane-container">
-        <div id="tab-modules" class="tab-content active">
+        <div id="tab-pages" class="tab-content active">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0" style="font-size:15px;font-weight:600"><i class="fas fa-puzzle-piece me-1"></i> Modules & Pages</h5>
-                <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="openModuleModal()">
-                    <i class="fas fa-plus"></i> Add Module
+                <h5 class="mb-0" style="font-size:15px;font-weight:600"><i class="fas fa-file-alt me-1"></i> Pages</h5>
+                <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="openPageModal()">
+                    <i class="fas fa-plus"></i> Add Page
                 </button>
             </div>
-            <div id="modulesList">
-                <?php if (empty($project['modules'])): ?>
+            <div id="pagesList">
+                <?php if (empty($module['pages'])): ?>
                 <div class="sap-empty" style="padding:32px 20px">
-                    <i class="fas fa-puzzle-piece"></i>
-                    <h4>No modules yet</h4>
-                    <p>Add modules to organize your project pages.</p>
+                    <i class="fas fa-file-alt"></i>
+                    <h4>No pages yet</h4>
+                    <p>Add pages to this module to track bugs per page.</p>
                 </div>
                 <?php else: ?>
-                <div class="module-grid">
-                    <?php foreach ($project['modules'] as $mod): ?>
-                    <div class="module-card">
-                        <div class="module-card-body">
-                            <div class="d-flex align-items-start justify-content-between mb-2">
+                <table class="sap-table sap-table-compact mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:35%">Page Name</th>
+                            <th style="width:25%">URL Path</th>
+                            <th>Bugs</th>
+                            <th style="width:130px;text-align:right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($module['pages'] as $pg): ?>
+                        <tr>
+                            <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="module-card-icon"><i class="fas fa-puzzle-piece"></i></span>
-                                    <h6 class="mb-0 fw-semibold"><?= esc($mod['name']) ?></h6>
+                                    <span class="page-icon-wrapper"><i class="fas fa-file-alt"></i></span>
+                                    <span class="fw-medium"><?= esc($pg['name']) ?></span>
                                 </div>
-                                <div class="sap-btn-group">
-                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="editModule('<?= $mod['id'] ?>','<?= esc(addslashes($mod['name'])) ?>','<?= esc(addslashes($mod['description'] ?? '')) ?>')" title="Edit module"><i class="fas fa-pencil-alt"></i></button>
-                                    <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="deleteModule('<?= $mod['id'] ?>')" title="Delete module"><i class="fas fa-trash-alt"></i></button>
-                                </div>
-                            </div>
-                            <p class="text-secondary mb-3" style="font-size:12px;line-height:1.5"><?= esc($mod['description'] ?? 'No description') ?></p>
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="module-card-stat"><i class="fas fa-file-alt"></i> <?= count($mod['pages']) ?> pages</span>
-                                <?php $totalBugs = 0; $openBugs = 0; foreach ($mod['pages'] as $pg) { $totalBugs += (int)($pg['bug_total'] ?? 0); $openBugs += (int)($pg['bug_open'] ?? 0); } ?>
+                            </td>
+                            <td><code class="mono table-code"><?= esc($pg['url_path'] ?? '-') ?></code></td>
+                            <td>
+                                <?php $totalBugs = (int) ($pg['bug_total'] ?? 0); ?>
                                 <?php if ($totalBugs > 0): ?>
-                                <span class="module-card-stat"><i class="fas fa-bug"></i> <?= $totalBugs ?> bugs</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?php if ((int)$pg['bug_open'] > 0): ?>
+                                    <span class="sap-badge rejected"><span class="badge-dot"></span><?= $pg['bug_open'] ?> open</span>
+                                    <?php endif; ?>
+                                    <?php if ((int)$pg['bug_resolved'] > 0): ?>
+                                    <span class="sap-badge approved"><?= $pg['bug_resolved'] ?> resolved</span>
+                                    <?php endif; ?>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="showBugList('<?= $pg['id'] ?>', '<?= esc($pg['name']) ?>')" title="View bug list">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </button>
+                                </div>
+                                <?php else: ?>
+                                <span class="text-muted" style="font-size:13px">No bugs</span>
                                 <?php endif; ?>
-                                <?php if ($openBugs > 0): ?>
-                                <span class="module-card-stat module-card-stat--open"><i class="fas fa-exclamation-circle"></i> <?= $openBugs ?> open</span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <div class="module-card-footer">
-                            <a href="<?= site_url('master-projects/' . $project['id'] . '/modules/' . $mod['id']) ?>" class="module-card-link">
-                                <i class="fas fa-arrow-right"></i> View Pages
-                            </a>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="sap-btn-group">
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="editPage('<?= $pg['id'] ?>','<?= $module['id'] ?>','<?= esc($pg['name']) ?>','<?= esc($pg['url_path'] ?? '') ?>','<?= esc($pg['description'] ?? '') ?>')" title="Edit page"><i class="fas fa-pencil-alt"></i></button>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="deletePage('<?= $pg['id'] ?>')" title="Delete page"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
                 <?php endif; ?>
             </div>
         </div>
@@ -516,17 +346,65 @@
             </div>
         </div>
     </div>
-    <?php endif; ?>
 </div>
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
-<!-- Module Modal -->
+<!-- Page Modal -->
+<div class="modal fade sap-modal" id="pageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pageModalTitle">Add Page</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="pageForm">
+                <input type="hidden" name="module_id" id="pageModuleId" value="<?= $module['id'] ?>">
+                <input type="hidden" name="edit_id" id="pageEditId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="sap-label">Page Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="pageName" class="sap-input" required placeholder="e.g., Login Page">
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">URL Path</label>
+                        <input type="text" name="url_path" id="pageUrl" class="sap-input" placeholder="e.g., /auth/login">
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Description</label>
+                        <textarea name="description" id="pageDesc" class="sap-input" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-check"></i> Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bug List Modal -->
+<div class="modal fade sap-modal" id="bugListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bugs for <span id="bugPageName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" id="bugListBody">
+                <div class="text-center p-4"><span class="sap-spinner"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Module Modal (edit only) -->
 <div class="modal fade sap-modal" id="moduleModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="moduleModalTitle">Add Module</h5>
+                <h5 class="modal-title">Edit Module</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="moduleForm">
@@ -554,6 +432,7 @@
 <?= $this->section('scripts') ?>
 <script>
 var projectId = '<?= $project['id'] ?? '' ?>';
+var moduleId = '<?= $module['id'] ?? '' ?>';
 
 /* ── Tab Switching ─────────────────────────────── */
 function switchDetailTab(tab) {
@@ -572,7 +451,84 @@ function escAttr(s) {
     return String(s || '').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 }
 
-/* ── Module functions ──────────────────────────── */
+/* ── Page functions ─────────────────────────────── */
+var pageModalInstance = null;
+function getPageModal() {
+    if (!pageModalInstance) {
+        pageModalInstance = new bootstrap.Modal(document.getElementById('pageModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
+    return pageModalInstance;
+}
+
+function editPage(id, moduleIdVal, name, urlPath, description) {
+    $('#pageModuleId').val(moduleIdVal);
+    $('#pageEditId').val(id);
+    $('#pageName').val(name);
+    $('#pageUrl').val(urlPath);
+    $('#pageDesc').val(description || '');
+    $('#pageModalTitle').text('Edit Page');
+    getPageModal().show();
+}
+
+function openPageModal() {
+    $('#pageModuleId').val(moduleId);
+    $('#pageEditId').val('');
+    $('#pageName').val('');
+    $('#pageUrl').val('');
+    $('#pageDesc').val('');
+    $('#pageModalTitle').text('Add Page');
+    getPageModal().show();
+}
+
+$('#pageForm').on('submit', function(e) {
+    e.preventDefault();
+    var editId = $('#pageEditId').val();
+    var url = editId
+        ? site_url + '/pages/' + editId + '/update'
+        : site_url + '/modules/' + moduleId + '/pages';
+    var data = $(this).serialize();
+    $.post(url, data, function(res) {
+        if (res.status) {
+            toastr.success(editId ? 'Page updated' : 'Page created');
+            bootstrap.Modal.getInstance(document.getElementById('pageModal')).hide();
+            window.location.reload();
+        } else {
+            toastr.error(res.data?.message || 'Failed');
+        }
+    }).fail(function(xhr) {
+        toastr.error('Gagal menyimpan page (HTTP ' + xhr.status + ')');
+    });
+});
+
+function deletePage(id) {
+    Swal.fire({
+        title: 'Delete this page?',
+        text: 'Linked bug tickets will remain but page reference will be removed.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#AA0808',
+        cancelButtonColor: '#758CA4',
+        confirmButtonText: 'Delete',
+    }).then(function(r) {
+        if (r.isConfirmed) {
+            $.post(site_url + '/pages/' + id + '/delete', function(res) {
+                if (res.status) {
+                    toastr.success('Page deleted');
+                    window.location.reload();
+                } else {
+                    toastr.error(res.data?.message || 'Failed');
+                }
+            }).fail(function(xhr) {
+                toastr.error('Gagal menghapus page (HTTP ' + xhr.status + ')');
+            });
+        }
+    });
+}
+
+/* ── Module functions ───────────────────────────── */
 var moduleModalInstance = null;
 function getModuleModal() {
     if (!moduleModalInstance) {
@@ -588,7 +544,6 @@ function editModule(id, name, desc) {
     $('#moduleEditId').val(id);
     $('#moduleName').val(name);
     $('#moduleDesc').val(desc);
-    $('#moduleModalTitle').text('Edit Module');
     getModuleModal().show();
 }
 
@@ -613,7 +568,7 @@ $('#moduleForm').on('submit', function(e) {
 function deleteModule(id) {
     Swal.fire({
         title: 'Delete this module?',
-        text: 'All pages within will also be deleted.',
+        text: 'All pages within will also be deleted. You will be redirected to the project page.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#AA0808',
@@ -622,8 +577,12 @@ function deleteModule(id) {
     }).then(function(r) {
         if (r.isConfirmed) {
             $.post(site_url + '/modules/' + id + '/delete', function(res) {
-                if (res.status) { toastr.success('Module deleted'); window.location.reload(); }
-                else { toastr.error(res.data?.message || 'Failed'); }
+                if (res.status) {
+                    toastr.success('Module deleted');
+                    window.location.href = site_url + '/master-projects/' + projectId;
+                } else {
+                    toastr.error(res.data?.message || 'Failed');
+                }
             }).fail(function(xhr) {
                 toastr.error('Gagal menghapus module (HTTP ' + xhr.status + ')');
             });
@@ -631,60 +590,47 @@ function deleteModule(id) {
     });
 }
 
-function renderModules(modules) {
-    if (!modules || !modules.length) {
-        $('#modulesList').html('<div class="sap-empty" style="padding:32px 20px"><i class="fas fa-puzzle-piece"></i><h4>No modules yet</h4><p>Add modules to organize your project pages.</p></div>');
-        return;
+/* ── Bug List ───────────────────────────────────── */
+var bugListModalInstance = null;
+function getBugListModal() {
+    if (!bugListModalInstance) {
+        bugListModalInstance = new bootstrap.Modal(document.getElementById('bugListModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
     }
-    var html = '<div class="module-grid">';
-    for (var i = 0; i < modules.length; i++) {
-        var m = modules[i];
-        var pages = m.pages || [];
-        var totalBugs = 0, openBugs = 0;
-        for (var j = 0; j < pages.length; j++) {
-            totalBugs += parseInt(pages[j].bug_total || 0);
-            openBugs += parseInt(pages[j].bug_open || 0);
-        }
-        var moduleUrl = site_url + '/master-projects/' + projectId + '/modules/' + m.id;
-        html += '<div class="module-card">';
-        html += '<div class="module-card-body">';
-        html += '<div class="d-flex align-items-start justify-content-between mb-2">';
-        html += '<div class="d-flex align-items-center gap-2">';
-        html += '<span class="module-card-icon"><i class="fas fa-puzzle-piece"></i></span>';
-        html += '<h6 class="mb-0 fw-semibold">' + escHtml(m.name) + '</h6>';
-        html += '</div>';
-        html += '<div class="sap-btn-group">';
-        html += '<button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="editModule(\'' + m.id + '\',\'' + escAttr(m.name) + '\',\'' + escAttr(m.description || '') + '\')" title="Edit module"><i class="fas fa-pencil-alt"></i></button>';
-        html += '<button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="deleteModule(\'' + m.id + '\')" title="Delete module"><i class="fas fa-trash-alt"></i></button>';
-        html += '</div>';
-        html += '</div>';
-        html += '<p class="text-secondary mb-3" style="font-size:12px;line-height:1.5">' + escHtml(m.description || 'No description') + '</p>';
-        html += '<div class="d-flex align-items-center gap-3">';
-        html += '<span class="module-card-stat"><i class="fas fa-file-alt"></i> ' + pages.length + ' pages</span>';
-        if (totalBugs > 0) html += '<span class="module-card-stat"><i class="fas fa-bug"></i> ' + totalBugs + ' bugs</span>';
-        if (openBugs > 0) html += '<span class="module-card-stat module-card-stat--open"><i class="fas fa-exclamation-circle"></i> ' + openBugs + ' open</span>';
-        html += '</div>';
-        html += '</div>';
-        html += '<div class="module-card-footer">';
-        html += '<a href="' + moduleUrl + '" class="module-card-link"><i class="fas fa-arrow-right"></i> View Pages</a>';
-        html += '</div>';
-        html += '</div>';
-    }
-    html += '</div>';
-    $('#modulesList').html(html);
+    return bugListModalInstance;
 }
 
-function refreshModules() {
-    $.get(site_url + '/master-projects/' + projectId + '/detail-json', function(res) {
-        if (res && res.modules) {
-            renderModules(res.modules);
+function showBugList(pageId, pageName) {
+    $('#bugPageName').text(pageName);
+    var modal = getBugListModal();
+    $('#bugListBody').html('<div class="text-center p-4"><span class="sap-spinner"></span></div>');
+    modal.show();
+    $.get(site_url + '/pages/' + pageId + '/bugs', function(res) {
+        if (!res || !res.length) {
+            $('#bugListBody').html('<div class="sap-empty" style="padding:32px"><i class="fas fa-check-circle"></i><h4>No bugs</h4><p>No bugs reported for this page.</p></div>');
+            return;
         }
+        var html = '<table class="sap-table sap-table-compact mb-0"><thead><tr><th style="min-width:200px">Title</th><th style="width:120px">Status</th><th style="width:100px">Priority</th><th style="width:130px">Created</th></tr></thead><tbody>';
+        for (var i = 0; i < res.length; i++) {
+            var b = res[i];
+            var statusCls = b.status_name === 'Open' ? 'sap-badge open' : b.status_name === 'Resolved' ? 'sap-badge resolved' : 'sap-badge closed';
+            var priorityDot = 'priority-dot ' + (b.priority_name ? b.priority_name.toLowerCase() : 'medium');
+            html += '<tr><td><a href="' + site_url + '/tickets/' + b.id + '" target="_blank" class="fw-medium" style="color:var(--sap-brand);text-decoration:none">' + b.title + '</a></td>'
+                 + '<td><span class="' + statusCls + '"><span class="badge-dot"></span>' + b.status_name + '</span></td>'
+                 + '<td><span class="' + priorityDot + '"></span> ' + b.priority_name + '</td>'
+                 + '<td><span class="text-muted">' + b.created_at + '</span></td></tr>';
+        }
+        html += '</tbody></table>';
+        $('#bugListBody').html(html);
     }).fail(function(xhr) {
-        toastr.error('Gagal memuat ulang modules (HTTP ' + xhr.status + ')');
+        $('#bugListBody').html('<div class="sap-empty" style="padding:32px"><i class="fas fa-exclamation-triangle"></i><h4>Gagal memuat data bug</h4><p>HTTP ' + xhr.status + '</p></div>');
+        toastr.error('Gagal memuat data bug');
     });
 }
 
-$('#moduleModal').on('hidden.bs.modal', function() {
+$('#pageModal, #bugListModal, #moduleModal').on('hidden.bs.modal', function() {
     $('.modal-backdrop').remove();
     $('body').removeClass('modal-open').css('padding-right', '');
 });
@@ -704,12 +650,25 @@ function loadKanban() {
         timeout: 15000,
     })
     .done(function(res) {
-        kanbanData = res || { open: [], in_progress: [], resolved: [], closed: [] };
+        kanbanData = { open: [], in_progress: [], resolved: [], closed: [] };
+        var all = res || {};
+        var pageIds = [];
+        <?php foreach ($module['pages'] as $pg): ?>
+        pageIds.push('<?= $pg['id'] ?>');
+        <?php endforeach; ?>
+        var keys = ['open', 'in_progress', 'resolved', 'closed'];
+        for (var k = 0; k < keys.length; k++) {
+            var col = all[keys[k]] || [];
+            for (var i = 0; i < col.length; i++) {
+                if (pageIds.indexOf(col[i].page_id) !== -1) {
+                    kanbanData[keys[k]].push(col[i]);
+                }
+            }
+        }
         renderKanban();
         initKanbanSortables();
     })
     .fail(function(xhr, status, error) {
-        console.error('Kanban load failed:', status, error, xhr.responseText);
         toastr.error('Gagal memuat kanban board');
         $('#kanbanBoard .kanban-cards').html('<div class="kanban-empty"><i class="fas fa-exclamation-triangle"></i>Failed to load kanban. Please refresh the page.</div>');
     });

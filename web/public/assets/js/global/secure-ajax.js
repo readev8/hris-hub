@@ -40,7 +40,7 @@ $.secureAjax = function (options) {
                 }
             });
         } else {
-            console.log("error")
+            toastr.error("Gagal memperbarui token keamanan. Silakan refresh halaman.", "Error");
         }
     };
 

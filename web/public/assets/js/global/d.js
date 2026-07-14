@@ -123,6 +123,7 @@ $.postForm = function (url, data, response, sender = null) {
   });
 };
 $.get = function (url, data, response) {
+  if (typeof data === 'function') { response = data; data = undefined; }
   regenerate().then((token) => {
     $.ajax({
       type: "GET",
@@ -133,19 +134,14 @@ $.get = function (url, data, response) {
         "X-CSRF-TOKEN": token[$("#i").val()],
       },
       success: (res) => {
-        return response(res);
+        if (typeof response === "function") return response(res);
       },
       error: (err) => {
-        // FIX: Proper error handling
         toastr.error(
           typeof err === "string" ? err : "Terjadi Kesalahan",
           "Error",
         );
-        return response({
-          statuscode: 500,
-          message: "Network error",
-          data: null,
-        });
+        if (typeof response === "function") return response({ statuscode: 500, message: "Network error", data: null });
       },
     });
   });

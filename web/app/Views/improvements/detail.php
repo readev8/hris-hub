@@ -157,6 +157,13 @@
         </div>
 
         <div class="col-md-4">
+            <?php
+            $impPerms = (session('permissions') ?? [])['improvements'] ?? [];
+            $impCanApprove = !empty($impPerms['can_approve']);
+            $impCanCreate  = !empty($impPerms['can_create']);
+            $impCanUpdate  = !empty($impPerms['can_update']);
+            $impCanDelete  = !empty($impPerms['can_delete']);
+            ?>
             <div class="sap-card mb-3">
                 <div class="sap-card-header">
                     <i class="fas fa-info-circle"></i> Details
@@ -175,28 +182,30 @@
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Department</dt>
                         <dd class="col-7"><?= esc($improvement['department_name']) ?></dd>
                         <?php endif; ?>
-                        <?php if (!empty($improvement['assignee_name'])): ?>
-                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Assignee</dt>
-                        <dd class="col-7"><?= esc($improvement['assignee_name']) ?></dd>
+                        <?php if (!empty($improvement['approver_name'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Approver</dt>
+                        <dd class="col-7"><i class="fas fa-user-check text-success me-1" style="font-size:11px"></i> <?= esc($improvement['approver_name']) ?></dd>
                         <?php endif; ?>
                         <?php if (!empty($improvement['target_date'])): ?>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Target Date</dt>
                         <dd class="col-7"><?= esc($improvement['target_date']) ?></dd>
                         <?php endif; ?>
-                        <?php if (!empty($improvement['page_name'])): ?>
-                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Scope</dt>
-                        <dd class="col-7" style="font-size:13px"><?= esc($improvement['project_name'] ?? '') ?> &rarr; <?= esc($improvement['module_name'] ?? '') ?> &rarr; <?= esc($improvement['page_name'] ?? '') ?></dd>
-                        <?php endif; ?>
                     </dl>
                 </div>
             </div>
 
-            <?php if (!empty($improvement['attachments'])): ?>
             <div class="sap-card mb-3">
-                <div class="sap-card-header">
-                    <i class="fas fa-paperclip"></i> Attachments
+                <div class="sap-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-paperclip"></i> Attachments</span>
+                    <?php if ($impCanUpdate): ?>
+                    <label class="sap-btn sap-btn-secondary sap-btn-sm mb-0" style="cursor:pointer">
+                        <i class="fas fa-plus"></i> Add Attachment
+                        <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" multiple hidden id="attachmentInput">
+                    </label>
+                    <?php endif; ?>
                 </div>
                 <div class="sap-card-body">
+                    <?php if (!empty($improvement['attachments'])): ?>
                     <div class="d-flex flex-wrap gap-2">
                         <?php foreach ($improvement['attachments'] as $att): ?>
                             <?php if (strpos($att['mime_type'] ?? '', 'image/') === 0): ?>
@@ -219,23 +228,18 @@
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
+                    <?php else: ?>
+                    <p class="text-muted mb-0" style="font-size:13px">No attachments yet.</p>
+                    <?php endif; ?>
                 </div>
             </div>
-            <?php endif; ?>
 
             <div class="sap-card">
                 <div class="sap-card-header">
                     <i class="fas fa-bolt"></i> Actions
                 </div>
                 <div class="sap-card-body d-flex flex-column gap-2">
-                    <?php
-                    $st = (int)($improvement['status'] ?? -1);
-                    $impPerms = (session('permissions') ?? [])['improvements'] ?? [];
-                    $impCanApprove = !empty($impPerms['can_approve']);
-                    $impCanCreate  = !empty($impPerms['can_create']);
-                    $impCanUpdate  = !empty($impPerms['can_update']);
-                    $impCanDelete  = !empty($impPerms['can_delete']);
-                    ?>
+                    <?php $st = (int)($improvement['status'] ?? -1); ?>
                     <?php if ($st === 0 && $impCanApprove): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve-it')"><i class="fas fa-check"></i> Approve (IT)</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptReject()"><i class="fas fa-times"></i> Reject</button>
@@ -276,6 +280,8 @@ function doAction(action) {
         } else {
             toastr.error(res.data.message || 'Action failed');
         }
+    }).fail(function(xhr) {
+        toastr.error('Gagal melakukan aksi (HTTP ' + xhr.status + ')');
     });
 }
 
@@ -297,6 +303,8 @@ function promptReject() {
                 } else {
                     toastr.error(res.data.message || 'Failed');
                 }
+            }).fail(function(xhr) {
+                toastr.error('Gagal reject improvement (HTTP ' + xhr.status + ')');
             });
         }
     });
@@ -320,6 +328,8 @@ function confirmDelete() {
                 } else {
                     toastr.error(res.data.message || 'Failed to delete');
                 }
+            }).fail(function(xhr) {
+                toastr.error('Gagal menghapus improvement (HTTP ' + xhr.status + ')');
             });
         }
     });
@@ -337,7 +347,66 @@ $('#commentForm').on('submit', function(e) {
         } else {
             toastr.error(res.data.message || 'Failed');
         }
+    }).fail(function(xhr) {
+        toastr.error('Gagal menambahkan comment (HTTP ' + xhr.status + ')');
     });
+});
+
+$('#attachmentInput').on('change', function() {
+    var files = this.files;
+    if (!files.length) return;
+
+    var maxSize = 500 * 1024;
+    var fd = new FormData();
+    var skipped = 0;
+    for (var i = 0; i < files.length; i++) {
+        if (files[i].size > maxSize) {
+            toastr.warning(files[i].name + ' exceeds 500KB limit');
+            skipped++;
+            continue;
+        }
+        fd.append('images[]', files[i]);
+    }
+
+    if (skipped >= files.length) {
+        $(this).val('');
+        return;
+    }
+
+    var btn = $(this).closest('label');
+    btn.css('pointer-events', 'none').css('opacity', '0.6');
+
+    $.ajax({
+        url: site_url + '/improvements/' + token + '/attachments',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            if (res.status) {
+                toastr.success('Attachment(s) uploaded');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                toastr.error(res.message || 'Failed to upload attachment');
+                btn.css('pointer-events', '').css('opacity', '');
+                $('#attachmentInput').val('');
+            }
+        },
+        error: function(xhr) {
+            var res = null;
+            try { res = JSON.parse(xhr.responseText); } catch(e) {}
+            if (res && res.redirect) {
+                window.location.href = res.redirect;
+                return;
+            }
+            var msg = res && res.message ? res.message : 'Failed to upload (HTTP ' + xhr.status + ')';
+            toastr.error(msg);
+            btn.css('pointer-events', '').css('opacity', '');
+            $('#attachmentInput').val('');
+        }
+    });
+
+    $(this).val('');
 });
 
 // GLightbox init for improvements

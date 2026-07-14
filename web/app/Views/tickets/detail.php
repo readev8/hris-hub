@@ -212,7 +212,7 @@
                     <?php if ($status === 2 && $isAssignee): ?>
                         <button class="sap-btn sap-btn-success sap-btn-sm" onclick="promptAction('resolve','Resolution note')"><i class="fas fa-check-double"></i> Resolve</button>
                     <?php endif; ?>
-                    <?php if ($status === 3 && $isAssignee): ?>
+                    <?php if ($status === 3 && $isCreator): ?>
                         <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="doAction('close')"><i class="fas fa-lock"></i> Close</button>
                     <?php endif; ?>
                     <?php if ($status === 3 && ($isCreator || $roleId == 2)): ?>
@@ -258,6 +258,8 @@ function doAction(action) {
         } else {
             toastr.error(res.data.message || 'Action failed');
         }
+    }).fail(function(xhr) {
+        toastr.error('Gagal melakukan aksi (HTTP ' + xhr.status + ')');
     }, btn);
 }
 
@@ -284,6 +286,8 @@ function promptAction(action, label) {
                 } else {
                     toastr.error(res.data.message || 'Action failed');
                 }
+            }).fail(function(xhr) {
+                toastr.error('Gagal melakukan aksi (HTTP ' + xhr.status + ')');
             });
         }
     });
@@ -320,9 +324,13 @@ function showAssignModal() {
                     } else {
                         toastr.error(res.data.message || 'Failed to assign');
                     }
+                }).fail(function(xhr) {
+                    toastr.error('Gagal menugaskan ticket (HTTP ' + xhr.status + ')');
                 });
             }
         });
+    }).fail(function(xhr) {
+        toastr.error('Gagal memuat daftar user (HTTP ' + xhr.status + ')');
     });
 }
 
@@ -344,6 +352,8 @@ function confirmDelete() {
                 } else {
                     toastr.error(res.data.message || 'Failed to delete');
                 }
+            }).fail(function(xhr) {
+                toastr.error('Gagal menghapus ticket (HTTP ' + xhr.status + ')');
             });
         }
     });
@@ -413,6 +423,14 @@ var ticketLightbox = GLightbox({
     touchNavigation: true,
     keyboardNavigation: true,
     loop: false,
+    preload: true
+});
+
+var commentLightbox = GLightbox({
+    selector: '.comment-attachment-link',
+    touchNavigation: true,
+    keyboardNavigation: true,
+    loop: true,
     preload: true
 });
 </script>

@@ -13,9 +13,10 @@ class ProjectDetail extends BaseApi
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
         $project = $this->db()->table('projects')
-            ->select('projects.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
+            ->select('projects.*, creator.full_name as creator_name, assignee.full_name as assignee_name, approver.full_name as approver_name')
             ->join('users as creator', 'creator.id = projects.created_by', 'left')
             ->join('users as assignee', 'assignee.id = projects.assignee_id', 'left')
+            ->join('users as approver', 'approver.id = projects.approver_id', 'left')
             ->where('projects.id', $id)
             ->get()
             ->getRowArray();
@@ -54,6 +55,9 @@ class ProjectDetail extends BaseApi
         // Encrypted keys for form pre-population
         if (!empty($project['assignee_id'])) {
             $project['assigned_to'] = $this->api->encryptId($project['assignee_id']);
+        }
+        if (!empty($project['approver_id'])) {
+            $project['approver_id'] = $this->api->encryptId($project['approver_id']);
         }
         if (!empty($project['page_id'])) {
             $project['page_id'] = $this->api->encryptId($project['page_id']);

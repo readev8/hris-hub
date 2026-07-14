@@ -37,8 +37,6 @@
 
             this.isLoading = true;
 
-            console.log('[FullCalendar Loader] Starting load...');
-
             // Load scripts in order
             this.loadCore(this.onCoreLoaded.bind(this));
         },
@@ -53,12 +51,12 @@
             script.async = false;  // Important: load synchronously
 
             script.onload = function() {
-                console.log('[FullCalendar Loader] Core loaded');
                 callback();
             };
 
             script.onerror = function() {
                 console.error('[FullCalendar Loader] Failed to load core');
+                if (typeof toastr !== 'undefined') toastr.error('Calendar failed to load. Please refresh the page.', 'Error');
             };
 
             document.head.appendChild(script);
@@ -68,8 +66,6 @@
          * Called when core is loaded
          */
         onCoreLoaded: function() {
-            console.log('[FullCalendar Loader] Core ready, loading plugins...');
-
             // Wait for FullCalendar to be available
             var checkInterval = setInterval(function() {
                 if (typeof FullCalendar !== 'undefined') {
@@ -83,21 +79,18 @@
          * Load plugins
          */
         loadPlugins: function() {
-            console.log('[FullCalendar Loader] Loading DayGrid plugin...');
-
             var script = document.createElement('script');
             script.src = base_url + 'public/assets/plugin/fullcalendar/packages/daygrid/index.global.min.js';
             script.async = false;
 
             script.onload = function() {
-                console.log('[FullCalendar Loader] DayGrid plugin loaded');
-
                 // Wait for plugin to be registered
                 FullCalendarLoader.waitForPlugin();
             };
 
             script.onerror = function() {
                 console.error('[FullCalendar Loader] Failed to load DayGrid plugin');
+                if (typeof toastr !== 'undefined') toastr.error('Calendar plugin failed to load. Please refresh the page.', 'Error');
             };
 
             document.head.appendChild(script);
@@ -123,7 +116,6 @@
                     }
                     // Method 2: Check globalPlugins array
                     else if (FullCalendar.globalPlugins && FullCalendar.globalPlugins.length > 0) {
-                        console.log('[FullCalendar Loader] Found', FullCalendar.globalPlugins.length, 'plugins in globalPlugins array');
                         isPluginLoaded = true;
 
                         // Find DayGrid plugin and export it
@@ -132,7 +124,6 @@
                         });
 
                         if (dayGridPlugin) {
-                            console.log('[FullCalendar Loader] Found DayGrid plugin in globalPlugins:', dayGridPlugin.name);
                             // Export to global scope for easier access
                             FullCalendar.DayGridPlugin = dayGridPlugin;
                         }
@@ -141,8 +132,6 @@
 
                 if (isPluginLoaded) {
                     clearInterval(checkInterval);
-                    console.log('[FullCalendar Loader] ✓ All plugins loaded successfully');
-                    console.log('[FullCalendar Loader] DayGridPlugin available:', typeof FullCalendar.DayGridPlugin);
 
                     FullCalendarLoader.isLoaded = true;
                     FullCalendarLoader.isLoading = false;
@@ -157,10 +146,7 @@
 
                 } else if (attempts >= maxAttempts) {
                     clearInterval(checkInterval);
-                    console.warn('[FullCalendar Loader] ⚠ Plugins not loaded, but continuing anyway');
-                    console.log('[FullCalendar Loader] FullCalendar:', typeof FullCalendar);
-                    console.log('[FullCalendar Loader] DayGridPlugin:', typeof FullCalendar !== 'undefined' ? typeof FullCalendar.DayGridPlugin : 'N/A');
-                    console.log('[FullCalendar Loader] globalPlugins:', FullCalendar && FullCalendar.globalPlugins ? FullCalendar.globalPlugins.length : 'N/A');
+                    if (typeof toastr !== 'undefined') toastr.warning('Calendar may not display correctly. Please refresh the page.', 'Warning');
 
                     // Still mark as loaded (with degraded functionality)
                     FullCalendarLoader.isLoaded = true;
@@ -179,7 +165,5 @@
 
     // Export to global scope
     window.FullCalendarLoader = FullCalendarLoader;
-
-    console.log('[FullCalendar Loader] Ready');
 
 })();

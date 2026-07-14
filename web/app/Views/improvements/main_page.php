@@ -38,8 +38,7 @@
 #improvements-table_filter { display: none; }
 .column-search { width: 100%; padding: 4px 6px; border: 1px solid var(--sap-border); border-radius: var(--sap-radius); font-size: 12px; background: var(--sap-bg); color: var(--sap-text); }
 .column-search:focus { outline: none; border-color: var(--sap-brand); }
-.dt-buttons > .btn { background: var(--sap-secondary-bg); border: 1px solid var(--sap-border); color: var(--sap-text); font-size: 13px; padding: 4px 12px; margin-right: 4px; }
-.dt-buttons > .btn:hover { background: var(--sap-brand-hover); border-color: var(--sap-brand); }
+
 </style>
 <?= $this->endSection() ?>
 
@@ -100,14 +99,14 @@ $(function() {
             searchPlaceholder: 'Search improvements...',
             emptyTable: '<div class="sap-empty" style="padding:48px 20px"><i class="fas fa-rocket"></i><h4>No improvements found</h4><p>Submit a new improvement proposal to get started.</p></div>'
         },
-        dom: '<"row mb-3"<"col-sm-4"B><"col-sm-4"l><"col-sm-4"f>>rt<"row mt-3"<"col-sm-6"i><"col-sm-6"p>>',
+        dom: '<"row mb-3"<"col-sm-12"B>>rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
         buttons: [
-            { extend: 'colvis', text: '<i class="fas fa-columns"></i> Columns', className: 'btn-sm' },
             { extend: 'copy', text: '<i class="fas fa-copy"></i> Copy', className: 'btn-sm' },
             { extend: 'csv', text: '<i class="fas fa-file-csv"></i> CSV', className: 'btn-sm' },
             { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn-sm' },
             { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn-sm' },
             { extend: 'print', text: '<i class="fas fa-print"></i> Print', className: 'btn-sm' },
+            { extend: 'colvis', text: '<i class="fas fa-columns"></i> Columns', className: 'btn-sm' },
         ],
         drawCallback: function() {
             var api = this.api();

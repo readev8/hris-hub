@@ -12,6 +12,7 @@ $routes->get('tickets/track/(:any)', 'Tickets\Report\TicketTracking::get_by_code
 $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($routes) {
     // Auth
     $routes->get('auth/me', 'Auth\Action\Auth::me');
+    $routes->post('auth/local-user', 'Auth\Action\Auth::local_user');
 
     // Tickets
     $routes->post('tickets/create',              'Tickets\Action\Tickets::create_ticket');
@@ -54,10 +55,17 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     // Attachments
     $routes->delete('attachments/(:any)',   'Tickets\Action\Attachments::delete/$1');
 
-    // Users (Admin)
-    $routes->get('users',                  'Users\Action\Users::get_list');
-    $routes->post('users/create',          'Users\Action\Users::create');
-    $routes->post('users/(:any)/toggle',   'Users\Action\Users::toggle_active/$1');
+    // Users (Admin) — exact routes before wildcards
+    $routes->get('users',                           'Users\Action\Users::get_list');
+    $routes->post('users',                          'Users\Action\Users::get_list');
+    $routes->get('users/search-hris',               'Users\Action\Users::search_hris');
+    $routes->post('users/create',                   'Users\Action\Users::create');
+    $routes->post('users/lookup',                   'Users\Action\Users::lookup_user');
+    $routes->post('users/add-by-userid',            'Users\Action\Users::add_by_userid');
+    $routes->get('users/(:any)',                    'Users\Action\Users::get_detail/$1');
+    $routes->post('users/(:any)/update',            'Users\Action\Users::update_user/$1');
+    $routes->post('users/(:any)/toggle',            'Users\Action\Users::toggle_active/$1');
+    $routes->post('users/(:any)/delete',            'Users\Action\Users::delete_user/$1');
 
     // Master Projects
     $routes->get('master-projects',                    'MasterProjects\Report\MasterProjectList::get_list');
@@ -65,6 +73,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('master-projects/(:any)/kanban',      'MasterProjects\Report\MasterProjectList::get_kanban/$1');
     $routes->get('master-projects/(:any)/modules',     'MasterProjects\Report\MasterProjectList::get_modules/$1');
     $routes->get('master-projects/(:any)',             'MasterProjects\Data\MasterProjectDetail::get_detail/$1');
+    $routes->get('modules/(:any)',                     'MasterProjects\Data\ModuleDetail::get_detail/$1');
     $routes->get('modules/(:any)/pages',               'MasterProjects\Report\MasterProjectList::get_pages/$1');
     $routes->get('pages/(:any)/bugs',                  'MasterProjects\Report\MasterProjectList::get_bugs/$1');
     $routes->post('tickets/(:any)/move',               'Tickets\Action\Tickets::move_ticket/$1');
@@ -81,6 +90,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     // Roles & Permissions
     $routes->get('roles',                              'Roles\Report\RoleList::get_list');
     $routes->get('roles/modules/list',                 'Roles\Report\RoleList::get_modules');
+    $routes->get('roles/by-id/(:num)/permissions',     'Roles\Action\Roles::get_permissions_by_id/$1');
     $routes->get('roles/(:any)',                       'Roles\Report\RoleList::get_detail/$1');
     $routes->get('permissions/me',                     'Roles\Report\RoleList::get_user_permissions');
     $routes->post('roles/create',                      'Roles\Action\Roles::create_role');

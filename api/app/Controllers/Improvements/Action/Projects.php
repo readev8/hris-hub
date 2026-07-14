@@ -34,6 +34,7 @@ class Projects extends BaseApi
         $category = trim($input['category'] ?? '');
         $targetDate = !empty($input['target_date']) ? $input['target_date'] : null;
         $assigneeId = !empty($input['assigned_to']) ? $this->resolveId($input['assigned_to']) : null;
+        $approverId = !empty($input['approver_id']) ? $this->resolveId($input['approver_id']) : null;
         $pageId = !empty($input['page_id']) ? $this->resolveId($input['page_id']) : null;
 
         if (empty($name)) {
@@ -51,6 +52,7 @@ class Projects extends BaseApi
             'priority'            => $priority,
             'category'            => $category ?: null,
             'assignee_id'         => $assigneeId,
+            'approver_id'         => $approverId,
             'page_id'             => $pageId,
             'target_date'         => $targetDate,
             'status'              => Enums::PROJECT_STATUS_DRAFT,
@@ -101,6 +103,9 @@ class Projects extends BaseApi
         if (isset($input['category']))      $update['category'] = trim($input['category']);
         if (isset($input['target_date']))   $update['target_date'] = $input['target_date'] ?: null;
         if (isset($input['assigned_to']))   $update['assignee_id'] = $this->resolveId($input['assigned_to']);
+        if (array_key_exists('approver_id', $input)) {
+            $update['approver_id'] = !empty($input['approver_id']) ? $this->resolveId($input['approver_id']) : null;
+        }
         if (isset($input['page_id']))        $update['page_id'] = $this->resolveId($input['page_id']);
         $update['updated_at'] = date('Y-m-d H:i:s');
 
@@ -237,6 +242,11 @@ class Projects extends BaseApi
         $role = $this->getCurrentUserRole();
         if (!$role) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
+        // Per-user approval check: if approver_id is set, only that user (or admin) can reject
+        if (!empty($project['approver_id']) && (int) $project['approver_id'] !== $userId && $role !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya approver yang ditunjuk yang dapat menolak proyek ini', null, 403);
+        }
+
         $projectStatus = (int) $project['status'];
 
         if ($projectStatus === Enums::PROJECT_STATUS_DRAFT) {
@@ -372,6 +382,11 @@ class Projects extends BaseApi
 
         $role = $this->getCurrentUserRole();
         if (!$role) return $this->JSONResponse('User tidak ditemukan', null, 404);
+
+        // Per-user approval check: if approver_id is set, only that user (or admin) can approve
+        if (!empty($project['approver_id']) && (int) $project['approver_id'] !== $userId && $role !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya approver yang ditunjuk yang dapat menyetujui proyek ini', null, 403);
+        }
 
         if ($expectedStage === Enums::STAGE_PENDING_IT && $role !== Enums::IT_MANAGER && $role !== Enums::ADMIN) {
             return $this->JSONResponse('Hanya IT Manager yang dapat approve tahap ini', null, 403);

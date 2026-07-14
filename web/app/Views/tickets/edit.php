@@ -438,26 +438,36 @@ function uploadAttachments(files, index, btn) {
 }
 
 function removeAttachment(id, el) {
-    if (!confirm('Remove this attachment?')) return;
-    $.ajax({
-        url: site_url + '/attachments/' + id + '/delete',
-        type: 'POST',
-        success: function(res) {
-            if (res.status) {
-                $(el).closest('.attachment-item').remove();
-                toastr.success('Attachment removed');
-            } else {
-                toastr.error('Failed to remove');
-            }
-        },
-        error: function(xhr) {
-            var res = null;
-            try { res = JSON.parse(xhr.responseText); } catch(e) {}
-            if (res && res.redirect) {
-                window.location.href = res.redirect;
-                return;
-            }
-            toastr.error('Failed to remove');
+    Swal.fire({
+        title: 'Remove this attachment?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Remove',
+        confirmButtonColor: '#AA0808',
+        cancelButtonColor: '#758CA4',
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: site_url + '/attachments/' + id + '/delete',
+                type: 'POST',
+                success: function(res) {
+                    if (res.status) {
+                        $(el).closest('.attachment-item').remove();
+                        toastr.success('Attachment removed');
+                    } else {
+                        toastr.error('Failed to remove');
+                    }
+                },
+                error: function(xhr) {
+                    var res = null;
+                    try { res = JSON.parse(xhr.responseText); } catch(e) {}
+                    if (res && res.redirect) {
+                        window.location.href = res.redirect;
+                        return;
+                    }
+                    toastr.error('Failed to remove');
+                }
+            });
         }
     });
 }

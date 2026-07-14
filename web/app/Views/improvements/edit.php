@@ -1,4 +1,17 @@
 <?= $this->extend('template/index') ?>
+
+<?= $this->section('styles') ?>
+<style>
+.field-error {
+    font-size: 12px;
+    color: var(--sap-error);
+    margin-top: 4px;
+    display: none;
+}
+.field-error.visible { display: block; }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 <div class="container" style="max-width:900px">
     <div class="sap-breadcrumb mb-4">
@@ -21,10 +34,12 @@
                     <div class="mb-3">
                         <label class="sap-label">Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="sap-input" required value="<?= esc($improvement['name'] ?? '') ?>" placeholder="e.g., Implement SSO Login">
+                        <div class="field-error" id="error-name" role="alert"></div>
                     </div>
                     <div class="mb-3">
                         <label class="sap-label">Description <span class="text-danger">*</span></label>
                         <textarea name="description" class="sap-input" rows="5" required placeholder="Describe the improvement in detail..." style="min-height:120px"><?= esc($improvement['description'] ?? '') ?></textarea>
+                        <div class="field-error" id="error-description" role="alert"></div>
                     </div>
                 </div>
 
@@ -35,6 +50,7 @@
                     <div class="mb-3">
                         <label class="sap-label">Business Case <span class="text-danger">*</span></label>
                         <textarea name="business_case" class="sap-input" rows="3" required placeholder="Why is this improvement needed?" style="min-height:80px"><?= esc($improvement['business_case'] ?? '') ?></textarea>
+                        <div class="field-error" id="error-business_case" role="alert"></div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -57,45 +73,29 @@
                                 <option value="2" <?= ($improvement['priority'] ?? '') == 2 ? 'selected' : '' ?>>High</option>
                                 <option value="3" <?= ($improvement['priority'] ?? '') == 3 ? 'selected' : '' ?>>Critical</option>
                             </select>
+                            <div class="field-error" id="error-priority" role="alert"></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">
                     <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
-                        <i class="fas fa-project-diagram me-1"></i> Scope & Assignment
+                        <i class="fas fa-calendar-alt me-1"></i> Details
                     </h5>
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-4">
-                            <label class="sap-label">Project</label>
-                            <select class="sap-select" id="projectSelect">
-                                <option value="">Select Project...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="sap-label">Module</label>
-                            <select class="sap-select" id="moduleSelect" disabled>
-                                <option value="">Select Module...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="sap-label">Page</label>
-                            <select class="sap-select" id="pageSelect" disabled>
-                                <option value="">Select Page...</option>
-                            </select>
-                            <input type="hidden" name="page_id" id="pageIdValue" value="<?= esc($improvement['page_id'] ?? '') ?>">
-                        </div>
-                    </div>
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="sap-label">Assignee / PIC</label>
-                            <select name="assigned_to" class="sap-select" id="assigneeSelect">
-                                <option value="">Select user...</option>
-                            </select>
-                        </div>
                         <div class="col-md-6">
                             <label class="sap-label">Target Date</label>
                             <input type="date" name="target_date" class="sap-input" value="<?= esc($improvement['target_date'] ?? '') ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="sap-label">Approver <span style="font-weight:400;color:var(--sap-text-muted)">(optional)</span></label>
+                            <select name="approver_id" class="sap-select" id="approverSelect">
+                                <option value="">Role-based approval (default)</option>
+                                <?php foreach ($users as $u): ?>
+                                    <option value="<?= esc($u['id']) ?>" <?= (isset($improvement['approver_id']) && $improvement['approver_id'] == $u['id']) ? 'selected' : '' ?>><?= esc($u['full_name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted" style="font-size:11px">If set, only this user can approve. Otherwise, role-based approval applies.</small>
                         </div>
                     </div>
                 </div>
@@ -119,109 +119,20 @@
 var token = '<?= esc($token) ?>';
 
 $(function() {
-    $.get(site_url + '/users/ajax-list', function(res) {
-        var users = res.data || [];
-        var html = '<option value="">Select user...</option>';
-        var currentAssignee = '<?= esc($improvement['assigned_to'] ?? '') ?>';
-        for (var i = 0; i < users.length; i++) {
-            var selected = users[i].id === currentAssignee ? 'selected' : '';
-            html += '<option value="' + users[i].id + '" ' + selected + '>' + (users[i].full_name || users[i].name) + '</option>';
-        }
-        $('#assigneeSelect').html(html);
-    });
-
-    function loadProjects() {
-        $('#projectSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        $.ajax({
-            url: site_url + '/master-projects/active',
-            type: 'GET',
-            timeout: 10000,
-            success: function(res) {
-                if (!Array.isArray(res)) { $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false); return; }
-                var html = '<option value="">Select Project...</option>';
-                for (var i = 0; i < res.length; i++) {
-                    html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
-                }
-                $('#projectSelect').html(html).prop('disabled', false);
-                $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
-                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-            },
-            error: function() {
-                toastr.error('Failed to load projects');
-                $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false);
-            }
-        });
+    function clearFieldErrors() {
+        $('.field-error').removeClass('visible').text('');
+        $('.sap-input, .sap-select').removeClass('is-invalid');
     }
-    loadProjects();
 
-    var activeModuleReq = null;
-    var activePageReq = null;
-
-    $('#projectSelect').on('change', function() {
-        var pid = $(this).val();
-        if (!pid) {
-            $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-            $('#pageIdValue').val('');
-            return;
-        }
-        if (activeModuleReq) activeModuleReq.abort();
-        $('#moduleSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        activeModuleReq = $.ajax({
-            url: site_url + '/master-projects/' + pid + '/modules',
-            type: 'GET',
-            timeout: 10000,
-            success: function(res) {
-                if (!Array.isArray(res)) { $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', false); return; }
-                var html = '<option value="">Select Module...</option>';
-                for (var i = 0; i < res.length; i++) {
-                    html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
-                }
-                $('#moduleSelect').html(html).prop('disabled', false);
-                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-                $('#pageIdValue').val('');
-            },
-            error: function() {
-                toastr.error('Failed to load modules');
-                $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', false);
-            }
-        });
-    });
-
-    $('#moduleSelect').on('change', function() {
-        var mid = $(this).val();
-        if (!mid) {
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-            $('#pageIdValue').val('');
-            return;
-        }
-        if (activePageReq) activePageReq.abort();
-        $('#pageSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        activePageReq = $.ajax({
-            url: site_url + '/modules/' + mid + '/pages',
-            type: 'GET',
-            timeout: 10000,
-            success: function(res) {
-                if (!Array.isArray(res)) { $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false); return; }
-                var html = '<option value="">Select Page...</option>';
-                for (var i = 0; i < res.length; i++) {
-                    html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
-                }
-                $('#pageSelect').html(html).prop('disabled', false);
-            },
-            error: function() {
-                toastr.error('Failed to load pages');
-                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false);
-            }
-        });
-    });
-
-    $('#pageSelect').on('change', function() {
-        $('#pageIdValue').val($(this).val());
+    $('[name="name"], [name="description"], [name="business_case"], [name="priority"]').on('input change', function() {
+        $(this).removeClass('is-invalid');
+        var fieldName = $(this).attr('name');
+        $('#error-' + fieldName).removeClass('visible').text('');
     });
 
     $('#improvementForm').on('submit', function(e) {
         e.preventDefault();
+        clearFieldErrors();
         var btn = $(this).find('[type="submit"]');
         btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Updating...');
 
@@ -234,7 +145,18 @@ $(function() {
                     toastr.success('Improvement updated');
                     setTimeout(function() { window.location.href = site_url + '/improvements/' + token; }, 500);
                 } else {
-                    toastr.error(res.message || 'Failed to update');
+                    if (res.errors && typeof res.errors === 'object') {
+                        Object.keys(res.errors).forEach(function(field) {
+                            var input = $('[name="' + field + '"]');
+                            if (input.length) {
+                                input.addClass('is-invalid');
+                                $('#error-' + field).text(res.errors[field]).addClass('visible');
+                            }
+                        });
+                        toastr.error('Please fix the errors below');
+                    } else {
+                        toastr.error(res.message || 'Failed to update');
+                    }
                     btn.prop('disabled', false).html('<i class="fas fa-save"></i> Update');
                 }
             },

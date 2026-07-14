@@ -20,7 +20,7 @@
                     <th>Bugs</th>
                     <th>Status</th>
                     <th>Created</th>
-                    <th style="width:100px">Action</th>
+                    <th style="width:120px">Action</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -34,8 +34,7 @@
 #projects-table_filter { display: none; }
 .column-search { width: 100%; padding: 4px 6px; border: 1px solid var(--sap-border); border-radius: var(--sap-radius); font-size: 12px; background: var(--sap-bg); color: var(--sap-text); }
 .column-search:focus { outline: none; border-color: var(--sap-brand); }
-.dt-buttons > .btn { background: var(--sap-secondary-bg); border: 1px solid var(--sap-border); color: var(--sap-text); font-size: 13px; padding: 4px 12px; margin-right: 4px; }
-.dt-buttons > .btn:hover { background: var(--sap-brand-hover); border-color: var(--sap-brand); }
+
 </style>
 <?= $this->endSection() ?>
 
@@ -92,6 +91,7 @@ $(function() {
                 orderable: false,
                 render: function(d) {
                     return '<a href="' + site_url + '/master-projects/' + d + '" class="sap-btn sap-btn-secondary sap-btn-sm me-1" onclick="event.stopPropagation();"><i class="fas fa-eye"></i></a>' +
+                           '<a href="' + site_url + '/master-projects/' + d + '/edit" class="sap-btn sap-btn-secondary sap-btn-sm me-1" onclick="event.stopPropagation();"><i class="fas fa-pencil-alt"></i></a>' +
                            '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="event.stopPropagation(); deleteProject(\'' + d + '\')"><i class="fas fa-trash-alt"></i></button>';
                 }
             }
@@ -100,14 +100,14 @@ $(function() {
         language: {
             emptyTable: '<div class="sap-empty" style="padding:48px 20px"><i class="fas fa-project-diagram"></i><h4>No projects yet</h4><p>Create your first master project to start tracking bugs.</p></div>'
         },
-        dom: '<"row mb-3"<"col-sm-4"B><"col-sm-4"l><"col-sm-4"f>>rt<"row mt-3"<"col-sm-6"i><"col-sm-6"p>>',
+        dom: '<"row mb-3"<"col-sm-12"B>>rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
         buttons: [
-            { extend: 'colvis', text: '<i class="fas fa-columns"></i> Columns', className: 'btn-sm' },
             { extend: 'copy', text: '<i class="fas fa-copy"></i> Copy', className: 'btn-sm' },
             { extend: 'csv', text: '<i class="fas fa-file-csv"></i> CSV', className: 'btn-sm' },
             { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn-sm' },
             { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn-sm' },
             { extend: 'print', text: '<i class="fas fa-print"></i> Print', className: 'btn-sm' },
+            { extend: 'colvis', text: '<i class="fas fa-columns"></i> Columns', className: 'btn-sm' },
         ]
     });
 
@@ -154,6 +154,8 @@ window.deleteProject = function(id) {
                 } else {
                     toastr.error(res.data.message || 'Failed');
                 }
+            }).fail(function(xhr) {
+                toastr.error('Gagal menghapus project (HTTP ' + xhr.status + ')');
             });
         }
     });

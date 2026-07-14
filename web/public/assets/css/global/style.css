@@ -3,9 +3,6 @@
    Slate + Teal accent, Plus Jakarta Sans, Micro-interactions
    ============================================================ */
 
-/* ── Font: Plus Jakarta Sans ─────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
-
 :root {
   /* ── Brand & Primary (Teal accent) ───────────────────────── */
   --sap-brand:          #0D9488;
@@ -678,57 +675,83 @@ body.sidebar-collapsed .sidebar-footer {
 .priority-dot.low      { background: var(--sap-low); }
 
 /* ============================================================
-   Tables — Modern
+   Tables — Modern Enhanced
    ============================================================ */
 .sap-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 .sap-table thead th {
-  background: var(--sap-background);
+  background: var(--sap-surface);
   color: var(--sap-text-secondary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 2px solid var(--sap-border);
-  padding: 14px 18px;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--sap-border);
+  padding: 12px 16px;
   text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  user-select: none;
 }
+.sap-table thead th:first-child { border-radius: var(--sap-radius-sm) 0 0 0; }
+.sap-table thead th:last-child { border-radius: 0 var(--sap-radius-sm) 0 0; }
 .sap-table td {
-  padding: 14px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--sap-border-light);
   vertical-align: middle;
-  font-size: 14px;
+  font-size: 13px;
+  color: var(--sap-text);
 }
-.sap-table tbody tr { transition: background var(--sap-transition); }
-.sap-table tbody tr:hover { background: var(--sap-brand-hover) !important; }
+.sap-table tbody tr { transition: background 150ms ease, color 150ms ease; }
+.sap-table tbody tr:nth-child(even) { background: var(--sap-background); }
+.sap-table tbody tr:hover { background: var(--sap-brand-hover); }
+.sap-table tbody tr:active { background: rgba(13,148,136,0.12); }
+.sap-table tbody tr.selected { background: var(--sap-brand-light); }
+
+/* Dark mode table overrides */
+.dark-mode .sap-table thead th {
+  background: var(--sap-dark-surface);
+  color: #CBD5E1;
+  border-bottom-color: var(--sap-dark-border);
+}
+.dark-mode .sap-table td {
+  color: #E2E8F0;
+  border-bottom-color: #334155;
+}
+.dark-mode .sap-table tbody tr:nth-child(even) { background: rgba(30,41,59,0.5); }
+.dark-mode .sap-table tbody tr:hover { background: rgba(13,148,136,0.15); }
+.dark-mode .sap-table tbody tr:active { background: rgba(13,148,136,0.2); }
+.dark-mode .sap-table tbody tr.selected { background: rgba(13,148,136,0.2); }
 
 /* DataTables overrides */
-.dataTables_wrapper .dataTables_length,
-.dataTables_wrapper .dataTables_filter { margin-bottom: 14px; }
-.dataTables_wrapper .dataTables_length label,
-.dataTables_wrapper .dataTables_filter label { font-size: 14px; color: var(--sap-text-secondary); }
-.dataTables_wrapper .dataTables_filter input {
-  border: 1px solid var(--sap-border-input);
-  border-radius: var(--sap-radius);
-  padding: 8px 14px;
-  font-size: 14px;
-  background: var(--sap-surface);
+.dataTables_wrapper .dt-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.dataTables_wrapper .dt-buttons .btn-sm {
+  background: var(--sap-secondary-bg);
+  border: 1px solid var(--sap-border);
   color: var(--sap-text);
-  transition: border-color var(--sap-transition), box-shadow var(--sap-transition);
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: var(--sap-radius);
+  transition: all var(--sap-transition);
+  cursor: pointer;
 }
-.dataTables_wrapper .dataTables_filter input:focus {
+.dataTables_wrapper .dt-buttons .btn-sm:hover {
+  background: var(--sap-brand-hover);
   border-color: var(--sap-brand);
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(13,148,136,0.15);
+  color: var(--sap-brand);
 }
-
-.dark-mode .dataTables_wrapper .dataTables_filter input {
-  background: var(--sap-dark-surface);
-  border-color: #475569;
-  color: #F1F5F9;
+.dataTables_wrapper .dt-buttons .buttons-colvis {
+  flex-basis: 100%;
+  margin-top: 4px;
+  border-style: dashed;
 }
+.dataTables_wrapper .dataTables_length { margin-bottom: 0; }
+.dataTables_wrapper .dataTables_length label { font-size: 13px; color: var(--sap-text-secondary); }
+.dataTables_wrapper .dataTables_filter { display: none; }
 .dataTables_wrapper .dataTables_info {
   font-size: 13px;
   color: var(--sap-text-muted);
@@ -751,17 +774,27 @@ body.sidebar-collapsed .sidebar-footer {
   color: #fff !important;
   font-weight: 600 !important;
 }
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
   background: var(--sap-brand-hover) !important;
   border-color: var(--sap-brand) !important;
 }
 
+.dark-mode .dataTables_wrapper .dt-buttons .btn-sm {
+  background: var(--sap-dark-surface);
+  border-color: #475569;
+  color: #CBD5E1;
+}
+.dark-mode .dataTables_wrapper .dt-buttons .btn-sm:hover {
+  background: rgba(13,148,136,0.15);
+  border-color: #5EEAD4;
+  color: #5EEAD4;
+}
 .dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
   background: var(--sap-dark-surface) !important;
   border-color: #475569 !important;
   color: #CBD5E1 !important;
 }
-.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
   background: rgba(13,148,136,0.15) !important;
   border-color: #5EEAD4 !important;
   color: #5EEAD4 !important;
@@ -1248,12 +1281,19 @@ textarea.sap-input { height: auto; min-height: 100px; }
 /* ============================================================
    Accordion
    ============================================================ */
+/* Enhanced Accordion */
 .sap-accordion-item {
   border: 1px solid var(--sap-border);
   border-radius: var(--sap-radius);
   margin-bottom: 10px;
   overflow: hidden;
+  transition: box-shadow var(--sap-transition), border-color var(--sap-transition);
 }
+.sap-accordion-item:has(.accordion-collapse:not(.collapsed)) {
+  border-color: var(--sap-brand);
+  box-shadow: 0 0 0 1px rgba(13,148,136,0.1), var(--sap-shadow-sm);
+}
+
 .sap-accordion-header {
   padding: 14px 18px;
   background: var(--sap-surface);
@@ -1261,8 +1301,9 @@ textarea.sap-input { height: auto; min-height: 100px; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: background var(--sap-transition);
+  transition: background var(--sap-transition), border-left var(--sap-transition);
   border: none;
+  border-left: 3px solid transparent;
   width: 100%;
   text-align: left;
   font-family: var(--sap-font);
@@ -1271,9 +1312,39 @@ textarea.sap-input { height: auto; min-height: 100px; }
   color: var(--sap-text);
 }
 .sap-accordion-header:hover { background: var(--sap-brand-hover); }
-.sap-accordion-header i { transition: transform var(--sap-transition); }
+.sap-accordion-header:not(.collapsed) {
+  border-left-color: var(--sap-brand);
+  background: linear-gradient(90deg, rgba(13,148,136,0.04) 0%, transparent 100%);
+}
+.sap-accordion-header i {
+  transition: transform 200ms ease;
+  transform-origin: center;
+  font-size: 12px;
+  color: var(--sap-text-muted);
+}
 .sap-accordion-header.collapsed i { transform: rotate(-90deg); }
-.sap-accordion-body { border-top: 1px solid var(--sap-border-light); }
+.sap-accordion-header:not(.collapsed) i {
+  transform: rotate(0deg);
+  color: var(--sap-brand);
+}
+
+.sap-accordion-body {
+  border-top: 1px solid var(--sap-border-light);
+  background: var(--sap-surface);
+}
+
+/* Dark mode accordion */
+.dark-mode .sap-accordion-item:has(.accordion-collapse:not(.collapsed)) {
+  border-color: #5EEAD4;
+  box-shadow: 0 0 0 1px rgba(94,234,212,0.1), var(--sap-shadow-sm);
+}
+.dark-mode .sap-accordion-header:not(.collapsed) {
+  border-left-color: #5EEAD4;
+  background: linear-gradient(90deg, rgba(94,234,212,0.06) 0%, transparent 100%);
+}
+.dark-mode .sap-accordion-header:not(.collapsed) i {
+  color: #5EEAD4;
+}
 
 /* ============================================================
    Modal
