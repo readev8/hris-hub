@@ -19,6 +19,13 @@
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css?v=' . config('App')->assetVersion) ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/animations.css?v=' . config('App')->assetVersion) ?>">
     <?= $this->renderSection('styles') ?>
+    <script>
+    (function() {
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-collapsed');
+        }
+    })();
+    </script>
 </head>
 <body>
     <?= $this->include('template/partial/navbar') ?>
@@ -107,13 +114,9 @@
         $('.dropdown-toggle').dropdown();
 
         $('#sidebarToggle').on('click', function() {
-            $('body').toggleClass('sidebar-collapsed');
-            localStorage.setItem('sidebarCollapsed', $('body').hasClass('sidebar-collapsed'));
+            $(document.documentElement).toggleClass('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', $(document.documentElement).hasClass('sidebar-collapsed'));
         });
-
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            $('body').addClass('sidebar-collapsed');
-        }
 
         // Active menu item
         var path = window.location.pathname;

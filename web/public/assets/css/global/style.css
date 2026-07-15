@@ -343,33 +343,97 @@ code, .mono { font-family: var(--sap-mono); font-size: 0.8125rem; }
   border-right-color: var(--sap-dark-border);
 }
 
-/* Collapsed sidebar */
-body.sidebar-collapsed .sidebar {
-  width: var(--sap-sidebar-collapsed);
+.dark-mode .sidebar-toggle-btn {
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
 }
 
-body.sidebar-collapsed .sidebar .sidebar-nav li a span,
-body.sidebar-collapsed .sidebar .sidebar-group-label,
-body.sidebar-collapsed .sidebar .sidebar-footer-text {
+.dark-mode .sidebar-toggle-btn:hover {
+  background: rgba(255,255,255,0.10);
+}
+
+@media (hover: hover) {
+  .dark-mode .sidebar-collapsed .sidebar:hover {
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Collapsed sidebar */
+.sidebar-collapsed .sidebar {
+  width: var(--sap-sidebar-collapsed);
+  overflow-x: visible;
+}
+
+.sidebar-collapsed .sidebar .sidebar-nav li a span,
+.sidebar-collapsed .sidebar .sidebar-group-label,
+.sidebar-collapsed .sidebar .sidebar-footer-text {
   display: none;
 }
 
-body.sidebar-collapsed .sidebar .sidebar-nav li a {
+.sidebar-collapsed .sidebar .sidebar-nav li a {
   justify-content: center;
   padding: 12px;
   margin: 4px 8px;
 }
 
-body.sidebar-collapsed .sidebar .sidebar-nav li a i {
+.sidebar-collapsed .sidebar .sidebar-nav li a i {
   margin: 0;
 }
 
-body.sidebar-collapsed .main-content {
+.sidebar-collapsed .main-content {
   margin-left: var(--sap-sidebar-collapsed);
 }
 
-body.sidebar-collapsed .app-footer {
+.sidebar-collapsed .app-footer {
   margin-left: var(--sap-sidebar-collapsed);
+}
+
+/* Hover-to-expand sidebar (desktop only, overlay pattern) */
+@media (hover: hover) {
+  .sidebar-collapsed .sidebar:hover {
+    width: var(--sap-sidebar-width);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.10);
+  }
+
+  .sidebar-collapsed .sidebar:hover .sidebar-nav li a span,
+  .sidebar-collapsed .sidebar:hover .sidebar-group-label,
+  .sidebar-collapsed .sidebar:hover .sidebar-footer-text {
+    display: block;
+    animation: sap-sidebar-label-fade-in 0.15s ease-out 0.1s both;
+  }
+
+  .sidebar-collapsed .sidebar:hover .sidebar-nav li a {
+    justify-content: flex-start;
+    padding: 10px 24px;
+    margin: 2px 8px;
+  }
+
+  .sidebar-collapsed .sidebar:hover .sidebar-nav li a i {
+    margin-right: 12px;
+    margin-left: 0;
+  }
+
+  .sidebar-collapsed .sidebar:hover .sidebar-footer {
+    padding: 14px 24px;
+    text-align: left;
+  }
+}
+
+@keyframes sap-sidebar-label-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar .sidebar-nav li a,
+  .sidebar .sidebar-nav li a span,
+  .sidebar .sidebar-group-label,
+  .sidebar .sidebar-footer-text,
+  .sidebar .sidebar-footer {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 .sidebar-group-label {
@@ -460,29 +524,38 @@ body.sidebar-collapsed .app-footer {
 
 /* Sidebar toggle button */
 .sidebar-toggle-btn {
-  width: 40px; height: 40px;
+  width: 34px; height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: transparent;
-  color: rgba(255,255,255,0.85);
-  border-radius: var(--sap-radius);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.9);
+  border-radius: 50%;
   cursor: pointer;
   transition: all var(--sap-transition);
-  font-size: 16px;
+  font-size: 13px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .sidebar-toggle-btn:hover {
-  background: var(--sap-shell-hover);
+  background: rgba(255,255,255,0.18);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transform: scale(1.05);
+}
+
+.sidebar-toggle-btn:active {
+  transform: scale(0.95);
 }
 
 .sidebar-toggle-btn i {
   transition: transform var(--sap-transition);
 }
 
-body.sidebar-collapsed .sidebar-toggle-btn i {
+.sidebar-collapsed .sidebar-toggle-btn i {
   transform: rotate(180deg);
 }
 
@@ -505,7 +578,7 @@ body.sidebar-collapsed .sidebar-toggle-btn i {
   color: #64748B;
 }
 
-body.sidebar-collapsed .sidebar-footer {
+.sidebar-collapsed .sidebar-footer {
   padding: 14px 8px;
   text-align: center;
 }
