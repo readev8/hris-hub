@@ -29,6 +29,7 @@
                             <option value="1">Issue</option>
                             <option value="0">Bug</option>
                             <option value="3">Change Request</option>
+                            <option value="4">Data Request</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -52,9 +53,9 @@
 
                 <div class="mb-4" id="bugTraceSection" style="display:none">
                     <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
-                        <i class="fas fa-project-diagram me-1"></i> Bug Location <span class="text-danger">*</span>
+                        <i class="fas fa-project-diagram me-1"></i> Affected Page <span class="text-danger">*</span>
                     </h5>
-                    <p class="text-secondary" style="font-size:13px">Select the page where this bug was found</p>
+                    <p class="text-secondary" style="font-size:13px">Select the page affected by this ticket</p>
                     <div class="row g-2">
                         <div class="col-md-4">
                             <select class="sap-select" id="projectSelect">
@@ -81,10 +82,10 @@
                         <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:var(--sap-text-muted);display:block;margin-bottom:8px"></i>
                         <p class="mb-2 text-secondary" style="font-size:13px">Drop images here or</p>
                         <label class="sap-btn sap-btn-secondary sap-btn-sm" style="cursor:pointer" onclick="event.stopPropagation()">
-                            <i class="fas fa-images"></i> Choose Files
-                            <input type="file" name="images[]" accept="image/jpeg,image/png" multiple hidden>
+                            <i class="fas fa-paperclip"></i> Choose Files
+                            <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt,.csv" multiple hidden>
                         </label>
-                        <p class="mb-0 mt-1 text-muted" style="font-size:11px">JPG or PNG, max 2MB each</p>
+                        <p class="mb-0 mt-1 text-muted" style="font-size:11px">Images, PDF, Excel, Word, PPT — max 5MB each</p>
                     </div>
                     <div class="d-flex flex-wrap gap-2 mt-2" id="imagePreview"></div>
                 </div>
@@ -127,7 +128,7 @@ $(function() {
     });
 
     $('#ticketType').on('change', function() {
-        if ($(this).val() === '0') {
+        if (['0','3','4'].includes($(this).val())) {
             $('#bugTraceSection').slideDown(200);
             loadProjects();
         } else {
@@ -275,8 +276,8 @@ $(function() {
         e.preventDefault();
         var type = $('#ticketType').val();
         var pageId = $('#pageIdValue').val();
-        if (type === '0' && !pageId) {
-            toastr.warning('For Bug type, please select the affected page in Bug Location section');
+        if (['0','3','4'].includes(type) && !pageId) {
+            toastr.warning('Untuk tipe ini, wajib memilih halaman di bagian Affected Page');
             $('#bugTraceSection').slideDown(200);
             return;
         }

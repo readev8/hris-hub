@@ -57,6 +57,35 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     // Serve uploaded improvement attachments
     $routes->get('/uploads/improvements/(:any)', 'Improvements::serveFile/$1');
 
+    // Blueprints — static routes must precede wildcards
+    $routes->get('/blueprints',                          'Blueprints::index');
+    $routes->get('/blueprints/ajax-list',                'Blueprints::ajaxList');
+    $routes->get('/blueprints/create',                   'Blueprints::create');
+    $routes->post('/blueprints/create',                  'Blueprints::create');
+    $routes->post('/blueprints/(:any)/approve-it',       'Blueprints::approveIt/$1');
+    $routes->post('/blueprints/(:any)/approve-dept',     'Blueprints::approveDept/$1');
+    $routes->post('/blueprints/(:any)/reject',           'Blueprints::reject/$1');
+    $routes->post('/blueprints/(:any)/resubmit',         'Blueprints::resubmit/$1');
+    $routes->post('/blueprints/(:any)/comments',         'Blueprints::addComment/$1');
+    $routes->post('/blueprints/(:any)/modules',          'Blueprints::createModule/$1');
+    $routes->post('/blueprints/modules/(:any)/update',   'Blueprints::updateModule/$1');
+    $routes->post('/blueprints/modules/(:any)/delete',   'Blueprints::deleteModule/$1');
+    $routes->post('/blueprints/modules/(:any)/business-scenarios',        'Blueprints::createBusinessScenario/$1');
+    $routes->post('/blueprints/business-scenarios/(:any)/update',         'Blueprints::updateBusinessScenario/$1');
+    $routes->post('/blueprints/business-scenarios/(:any)/delete',         'Blueprints::deleteBusinessScenario/$1');
+    $routes->post('/blueprints/modules/(:any)/design-pages',              'Blueprints::createDesignPage/$1');
+    $routes->post('/blueprints/design-pages/(:any)/update',               'Blueprints::updateDesignPage/$1');
+    $routes->post('/blueprints/design-pages/(:any)/delete',               'Blueprints::deleteDesignPage/$1');
+    $routes->post('/blueprints/modules/(:any)/page-specifications',       'Blueprints::createPageSpecification/$1');
+    $routes->post('/blueprints/page-specifications/(:any)/update',        'Blueprints::updatePageSpecification/$1');
+    $routes->post('/blueprints/page-specifications/(:any)/delete',        'Blueprints::deletePageSpecification/$1');
+    $routes->post('/blueprints/(:any)/attachments',       'Blueprints::uploadAttachment/$1');
+    $routes->get('/blueprints/(:any)/edit',              'Blueprints::edit/$1');
+    $routes->post('/blueprints/(:any)/update',           'Blueprints::update/$1');
+    $routes->post('/blueprints/(:any)/delete',           'Blueprints::delete/$1');
+    $routes->get('/uploads/blueprints/(:any)',           'Blueprints::serveFile/$1');
+    $routes->get('/blueprints/(:any)',                   'Blueprints::detail/$1');
+
     $routes->get('/approvals', 'Approvals::index');
     $routes->get('/approvals/ajax-list', 'Approvals::ajaxList');
 

@@ -46,6 +46,8 @@
                         <h5 style="font-size:13px;color:var(--sap-text-secondary);text-transform:uppercase;letter-spacing:0.04em">Attachments</h5>
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             <?php foreach ($ticket['attachments'] as $att): ?>
+                            <?php $isImage = str_starts_with($att['mime_type'] ?? '', 'image/'); ?>
+                            <?php if ($isImage): ?>
                             <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
                                class="glightbox ticket-attachment-link"
                                data-gallery="ticket-main"
@@ -56,6 +58,20 @@
                                      class="sap-hover-lift"
                                      loading="lazy">
                             </a>
+                            <?php else: ?>
+                            <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
+                               download="<?= esc($att['filename']) ?>"
+                               class="sap-attachment-file"
+                               style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;border:1px solid var(--sap-border);background:var(--sap-surface);text-decoration:none;color:var(--sap-text-primary);transition:all 0.2s ease;max-width:220px"
+                               onmouseover="this.style.borderColor='var(--sap-active)'"
+                               onmouseout="this.style.borderColor='var(--sap-border)'">
+                                <i class="fas fa-file" style="font-size:24px;color:var(--sap-text-secondary);flex-shrink:0"></i>
+                                <div style="min-width:0">
+                                    <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><?= esc($att['filename']) ?></div>
+                                    <div style="font-size:11px;color:var(--sap-text-muted)"><?= esc($att['mime_type'] ?? 'file') ?></div>
+                                </div>
+                            </a>
+                            <?php endif; ?>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -88,6 +104,8 @@
                             <?php if (!empty($comment['attachments'])): ?>
                             <div class="d-flex flex-wrap gap-1 mt-2">
                                 <?php foreach ($comment['attachments'] as $att): ?>
+                                <?php $isImage = str_starts_with($att['mime_type'] ?? '', 'image/'); ?>
+                                <?php if ($isImage): ?>
                                 <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
                                    class="glightbox comment-attachment-link"
                                    data-gallery="comment-<?= $comment['id'] ?>"
@@ -98,6 +116,16 @@
                                          class="sap-hover-lift"
                                          loading="lazy">
                                 </a>
+                                <?php else: ?>
+                                <a href="<?= site_url('uploads/tickets/' . $att['stored_name']) ?>"
+                                   download="<?= esc($att['filename']) ?>"
+                                   style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:4px;border:1px solid var(--sap-border);background:var(--sap-surface);text-decoration:none;color:var(--sap-text-primary);font-size:12px;transition:all 0.2s ease"
+                                   onmouseover="this.style.borderColor='var(--sap-active)'"
+                                   onmouseout="this.style.borderColor='var(--sap-border)'">
+                                    <i class="fas fa-file" style="color:var(--sap-text-secondary)"></i>
+                                    <?= esc($att['filename']) ?>
+                                </a>
+                                <?php endif; ?>
                                 <?php endforeach; ?>
                             </div>
                             <?php endif; ?>
@@ -112,7 +140,7 @@
                         <div class="d-flex align-items-start gap-2">
                             <label class="sap-btn sap-btn-secondary sap-btn-sm" style="cursor:pointer">
                                 <i class="fas fa-paperclip"></i>
-                                <input type="file" name="images[]" accept="image/jpeg,image/png" multiple hidden>
+                                <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt,.csv" multiple hidden>
                             </label>
                             <button class="sap-btn sap-btn-primary sap-btn-sm" type="submit"><i class="fas fa-paper-plane"></i> Send</button>
                         </div>

@@ -55,64 +55,82 @@ class Improvements extends BaseController
         helper('form');
 
         if ($this->request->getMethod() === 'POST') {
-            $post = $this->request->getPost();
+            try {
+                $post = $this->request->getPost();
 
-            $validationRules = [
-                'name'          => 'required|min_length[3]|max_length[255]',
-                'description'   => 'required|min_length[10]',
-                'business_case' => 'required|min_length[10]',
-                'priority'      => 'in_list[0,1,2,3]',
-            ];
-            if (!$this->validate($validationRules)) {
-                return $this->response->setJSON([
-                    'status'  => false,
-                    'message' => 'Validation failed',
-                    'errors'  => $this->validator->getErrors(),
-                ]);
-            }
-
-            $files = $this->request->getFileMultiple('images') ?? [];
-
-            $savedFiles = [];
-            if (!empty($files)) {
-                $error = $this->validateUploadedFiles($files);
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                $validationRules = [
+                    'name'          => 'required|min_length[3]|max_length[255]',
+                    'description'   => 'required|min_length[10]',
+                    'business_case' => 'required|min_length[10]',
+                    'priority'      => 'in_list[0,1,2,3]',
+                ];
+                if (!$this->validate($validationRules)) {
+                    return $this->response->setJSON([
+                        'status'  => false,
+                        'message' => 'Validation failed',
+                        'errors'  => $this->validator->getErrors(),
+                    ]);
                 }
-                $savedFiles = $this->saveUploadedFiles($files);
-            }
 
-            $result = $this->api->post_data('improvements/create', $post);
+                $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
 
-            if ($result && ($result['status'] ?? false)) {
-                $improvementId = $result['data']['result']['id'] ?? null;
+                $savedFiles = [];
+                if (!empty($files)) {
+                    $error = $this->validateUploadedFiles($files);
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                }
 
-                if ($improvementId && !empty($savedFiles)) {
-                    foreach ($savedFiles as $sf) {
-                        $attResult = $this->api->post_data('improvements/' . $improvementId . '/attachments', $sf);
-                        if (!$attResult || !($attResult['status'] ?? false)) {
-                            $this->deleteUploadedFiles($savedFiles);
-                            log_message('error', 'Improvement attachment save failed for ' . $improvementId);
-                            return $this->response->setJSON([
-                                'status'  => false,
-                                'message' => 'Gagal menyimpan file',
-                            ]);
+                $result = $this->api->post_data('improvements/create', $post);
+
+                if (!$result) {
+                    log_message('error', 'Improvements create API unreachable for data: ' . json_encode($post));
+                    return $this->response->setJSON([
+                        'status'  => false,
+                        'message' => 'Server API tidak terjangkau',
+                    ]);
+                }
+
+                if ($result['status'] ?? false) {
+                    $improvementId = $result['data']['result']['id'] ?? null;
+
+                    if ($improvementId && !empty($savedFiles)) {
+                        foreach ($savedFiles as $sf) {
+                            $attResult = $this->api->post_data('improvements/' . $improvementId . '/attachments', $sf);
+                            if (!$attResult || !($attResult['status'] ?? false)) {
+                                $this->deleteUploadedFiles($savedFiles);
+                                log_message('error', 'Improvement attachment save failed for ' . $improvementId);
+                                return $this->response->setJSON([
+                                    'status'  => false,
+                                    'message' => 'Gagal menyimpan file',
+                                ]);
+                            }
                         }
                     }
+
+                    return $this->response->setJSON(['status' => true, 'redirect' => site_url('improvements')]);
                 }
 
-                return $this->response->setJSON(['status' => true, 'redirect' => site_url('improvements')]);
-            }
+                if (!empty($savedFiles)) {
+                    $this->deleteUploadedFiles($savedFiles);
+                }
 
-            if (!empty($savedFiles)) {
-                $this->deleteUploadedFiles($savedFiles);
+                log_message('error', 'Improvements create API failed: ' . json_encode($result));
+                return $this->response->setJSON([
+                    'status'  => false,
+                    'message' => $result['data']['message'] ?? 'Failed to create improvement',
+                ]);
+            } catch (\Throwable $e) {
+                log_message('error', 'Improvements create exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+                return $this->response->setJSON([
+                    'status'  => false,
+                    'message' => 'Terjadi kesalahan server: ' . $e->getMessage(),
+                ]);
             }
-
-            log_message('error', 'Improvements create API failed: ' . json_encode($result));
-            return $this->response->setJSON([
-                'status'  => false,
-                'message' => $result['data']['message'] ?? 'Failed to create improvement',
-            ]);
         }
 
         $usersResult = $this->api->get_data('users');
@@ -220,7 +238,9 @@ class Improvements extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $files = $this->request->getFileMultiple('images') ?? [];
+        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+        });
         if (empty($files)) {
             return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
         }
@@ -359,14 +379,23 @@ class Improvements extends BaseController
     {
         $maxFiles = 5;
         $maxSize  = 500 * 1024;
-        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+        $allowedMimes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
 
         if (count($files) > $maxFiles) {
             return 'Maksimal ' . $maxFiles . ' file';
         }
 
         foreach ($files as $file) {
-            if (!$file instanceof UploadedFile || !$file->isValid()) {
+            if (!$file instanceof UploadedFile || $file->getError() === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+            if (!$file->isValid()) {
                 return 'File tidak valid';
             }
 

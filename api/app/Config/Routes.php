@@ -87,6 +87,33 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('pages/(:any)/update',               'MasterProjects\Action\Pages::update_page/$1');
     $routes->post('pages/(:any)/delete',               'MasterProjects\Action\Pages::delete_page/$1');
 
+    // Blueprints
+    $routes->get('blueprints',                                          'Blueprints\Report\BlueprintList::get_list');
+    $routes->get('blueprints/pending',                                  'Blueprints\Report\BlueprintList::get_pending_approvals');
+    $routes->get('blueprints/(:any)',                                   'Blueprints\Data\BlueprintDetail::get_detail/$1');
+    $routes->post('blueprints/create',                                  'Blueprints\Action\Blueprints::create');
+    $routes->post('blueprints/(:any)/update',                           'Blueprints\Action\Blueprints::update/$1');
+    $routes->post('blueprints/(:any)/delete',                           'Blueprints\Action\Blueprints::delete/$1');
+    $routes->post('blueprints/(:any)/approve-it',                       'Blueprints\Action\Blueprints::approve_it/$1');
+    $routes->post('blueprints/(:any)/approve-dept',                     'Blueprints\Action\Blueprints::approve_dept/$1');
+    $routes->post('blueprints/(:any)/reject',                           'Blueprints\Action\Blueprints::reject/$1');
+    $routes->post('blueprints/(:any)/resubmit',                         'Blueprints\Action\Blueprints::resubmit/$1');
+    $routes->post('blueprints/(:any)/comments',                         'Blueprints\Action\Blueprints::add_comment/$1');
+    $routes->post('blueprints/(:any)/attachments',                      'Blueprints\Action\Attachments::add/$1');
+    $routes->delete('blueprints/(:any)/attachments/(:any)',             'Blueprints\Action\Attachments::delete/$1/$2');
+    $routes->post('blueprints/(:any)/modules',                          'Blueprints\Action\Modules::create/$1');
+    $routes->post('blueprints/modules/(:any)/update',                   'Blueprints\Action\Modules::update/$1');
+    $routes->post('blueprints/modules/(:any)/delete',                   'Blueprints\Action\Modules::delete/$1');
+    $routes->post('blueprints/modules/(:any)/business-scenarios',       'Blueprints\Action\BusinessScenarios::create/$1');
+    $routes->post('blueprints/business-scenarios/(:any)/update',        'Blueprints\Action\BusinessScenarios::update/$1');
+    $routes->post('blueprints/business-scenarios/(:any)/delete',        'Blueprints\Action\BusinessScenarios::delete/$1');
+    $routes->post('blueprints/modules/(:any)/design-pages',             'Blueprints\Action\DesignPages::create/$1');
+    $routes->post('blueprints/design-pages/(:any)/update',              'Blueprints\Action\DesignPages::update/$1');
+    $routes->post('blueprints/design-pages/(:any)/delete',              'Blueprints\Action\DesignPages::delete/$1');
+    $routes->post('blueprints/modules/(:any)/page-specifications',      'Blueprints\Action\PageSpecifications::create/$1');
+    $routes->post('blueprints/page-specifications/(:any)/update',       'Blueprints\Action\PageSpecifications::update/$1');
+    $routes->post('blueprints/page-specifications/(:any)/delete',       'Blueprints\Action\PageSpecifications::delete/$1');
+
     // Roles & Permissions
     $routes->get('roles',                              'Roles\Report\RoleList::get_list');
     $routes->get('roles/modules/list',                 'Roles\Report\RoleList::get_modules');

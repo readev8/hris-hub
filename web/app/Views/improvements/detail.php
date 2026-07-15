@@ -200,7 +200,7 @@
                     <?php if ($impCanUpdate): ?>
                     <label class="sap-btn sap-btn-secondary sap-btn-sm mb-0" style="cursor:pointer">
                         <i class="fas fa-plus"></i> Add Attachment
-                        <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" multiple hidden id="attachmentInput">
+                        <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.xlsx,.xls,.doc,.docx" multiple hidden id="attachmentInput">
                     </label>
                     <?php endif; ?>
                 </div>
@@ -219,9 +219,17 @@
                                  class="sap-hover-lift">
                         </a>
                             <?php else: ?>
+                        <?php
+                        $mime = $att['mime_type'] ?? '';
+                        $iconClass = 'fas fa-file';
+                        $iconColor = 'var(--sap-text-muted)';
+                        if ($mime === 'application/pdf') { $iconClass = 'fas fa-file-pdf'; $iconColor = 'var(--sap-error)'; }
+                        elseif (in_array($mime, ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'])) { $iconClass = 'fas fa-file-excel'; $iconColor = '#217346'; }
+                        elseif (in_array($mime, ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])) { $iconClass = 'fas fa-file-word'; $iconColor = '#2B579A'; }
+                        ?>
                         <a href="<?= site_url('uploads/improvements/' . $att['stored_name']) ?>" target="_blank">
                             <div style="padding:12px 16px;background:var(--sap-background);border-radius:6px;border:1px solid var(--sap-border);font-size:13px">
-                                <i class="fas fa-file-pdf" style="color:var(--sap-error);margin-right:6px"></i>
+                                <i class="<?= $iconClass ?>" style="color:<?= $iconColor ?>;margin-right:6px"></i>
                                 <?= esc($att['filename']) ?>
                             </div>
                         </a>

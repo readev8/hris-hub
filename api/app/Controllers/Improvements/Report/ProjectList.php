@@ -23,6 +23,11 @@ class ProjectList extends BaseApi
         if ($status !== '') $builder->where('projects.status', (int) $status);
         if ($priority !== '') $builder->where('projects.priority', (int) $priority);
 
+        $excludeBlueprint = !empty($params['exclude_blueprint']);
+        if ($excludeBlueprint) {
+            $builder->where('projects.id NOT IN (SELECT improvement_id FROM blueprints WHERE improvement_id IS NOT NULL)', null, false);
+        }
+
         $total = $builder->countAllResults(false);
         $rows = $builder->orderBy('projects.id', 'DESC')
             ->limit($perPage, $offset)

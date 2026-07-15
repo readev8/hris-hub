@@ -102,11 +102,11 @@
                     <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
                         <i class="fas fa-paperclip me-1"></i> Attachments
                     </h5>
-                    <label class="sap-label">Files <span style="font-weight:400;color:var(--sap-text-muted)">(optional, max 5, JPG/PNG/GIF/WebP/PDF, max 500KB each)</span></label>
+                    <label class="sap-label">Files <span style="font-weight:400;color:var(--sap-text-muted)">(optional, max 5, JPG/PNG/GIF/WebP/PDF/XLSX/DOC, max 500KB each)</span></label>
                     <div style="border:2px dashed var(--sap-border);border-radius:var(--sap-radius);padding:24px;text-align:center;cursor:pointer" id="dropzone">
                         <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:var(--sap-text-muted);display:block;margin-bottom:8px"></i>
                         <p class="mb-0 text-secondary" style="font-size:13px">Drop files here or click to browse</p>
-                        <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" multiple hidden>
+                        <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.xlsx,.xls,.doc,.docx" multiple hidden>
                     </div>
                     <div class="d-flex flex-wrap gap-2 mt-2" id="filePreview"></div>
                 </div>
@@ -193,7 +193,13 @@ $(function() {
                     reader.readAsDataURL(f);
                 })(file, wrapper, idx);
             } else {
-                wrapper.append('<div style="padding:8px 12px;background:var(--sap-background);border-radius:6px;border:1px solid var(--sap-border);font-size:13px"><i class="fas fa-file-pdf" style="color:var(--sap-error);margin-right:6px"></i>' + file.name + '</div>');
+                var ext = file.name.split('.').pop().toLowerCase();
+                var iconClass = 'fas fa-file';
+                var iconColor = 'var(--sap-text-muted)';
+                if (ext === 'pdf') { iconClass = 'fas fa-file-pdf'; iconColor = 'var(--sap-error)'; }
+                else if (ext === 'xlsx' || ext === 'xls') { iconClass = 'fas fa-file-excel'; iconColor = '#217346'; }
+                else if (ext === 'doc' || ext === 'docx') { iconClass = 'fas fa-file-word'; iconColor = '#2B579A'; }
+                wrapper.append('<div style="padding:8px 12px;background:var(--sap-background);border-radius:6px;border:1px solid var(--sap-border);font-size:13px"><i class="' + iconClass + '" style="color:' + iconColor + ';margin-right:6px"></i>' + file.name + '</div>');
                 wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + idx + '" style="position:absolute;top:-6px;right:-6px;background:var(--sap-error);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">&times;</button>');
             }
             preview.append(wrapper);

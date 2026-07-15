@@ -43,8 +43,9 @@ class Tickets extends BaseApi
             $pageId = $this->resolveId($input['page_id']);
         }
 
-        if ($type === Enums::TICKET_TYPE_BUG && !$pageId) {
-            return $this->JSONResponse('Untuk Bug, wajib memilih halaman yang bermasalah', null, 400);
+        $needsPage = in_array($type, [Enums::TICKET_TYPE_BUG, Enums::TICKET_TYPE_CHANGE_REQUEST, Enums::TICKET_TYPE_DATA_REQUEST], true);
+        if ($needsPage && !$pageId) {
+            return $this->JSONResponse('Untuk tipe ini, wajib memilih halaman', null, 400);
         }
 
         if (strlen($title) < 5) {
@@ -340,8 +341,9 @@ class Tickets extends BaseApi
         $dueDate = $input['due_date'] ?? $ticket['due_date'];
         $assigneeId = isset($input['assignee_id']) ? ($input['assignee_id'] !== '' ? $this->resolveId($input['assignee_id']) : null) : $ticket['assignee_id'];
 
-        if ($type === Enums::TICKET_TYPE_BUG && empty($input['page_id']) && empty($ticket['page_id'])) {
-            return $this->JSONResponse('Untuk Bug, wajib memilih halaman yang bermasalah', null, 400);
+        $needsPage = in_array($type, [Enums::TICKET_TYPE_BUG, Enums::TICKET_TYPE_CHANGE_REQUEST, Enums::TICKET_TYPE_DATA_REQUEST], true);
+        if ($needsPage && empty($input['page_id']) && empty($ticket['page_id'])) {
+            return $this->JSONResponse('Untuk tipe ini, wajib memilih halaman', null, 400);
         }
 
         if (strlen($title) < 5) {

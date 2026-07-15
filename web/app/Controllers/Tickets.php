@@ -64,10 +64,10 @@ class Tickets extends BaseController
                 $rules = [
                     'title'       => 'required|min_length[5]|max_length[255]',
                     'description' => 'required|min_length[10]',
-                    'type'        => 'required|in_list[0,1,2,3]',
+                    'type'        => 'required|in_list[0,1,2,3,4]',
                     'priority'    => 'required|in_list[0,1,2,3]',
                 ];
-                if (($post['type'] ?? '') === '0') {
+                if (in_array($post['type'] ?? '', ['0', '3', '4'], true)) {
                     $rules['page_id'] = 'required';
                 }
                 if (!$this->validate($rules)) {
@@ -165,7 +165,7 @@ class Tickets extends BaseController
         $rules = [
             'title'       => 'permit_empty|min_length[5]|max_length[255]',
             'description' => 'permit_empty|min_length[10]',
-            'type'        => 'permit_empty|in_list[0,1,2,3]',
+            'type'        => 'permit_empty|in_list[0,1,2,3,4]',
             'priority'    => 'permit_empty|in_list[0,1,2,3]',
         ];
         if (!$this->validate($rules)) {
@@ -508,7 +508,17 @@ class Tickets extends BaseController
     {
         $maxFiles = 5;
         $maxSize  = 5 * 1024 * 1024;
-        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+        $allowedMimes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/vnd.ms-powerpoint',
+            'text/csv',
+        ];
 
         if (count($files) > $maxFiles) {
             return 'Maksimal ' . $maxFiles . ' file';
@@ -524,7 +534,7 @@ class Tickets extends BaseController
 
             $mime = $file->getMimeType();
             if (!in_array($mime, $allowedMimes, true)) {
-                return 'Hanya file JPG, PNG, GIF, WebP, dan PDF yang diizinkan: ' . $file->getClientName();
+                return 'Tipe file tidak diizinkan: ' . $file->getClientName();
             }
 
             if ($file->getSize() > $maxSize) {
