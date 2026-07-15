@@ -520,6 +520,9 @@ class Blueprints extends BaseController
         $blueprintToken = $data['blueprint_token'] ?? null;
         unset($data['blueprint_token']);
 
+        $deletedAttachments = $data['deleted_attachments'] ?? '';
+        unset($data['deleted_attachments']);
+
         $result = $this->api->post_data('blueprints/business-scenarios/' . $encryptedId . '/update', $data);
 
         if (!$result || !($result['status'] ?? false)) {
@@ -528,6 +531,25 @@ class Blueprints extends BaseController
         }
 
         if ($blueprintToken) {
+            if ($deletedAttachments) {
+                $deletedIds = json_decode($deletedAttachments, true);
+                if (is_array($deletedIds)) {
+                    $uploadPath = WRITEPATH . 'uploads/blueprints/';
+                    foreach ($deletedIds as $encAttId) {
+                        $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $encAttId);
+                        if ($attResult && ($attResult['status'] ?? false)) {
+                            $storedName = $attResult['data']['result']['stored_name'] ?? '';
+                            if ($storedName) {
+                                $filePath = $uploadPath . $storedName;
+                                if (is_file($filePath)) { unlink($filePath); }
+                            }
+                        } else {
+                            log_message('error', 'Blueprints: Failed to delete attachment ' . $encAttId . ': ' . json_encode($attResult));
+                        }
+                    }
+                }
+            }
+
             $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
                 return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
             });
@@ -622,6 +644,9 @@ class Blueprints extends BaseController
         $blueprintToken = $data['blueprint_token'] ?? null;
         unset($data['blueprint_token']);
 
+        $deletedAttachments = $data['deleted_attachments'] ?? '';
+        unset($data['deleted_attachments']);
+
         $result = $this->api->post_data('blueprints/design-pages/' . $encryptedId . '/update', $data);
 
         if (!$result || !($result['status'] ?? false)) {
@@ -630,6 +655,25 @@ class Blueprints extends BaseController
         }
 
         if ($blueprintToken) {
+            if ($deletedAttachments) {
+                $deletedIds = json_decode($deletedAttachments, true);
+                if (is_array($deletedIds)) {
+                    $uploadPath = WRITEPATH . 'uploads/blueprints/';
+                    foreach ($deletedIds as $encAttId) {
+                        $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $encAttId);
+                        if ($attResult && ($attResult['status'] ?? false)) {
+                            $storedName = $attResult['data']['result']['stored_name'] ?? '';
+                            if ($storedName) {
+                                $filePath = $uploadPath . $storedName;
+                                if (is_file($filePath)) { unlink($filePath); }
+                            }
+                        } else {
+                            log_message('error', 'Blueprints: Failed to delete attachment ' . $encAttId . ': ' . json_encode($attResult));
+                        }
+                    }
+                }
+            }
+
             $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
                 return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
             });

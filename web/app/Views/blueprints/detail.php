@@ -91,15 +91,21 @@
                             </div>
                         <?php else: ?>
                             <?php foreach ($blueprint['modules'] as $idx => $mod): ?>
+                            <?php
+                            $specCount = 0;
+                            foreach ($mod['design_pages'] ?? [] as $dp) {
+                                $specCount += count($dp['page_specifications'] ?? []);
+                            }
+                            ?>
                             <a href="#" class="list-group-item list-group-item-action module-item <?= $idx === 0 ? 'active' : '' ?>"
-                               data-module-id="<?= esc($mod['id_encrypted'] ?? $mod['id'], 'attr') ?>"
-                               onclick="selectModule('<?= esc($mod['id_encrypted'] ?? $mod['id'], 'attr') ?>', this); return false;">
+                               data-module-id="<?= esc($mod['id'], 'attr') ?>"
+                               onclick="selectModule('<?= esc($mod['id'], 'attr') ?>', this); return false;">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="fw-medium" style="font-size:13px"><?= esc($mod['name']) ?></span>
                                     <span class="text-muted" style="font-size:11px">
                                         <?= count($mod['business_scenarios'] ?? []) ?>S /
                                         <?= count($mod['design_pages'] ?? []) ?>D /
-                                        <?= count($mod['page_specifications'] ?? []) ?>P
+                                        <?= $specCount ?>P
                                     </span>
                                 </div>
                             </a>
@@ -357,6 +363,9 @@
                         <div style="border:2px dashed var(--sap-border);border-radius:var(--sap-radius);padding:16px;text-align:center;cursor:pointer" id="scenarioDropzone">
                             <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--sap-text-muted);display:block;margin-bottom:4px"></i>
                             <p class="mb-0 text-secondary" style="font-size:12px">Drop files here or click to browse</p>
+                            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm mt-2" onclick="event.stopPropagation(); $(this).closest('.mb-3').find('input[type=file]').click();">
+                                <i class="fas fa-upload"></i> Pilih File
+                            </button>
                             <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" multiple hidden>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-2" id="scenarioFilePreview"></div>
@@ -396,6 +405,9 @@
                         <div style="border:2px dashed var(--sap-border);border-radius:var(--sap-radius);padding:16px;text-align:center;cursor:pointer" id="designPageDropzone">
                             <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--sap-text-muted);display:block;margin-bottom:4px"></i>
                             <p class="mb-0 text-secondary" style="font-size:12px">Drop images here or click to browse</p>
+                            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm mt-2" onclick="event.stopPropagation(); $(this).closest('.mb-3').find('input[type=file]').click();">
+                                <i class="fas fa-image"></i> Pilih Gambar
+                            </button>
                             <input type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple hidden>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-2" id="designPageFilePreview"></div>
@@ -434,14 +446,23 @@
 <script>
 var token = '<?= esc($token) ?>';
 var userPermissions = <?= json_encode($userPermissions) ?>;
-var currentModuleId = <?= json_encode($blueprint['modules'][0]['id_encrypted'] ?? $blueprint['modules'][0]['id'] ?? null) ?>;
+var currentModuleId = <?= json_encode($blueprint['modules'][0]['id'] ?? null) ?>;
 var currentTab = 'scenarios';
 var scenarioFiles = [];
+var scenarioExistingAttachments = [];
+var scenarioDeletedAttachments = [];
 var designPageFiles = [];
+var designPageExistingAttachments = [];
+var designPageDeletedAttachments = [];
 var blueprintModules = <?= json_encode($blueprint['modules'] ?? []) ?>;
 
 function escHtml(str) {
     return $('<div>').text(str || '').html();
+}
+
+function getEncryptedModuleId(rawId) {
+    var mod = blueprintModules.find(function(m) { return m.id == rawId; });
+    return mod ? (mod.id_encrypted || mod.id) : null;
 }
 
 function selectModule(moduleId, el) {
@@ -455,7 +476,7 @@ function selectModule(moduleId, el) {
 
 function loadModuleContent(moduleId) {
     if (!moduleId) return;
-    var mod = blueprintModules.find(function(m) { return (m.id_encrypted || m.id) == moduleId; });
+    var mod = blueprintModules.find(function(m) { return m.id == moduleId; });
     if (!mod) return;
     renderScenarios(mod.business_scenarios || []);
     renderDesignPages(mod.design_pages || []);
@@ -501,7 +522,8 @@ function updateModulesSidebar(modules) {
     }
     var canUpdate = userPermissions.blueprints && userPermissions.blueprints.can_update;
     modules.forEach(function(mod) {
-        var moduleId = mod.id_encrypted || mod.id;
+        var moduleId = mod.id;
+        var encModuleId = mod.id_encrypted;
         var isActive = moduleId == currentModuleId;
         var scenarioCount = (mod.business_scenarios || []).length;
         var designCount = (mod.design_pages || []).length;
@@ -510,21 +532,21 @@ function updateModulesSidebar(modules) {
         var actionsHtml = '';
         if (canUpdate) {
             actionsHtml = '<span class="module-actions">' +
-                '<button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="event.stopPropagation(); editModule(\'' + moduleId + '\')" style="padding:2px 6px;font-size:11px"><i class="fas fa-edit"></i></button> ' +
-                '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="event.stopPropagation(); deleteModule(\'' + moduleId + '\')" style="padding:2px 6px;font-size:11px"><i class="fas fa-trash"></i></button>' +
+                '<button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="event.stopPropagation(); editModule(\'' + encModuleId + '\')" style="padding:2px 6px;font-size:11px"><i class="fas fa-edit"></i></button> ' +
+                '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="event.stopPropagation(); deleteModule(\'' + encModuleId + '\')" style="padding:2px 6px;font-size:11px"><i class="fas fa-trash"></i></button>' +
                 '</span>';
         }
         var moduleHtml = '<a href="#" class="list-group-item list-group-item-action module-item ' + (isActive ? 'active' : '') + '" ' +
             'data-module-id="' + moduleId + '" ' +
-            'onclick="selectModule(\'' + moduleId + '\', this); return false;">' +
+            'onclick="selectModule(' + moduleId + ', this); return false;">' +
             '<div class="d-flex justify-content-between align-items-center">' +
             '<span class="fw-medium" style="font-size:13px">' + escHtml(mod.name) + '</span>' +
             '<span class="text-muted" style="font-size:11px">' + scenarioCount + 'S / ' + designCount + 'D / ' + specCount + 'P</span>' +
-            '</div></a>';
+            '</div>' + actionsHtml + '</a>';
         container.append(moduleHtml);
     });
     if (!currentModuleId && modules.length) {
-        currentModuleId = modules[0].id_encrypted || modules[0].id;
+        currentModuleId = modules[0].id;
     }
     if (currentModuleId) {
         loadModuleContent(currentModuleId);
@@ -801,13 +823,16 @@ function showAddScenario() {
     $('#scenarioFormId').val('');
     $('#scenarioTitleInput').val('');
     $('#scenarioDescInput').val('');
+    scenarioExistingAttachments = [];
+    scenarioDeletedAttachments = [];
     scenarioFiles = [];
+    $('#scenarioModal .modal-title').html('<i class="fas fa-briefcase me-2"></i>Add Business Scenario');
     renderScenarioFiles();
     $('#scenarioModal').modal('show');
 }
 
 function editScenario(scenarioId) {
-    var mod = blueprintModules.find(function(m) { return (m.id_encrypted || m.id) == currentModuleId; });
+    var mod = blueprintModules.find(function(m) { return m.id == currentModuleId; });
     if (!mod) return;
     var scenarios = mod.business_scenarios || [];
     var s = scenarios.find(function(sc) { return (sc.id_encrypted || sc.id) == scenarioId; });
@@ -815,7 +840,10 @@ function editScenario(scenarioId) {
     $('#scenarioFormId').val(scenarioId);
     $('#scenarioTitleInput').val(s.title);
     $('#scenarioDescInput').val(s.description);
+    scenarioExistingAttachments = (s.attachments || []).map(function(a) { return Object.assign({}, a); });
+    scenarioDeletedAttachments = [];
     scenarioFiles = [];
+    $('#scenarioModal .modal-title').html('<i class="fas fa-briefcase me-2"></i>Edit Business Scenario');
     renderScenarioFiles();
     $('#scenarioModal').modal('show');
 }
@@ -845,24 +873,44 @@ function deleteScenario(scenarioId) {
 function renderScenarioFiles() {
     var preview = $('#scenarioFilePreview');
     preview.empty();
+    var baseUrl = site_url + '/uploads/blueprints/';
+    var removeBtnStyle = 'position:absolute;top:-6px;right:-6px;background:var(--sap-error);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center';
+    var thumbStyle = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)';
+    var fileBoxStyle = 'width:80px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--sap-border);background:var(--sap-background);font-size:11px;text-align:center;padding:4px;overflow:hidden';
+
+    scenarioExistingAttachments.forEach(function(att) {
+        if (scenarioDeletedAttachments.indexOf(att.id) !== -1) return;
+        var wrapper = $('<div style="position:relative;display:inline-block"></div>');
+        if (att.mime_type && att.mime_type.indexOf('image/') === 0) {
+            wrapper.append('<img src="' + baseUrl + att.stored_name + '" style="' + thumbStyle + '">');
+        } else {
+            wrapper.append('<div style="' + fileBoxStyle + '"><i class="fas fa-file mb-1"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px">' + escHtml(att.filename) + '</span></div>');
+        }
+        wrapper.append('<button type="button" class="btn-remove-existing-attachment" data-att-id="' + att.id + '" style="' + removeBtnStyle + '">&times;</button>');
+        preview.append(wrapper);
+    });
+
     scenarioFiles.forEach(function(file, i) {
         var wrapper = $('<div style="position:relative;display:inline-block"></div>');
         if (file.type.startsWith('image/')) {
             var reader = new FileReader();
             reader.onload = function(e) {
-                wrapper.append('<img src="' + e.target.result + '" style="max-width:100px;max-height:75px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)">');
-                wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + i + '" style="position:absolute;top:-6px;right:-6px;background:var(--sap-error);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">&times;</button>');
+                wrapper.append('<img src="' + e.target.result + '" style="' + thumbStyle + '">');
+                wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + i + '" style="' + removeBtnStyle + '">&times;</button>');
             };
             reader.readAsDataURL(file);
         } else {
-            wrapper.append('<div style="padding:8px 12px;background:var(--sap-background);border-radius:6px;border:1px solid var(--sap-border);font-size:12px"><i class="fas fa-file" style="margin-right:4px"></i>' + file.name + '</div>');
-            wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + i + '" style="position:absolute;top:-6px;right:-6px;background:var(--sap-error);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">&times;</button>');
+            wrapper.append('<div style="' + fileBoxStyle + '"><i class="fas fa-file mb-1"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px">' + escHtml(file.name) + '</span></div>');
+            wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + i + '" style="' + removeBtnStyle + '">&times;</button>');
         }
         preview.append(wrapper);
     });
 }
 
-$('#scenarioDropzone').on('click', function() { $(this).find('input[type="file"]').click(); })
+$('#scenarioDropzone').on('click', function(e) {
+    if (e.target !== this) return;
+    $(this).find('input[type="file"]').click();
+})
 .on('dragover', function(e) { e.preventDefault(); $(this).css('border-color', 'var(--sap-brand)'); })
 .on('dragleave', function() { $(this).css('border-color', 'var(--sap-border)'); })
 .on('drop', function(e) {
@@ -884,13 +932,25 @@ $('#scenarioFilePreview').on('click', '.btn-remove-file', function() {
     renderScenarioFiles();
 });
 
+$('#scenarioFilePreview').on('click', '.btn-remove-existing-attachment', function() {
+    var attId = $(this).data('att-id');
+    if (scenarioDeletedAttachments.indexOf(attId) === -1) {
+        scenarioDeletedAttachments.push(attId);
+    }
+    renderScenarioFiles();
+});
+
 $('#scenarioForm').on('submit', function(e) {
     e.preventDefault();
     var id = $('#scenarioFormId').val();
-    var url = id ? site_url + '/blueprints/business-scenarios/' + id + '/update' : site_url + '/blueprints/modules/' + currentModuleId + '/business-scenarios';
+    var encModId = getEncryptedModuleId(currentModuleId);
+    var url = id ? site_url + '/blueprints/business-scenarios/' + id + '/update' : site_url + '/blueprints/modules/' + encModId + '/business-scenarios';
     var fd = new FormData(this);
     fd.delete('images[]');
     scenarioFiles.forEach(function(f) { fd.append('images[]', f); });
+    if (scenarioDeletedAttachments.length) {
+        fd.append('deleted_attachments', JSON.stringify(scenarioDeletedAttachments));
+    }
     $.ajax({
         url: url,
         type: 'POST',
@@ -915,13 +975,16 @@ function showAddDesignPage() {
     $('#designPageFormId').val('');
     $('#designPageTitleInput').val('');
     $('#designPageDescInput').val('');
+    designPageExistingAttachments = [];
+    designPageDeletedAttachments = [];
     designPageFiles = [];
+    $('#designPageModal .modal-title').html('<i class="fas fa-palette me-2"></i>Add Design Page');
     renderDesignPageFiles();
     $('#designPageModal').modal('show');
 }
 
 function editDesignPage(pageId) {
-    var mod = blueprintModules.find(function(m) { return (m.id_encrypted || m.id) == currentModuleId; });
+    var mod = blueprintModules.find(function(m) { return m.id == currentModuleId; });
     if (!mod) return;
     var pages = mod.design_pages || [];
     var p = pages.find(function(dp) { return (dp.id_encrypted || dp.id) == pageId; });
@@ -929,7 +992,10 @@ function editDesignPage(pageId) {
     $('#designPageFormId').val(pageId);
     $('#designPageTitleInput').val(p.title);
     $('#designPageDescInput').val(p.description);
+    designPageExistingAttachments = (p.attachments || []).map(function(a) { return Object.assign({}, a); });
+    designPageDeletedAttachments = [];
     designPageFiles = [];
+    $('#designPageModal .modal-title').html('<i class="fas fa-palette me-2"></i>Edit Design Page');
     renderDesignPageFiles();
     $('#designPageModal').modal('show');
 }
@@ -959,21 +1025,44 @@ function deleteDesignPage(pageId) {
 function renderDesignPageFiles() {
     var preview = $('#designPageFilePreview');
     preview.empty();
+    var baseUrl = site_url + '/uploads/blueprints/';
+    var removeBtnStyle = 'position:absolute;top:-6px;right:-6px;background:var(--sap-error);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center';
+    var thumbStyle = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)';
+    var fileBoxStyle = 'width:80px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--sap-border);background:var(--sap-background);font-size:11px;text-align:center;padding:4px;overflow:hidden';
+
+    designPageExistingAttachments.forEach(function(att) {
+        if (designPageDeletedAttachments.indexOf(att.id) !== -1) return;
+        var wrapper = $('<div style="position:relative;display:inline-block"></div>');
+        if (att.mime_type && att.mime_type.indexOf('image/') === 0) {
+            wrapper.append('<img src="' + baseUrl + att.stored_name + '" style="' + thumbStyle + '">');
+        } else {
+            wrapper.append('<div style="' + fileBoxStyle + '"><i class="fas fa-file mb-1"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px">' + escHtml(att.filename) + '</span></div>');
+        }
+        wrapper.append('<button type="button" class="btn-remove-existing-attachment" data-att-id="' + att.id + '" style="' + removeBtnStyle + '">&times;</button>');
+        preview.append(wrapper);
+    });
+
     designPageFiles.forEach(function(file, i) {
         var wrapper = $('<div style="position:relative;display:inline-block"></div>');
         if (file.type.startsWith('image/')) {
             var reader = new FileReader();
             reader.onload = function(e) {
-                wrapper.append('<img src="' + e.target.result + '" style="max-width:100px;max-height:75px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)">');
-                wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + i + '" style="position:absolute;top:-6px;right:-6px;background:var(--sap-error);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">&times;</button>');
+                wrapper.append('<img src="' + e.target.result + '" style="' + thumbStyle + '">');
+                wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + i + '" style="' + removeBtnStyle + '">&times;</button>');
             };
             reader.readAsDataURL(file);
+        } else {
+            wrapper.append('<div style="' + fileBoxStyle + '"><i class="fas fa-file mb-1"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px">' + escHtml(file.name) + '</span></div>');
+            wrapper.append('<button type="button" class="btn-remove-file" data-idx="' + i + '" style="' + removeBtnStyle + '">&times;</button>');
         }
         preview.append(wrapper);
     });
 }
 
-$('#designPageDropzone').on('click', function() { $(this).find('input[type="file"]').click(); })
+$('#designPageDropzone').on('click', function(e) {
+    if (e.target !== this) return;
+    $(this).find('input[type="file"]').click();
+})
 .on('dragover', function(e) { e.preventDefault(); $(this).css('border-color', 'var(--sap-brand)'); })
 .on('dragleave', function() { $(this).css('border-color', 'var(--sap-border)'); })
 .on('drop', function(e) {
@@ -995,13 +1084,25 @@ $('#designPageFilePreview').on('click', '.btn-remove-file', function() {
     renderDesignPageFiles();
 });
 
+$('#designPageFilePreview').on('click', '.btn-remove-existing-attachment', function() {
+    var attId = $(this).data('att-id');
+    if (designPageDeletedAttachments.indexOf(attId) === -1) {
+        designPageDeletedAttachments.push(attId);
+    }
+    renderDesignPageFiles();
+});
+
 $('#designPageForm').on('submit', function(e) {
     e.preventDefault();
     var id = $('#designPageFormId').val();
-    var url = id ? site_url + '/blueprints/design-pages/' + id + '/update' : site_url + '/blueprints/modules/' + currentModuleId + '/design-pages';
+    var encModId = getEncryptedModuleId(currentModuleId);
+    var url = id ? site_url + '/blueprints/design-pages/' + id + '/update' : site_url + '/blueprints/modules/' + encModId + '/design-pages';
     var fd = new FormData(this);
     fd.delete('images[]');
     designPageFiles.forEach(function(f) { fd.append('images[]', f); });
+    if (designPageDeletedAttachments.length) {
+        fd.append('deleted_attachments', JSON.stringify(designPageDeletedAttachments));
+    }
     $.ajax({
         url: url,
         type: 'POST',

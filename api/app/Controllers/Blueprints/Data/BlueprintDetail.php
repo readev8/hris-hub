@@ -62,7 +62,7 @@ class BlueprintDetail extends BaseApi
                 }
             }
         }
-        $blueprint['modules'] = $modules;
+        unset($mod, $bs, $dp, $ps);
 
         $allAttachments = $this->db()->table('blueprint_attachments')
             ->where('blueprint_id', $id)
@@ -72,6 +72,7 @@ class BlueprintDetail extends BaseApi
         foreach ($allAttachments as &$att) {
             $att['id'] = $this->api->encryptId($att['id']);
         }
+        unset($att);
 
         $blueprintAttachments = [];
         $attachmentsBySection = [];
@@ -98,6 +99,8 @@ class BlueprintDetail extends BaseApi
                 $dp['attachments'] = $attachmentsBySection['design_page:' . $dp['id']] ?? [];
             }
         }
+        unset($mod, $bs, $dp);
+        $blueprint['modules'] = $modules;
 
         $approvals = $this->db()->table('blueprint_approval_requests')
             ->select('blueprint_approval_requests.*, approver.full_name as approver_name')

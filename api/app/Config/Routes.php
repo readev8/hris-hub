@@ -96,7 +96,24 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('blueprints/pending',                                  'Blueprints\Report\BlueprintList::get_pending_approvals');
     $routes->get('blueprints/design-pages/(:any)',                      'Blueprints\Data\DesignPageDetail::get_detail/$1');
     $routes->get('blueprints/(:any)',                                   'Blueprints\Data\BlueprintDetail::get_detail/$1');
+
+    // Blueprints — exact routes first
     $routes->post('blueprints/create',                                  'Blueprints\Action\Blueprints::create');
+
+    // Blueprints — specific sub-entity routes (BEFORE wildcards)
+    $routes->post('blueprints/modules/(:any)/update',                   'Blueprints\Action\Modules::update/$1');
+    $routes->post('blueprints/modules/(:any)/delete',                   'Blueprints\Action\Modules::delete/$1');
+    $routes->post('blueprints/modules/(:any)/business-scenarios',       'Blueprints\Action\BusinessScenarios::create/$1');
+    $routes->post('blueprints/modules/(:any)/design-pages',             'Blueprints\Action\DesignPages::create/$1');
+    $routes->post('blueprints/business-scenarios/(:any)/update',        'Blueprints\Action\BusinessScenarios::update/$1');
+    $routes->post('blueprints/business-scenarios/(:any)/delete',        'Blueprints\Action\BusinessScenarios::delete/$1');
+    $routes->post('blueprints/design-pages/(:any)/update',              'Blueprints\Action\DesignPages::update/$1');
+    $routes->post('blueprints/design-pages/(:any)/delete',              'Blueprints\Action\DesignPages::delete/$1');
+    $routes->post('blueprints/design-pages/(:any)/page-specifications',  'Blueprints\Action\PageSpecifications::create/$1');
+    $routes->post('blueprints/page-specifications/(:any)/update',       'Blueprints\Action\PageSpecifications::update/$1');
+    $routes->post('blueprints/page-specifications/(:any)/delete',       'Blueprints\Action\PageSpecifications::delete/$1');
+
+    // Blueprints — wildcard blueprint-level routes (LAST)
     $routes->post('blueprints/(:any)/update',                           'Blueprints\Action\Blueprints::update/$1');
     $routes->post('blueprints/(:any)/delete',                           'Blueprints\Action\Blueprints::delete/$1');
     $routes->post('blueprints/(:any)/approve-it',                       'Blueprints\Action\Blueprints::approve_it/$1');
@@ -107,17 +124,6 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('blueprints/(:any)/attachments',                      'Blueprints\Action\Attachments::add/$1');
     $routes->delete('blueprints/(:any)/attachments/(:any)',             'Blueprints\Action\Attachments::delete/$1/$2');
     $routes->post('blueprints/(:any)/modules',                          'Blueprints\Action\Modules::create/$1');
-    $routes->post('blueprints/modules/(:any)/update',                   'Blueprints\Action\Modules::update/$1');
-    $routes->post('blueprints/modules/(:any)/delete',                   'Blueprints\Action\Modules::delete/$1');
-    $routes->post('blueprints/modules/(:any)/business-scenarios',       'Blueprints\Action\BusinessScenarios::create/$1');
-    $routes->post('blueprints/business-scenarios/(:any)/update',        'Blueprints\Action\BusinessScenarios::update/$1');
-    $routes->post('blueprints/business-scenarios/(:any)/delete',        'Blueprints\Action\BusinessScenarios::delete/$1');
-    $routes->post('blueprints/modules/(:any)/design-pages',             'Blueprints\Action\DesignPages::create/$1');
-    $routes->post('blueprints/design-pages/(:any)/update',              'Blueprints\Action\DesignPages::update/$1');
-    $routes->post('blueprints/design-pages/(:any)/delete',              'Blueprints\Action\DesignPages::delete/$1');
-    $routes->post('blueprints/design-pages/(:any)/page-specifications',  'Blueprints\Action\PageSpecifications::create/$1');
-    $routes->post('blueprints/page-specifications/(:any)/update',       'Blueprints\Action\PageSpecifications::update/$1');
-    $routes->post('blueprints/page-specifications/(:any)/delete',       'Blueprints\Action\PageSpecifications::delete/$1');
 
     // Roles & Permissions
     $routes->get('roles',                              'Roles\Report\RoleList::get_list');

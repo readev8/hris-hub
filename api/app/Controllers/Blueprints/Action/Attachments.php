@@ -23,9 +23,16 @@ class Attachments extends BaseApi
         $storedName = trim($input['stored_name'] ?? '');
         $mimeType = trim($input['mime_type'] ?? '');
         $fileSize = (int) ($input['file_size'] ?? 0);
-        $moduleId = !empty($input['module_id']) ? $this->resolveId($input['module_id']) : null;
         $sectionType = trim($input['section_type'] ?? '');
         $sectionId = !empty($input['section_id']) ? $this->resolveId($input['section_id']) : null;
+
+        $moduleId = null;
+        if (!empty($input['module_id'])) {
+            $moduleId = $this->resolveId($input['module_id']);
+            if ($moduleId === null) {
+                log_message('error', 'Attachments: Failed to resolve module_id from: ' . ($input['module_id'] ?? 'null'));
+            }
+        }
 
         if (empty($filename) || empty($storedName) || empty($mimeType) || $fileSize <= 0) {
             return $this->JSONResponse('Data lampiran tidak lengkap', null, 400);

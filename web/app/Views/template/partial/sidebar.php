@@ -21,30 +21,6 @@ $canBlueprints     = !empty($perms['blueprints']['can_view']);
                     </a>
                 </li>
             <?php endif; ?>
-            <?php if ($canTickets): ?>
-                <li>
-                    <a href="<?= site_url('tickets') ?>">
-                        <i class="fas fa-ticket"></i>
-                        <span>Tickets</span>
-                    </a>
-                </li>
-            <?php endif; ?>
-            <?php if ($canImprovements): ?>
-                <li>
-                    <a href="<?= site_url('improvements') ?>">
-                        <i class="fas fa-rocket"></i>
-                        <span>Improvements</span>
-                    </a>
-                </li>
-            <?php endif; ?>
-            <?php if ($canBlueprints): ?>
-                <li>
-                    <a href="<?= site_url('blueprints') ?>">
-                        <i class="fas fa-drafting-compass"></i>
-                        <span>Blueprints</span>
-                    </a>
-                </li>
-            <?php endif; ?>
         </ul>
     <?php endif; ?>
     <ul class="sidebar-nav">
@@ -76,6 +52,14 @@ $canBlueprints     = !empty($perms['blueprints']['can_view']);
             <a href="<?= site_url('improvements') ?>">
                 <i class="fas fa-rocket"></i>
                 <span>Improvements</span>
+            </a>
+        </li>
+    <?php endif; ?>
+    <?php if ($canBlueprints): ?>
+        <li>
+            <a href="<?= site_url('blueprints') ?>">
+                <i class="fas fa-drafting-compass"></i>
+                <span>Blueprints</span>
             </a>
         </li>
     <?php endif; ?>

@@ -11,7 +11,7 @@ class CreateBlueprintAttachments extends Migration
         $this->forge->addField([
             'id'           => ['type' => 'BIGINT', 'unsigned' => true, 'auto_increment' => true],
             'blueprint_id' => ['type' => 'BIGINT', 'unsigned' => true],
-            'module_id'    => ['type' => 'BIGINT', 'unsigned' => true],
+            'module_id'    => ['type' => 'BIGINT', 'unsigned' => true, 'null' => true, 'default' => null],
             'section_type' => ['type' => 'VARCHAR', 'constraint' => 50],
             'section_id'   => ['type' => 'BIGINT', 'unsigned' => true],
             'uploaded_by'  => ['type' => 'BIGINT', 'unsigned' => true],
