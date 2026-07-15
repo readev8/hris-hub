@@ -9,6 +9,120 @@
     display: none;
 }
 .field-error.visible { display: block; }
+
+/* Improvement Search Input */
+.improvement-search-wrapper {
+    position: relative;
+}
+.improvement-search-input-wrap {
+    position: relative;
+    display: flex;
+    gap: 8px;
+}
+.improvement-search-input {
+    flex: 1;
+    padding-left: 40px !important;
+    height: 46px !important;
+    font-size: 15px !important;
+    border-radius: 12px !important;
+    background: var(--sap-bg);
+    border: 1.5px solid var(--sap-border-input) !important;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+    cursor: pointer;
+}
+.improvement-search-input:focus {
+    border-color: var(--sap-brand) !important;
+    box-shadow: 0 0 0 3px rgba(0,112,242,0.12) !important;
+}
+.improvement-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sap-text-muted);
+    font-size: 14px;
+    z-index: 2;
+}
+.improvement-search-btn {
+    height: 46px;
+    padding: 0 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.improvement-hint {
+    font-size: 12px;
+    color: var(--sap-text-muted);
+    margin-top: 6px;
+    padding-left: 2px;
+}
+/* Selected Improvement Card */
+.improvement-selected-card {
+    margin-top: 12px;
+    padding: 14px 16px;
+    background: var(--sap-surface);
+    border: 1.5px solid var(--sap-brand);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    animation: sapFadeInUp 200ms ease both;
+}
+.improvement-selected-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+.improvement-selected-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--sap-brand);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.improvement-selected-text {
+    flex: 1;
+    min-width: 0;
+}
+.improvement-selected-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--sap-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.improvement-selected-meta {
+    font-size: 12px;
+    color: var(--sap-text-muted);
+    margin-top: 2px;
+}
+.improvement-selected-remove {
+    background: none;
+    border: none;
+    color: var(--sap-text-muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: all 150ms ease;
+    flex-shrink: 0;
+}
+.improvement-selected-remove:hover {
+    background: var(--sap-error-bg);
+    color: var(--sap-error);
+}
 </style>
 <?= $this->endSection() ?>
 
@@ -30,17 +144,31 @@
                         <i class="fas fa-link me-1"></i> Select Improvement
                     </h5>
                     <div class="mb-3">
-                        <label class="sap-label">Improvement <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="text" class="sap-input" id="improvementDisplay"
-                                   placeholder="Click search to select improvement..." disabled>
-                            <input type="hidden" name="improvement_id" id="improvementId" value="">
-                            <button type="button" class="sap-btn sap-btn-secondary" onclick="openImprovementModal()" style="white-space:nowrap">
-                                <i class="fas fa-search"></i> Search
-                            </button>
-                            <button type="button" class="sap-btn sap-btn-secondary" onclick="clearImprovement()" style="white-space:nowrap">
-                                <i class="fas fa-times"></i>
-                            </button>
+                        <label class="sap-label" for="improvementDisplay">Improvement <span class="text-danger">*</span></label>
+                        <div class="improvement-search-wrapper">
+                            <div class="improvement-search-input-wrap">
+                                <i class="fas fa-link improvement-search-icon"></i>
+                                <input type="text" class="sap-input improvement-search-input" id="improvementDisplay"
+                                       placeholder="Click search to select improvement..." readonly>
+                                <input type="hidden" name="improvement_id" id="improvementId" value="">
+                                <button type="button" class="sap-btn sap-btn-primary improvement-search-btn" onclick="openImprovementModal()">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                            </div>
+                            <div class="improvement-hint" id="improvementHint">Click search to find and select an improvement</div>
+                            <!-- Selected Improvement Card (hidden by default) -->
+                            <div id="improvementSelectedCard" class="improvement-selected-card" style="display:none">
+                                <div class="improvement-selected-info">
+                                    <div class="improvement-selected-icon"><i class="fas fa-lightbulb"></i></div>
+                                    <div class="improvement-selected-text">
+                                        <div class="improvement-selected-name" id="selectedImprovementName">-</div>
+                                        <div class="improvement-selected-meta" id="selectedImprovementMeta">-</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="improvement-selected-remove" onclick="clearImprovement()" title="Remove">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="field-error" id="error-improvement_id" role="alert"></div>
                     </div>
@@ -85,6 +213,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
+                <div id="improvementSearchLoading" class="text-center p-4" style="display:none">
+                    <i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--sap-brand)"></i>
+                    <p class="mt-2 mb-0 text-secondary" style="font-size:13px">Loading improvements...</p>
+                </div>
+                <div id="improvementSearchEmpty" class="text-center p-4" style="display:none">
+                    <i class="fas fa-inbox" style="font-size:36px;color:var(--sap-text-muted)"></i>
+                    <h5 class="mt-2">No improvements found</h5>
+                    <p class="mb-0 text-secondary" style="font-size:13px">All improvements already have blueprints, or try a different search.</p>
+                </div>
                 <table id="improvementSearchTable" class="sap-table mb-0" style="width:100%">
                     <thead>
                         <tr>
@@ -109,6 +246,7 @@
 <?= $this->section('scripts') ?>
 <script>
 var improvementSearchTable = null;
+var selectedImprovementData = null;
 
 function sapBadge(name) {
     var clsMap = {'Draft':'draft','Pending IT Approval':'pending','Pending Dept Approval':'pending','Approved':'approved','Rejected':'rejected'};
@@ -119,6 +257,10 @@ function sapBadge(name) {
 function openImprovementModal() {
     var modal = new bootstrap.Modal(document.getElementById('improvementSearchModal'));
     modal.show();
+    $('#improvementSearchLoading').show();
+    $('#improvementSearchEmpty').hide();
+    $('#improvementSearchTable').hide();
+
     if (!improvementSearchTable) {
         improvementSearchTable = $('#improvementSearchTable').DataTable({
             processing: true,
@@ -126,7 +268,17 @@ function openImprovementModal() {
             ajax: {
                 url: site_url + '/improvements/ajax-list',
                 data: { exclude_blueprint: 1 },
-                dataSrc: 'data'
+                dataSrc: function(json) {
+                    $('#improvementSearchLoading').hide();
+                    if (!json.data || json.data.length === 0) {
+                        $('#improvementSearchEmpty').show();
+                        $('#improvementSearchTable').hide();
+                    } else {
+                        $('#improvementSearchEmpty').hide();
+                        $('#improvementSearchTable').show();
+                    }
+                    return json.data || [];
+                }
             },
             columns: [
                 { data: 'name', render: function(d) { return '<span class="fw-medium">' + d + '</span>'; } },
@@ -138,12 +290,15 @@ function openImprovementModal() {
                     data: 'id',
                     orderable: false,
                     render: function(d) {
-                        return '<button class="sap-btn sap-btn-primary sap-btn-sm" onclick="selectImprovement(\'' + d + '\', this)"><i class="fas fa-check"></i></button>';
+                        return '<button class="sap-btn sap-btn-primary sap-btn-sm" onclick="selectImprovement(\'' + d + '\', this)"><i class="fas fa-check"></i> Select</button>';
                     }
                 }
             ],
             order: [[4, 'desc']],
-            language: { searchPlaceholder: 'Search improvements...' }
+            language: { searchPlaceholder: 'Search by name...', emptyTable: 'No improvements available' },
+            drawCallback: function() {
+                $('#improvementSearchLoading').hide();
+            }
         });
     } else {
         improvementSearchTable.ajax.reload();
@@ -152,15 +307,26 @@ function openImprovementModal() {
 
 function selectImprovement(id, btn) {
     var rowData = improvementSearchTable.row($(btn).closest('tr')).data();
+    selectedImprovementData = rowData;
     $('#improvementId').val(id);
     $('#improvementDisplay').val(rowData.name);
+    $('#selectedImprovementName').text(rowData.name);
+    var meta = [];
+    if (rowData.status_name) meta.push('Status: ' + rowData.status_name);
+    if (rowData.priority_name) meta.push('Priority: ' + rowData.priority_name);
+    $('#selectedImprovementMeta').text(meta.join(' • '));
+    $('#improvementSelectedCard').slideDown(200);
+    $('#improvementHint').hide();
     $('#error-improvement_id').removeClass('visible').text('');
     bootstrap.Modal.getInstance(document.getElementById('improvementSearchModal')).hide();
 }
 
 function clearImprovement() {
+    selectedImprovementData = null;
     $('#improvementId').val('');
     $('#improvementDisplay').val('');
+    $('#improvementSelectedCard').slideUp(200);
+    $('#improvementHint').show();
 }
 
 $(function() {

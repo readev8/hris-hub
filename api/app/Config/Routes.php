@@ -16,6 +16,10 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
 
     // Tickets
     $routes->post('tickets/create',              'Tickets\Action\Tickets::create_ticket');
+    $routes->post('tickets/(:any)/approve-it',    'Tickets\Action\Tickets::approve_it/$1');
+    $routes->post('tickets/(:any)/approve-dept',  'Tickets\Action\Tickets::approve_dept/$1');
+    $routes->post('tickets/(:any)/reject-approval','Tickets\Action\Tickets::reject_approval/$1');
+    $routes->post('tickets/(:any)/resubmit',      'Tickets\Action\Tickets::resubmit/$1');
     $routes->post('tickets/(:any)/update',       'Tickets\Action\Tickets::update_ticket/$1');
     $routes->post('tickets/(:any)/approve',      'Tickets\Action\Tickets::approve_ticket/$1');
     $routes->post('tickets/(:any)/reject',       'Tickets\Action\Tickets::reject_ticket/$1');
@@ -90,6 +94,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     // Blueprints
     $routes->get('blueprints',                                          'Blueprints\Report\BlueprintList::get_list');
     $routes->get('blueprints/pending',                                  'Blueprints\Report\BlueprintList::get_pending_approvals');
+    $routes->get('blueprints/design-pages/(:any)',                      'Blueprints\Data\DesignPageDetail::get_detail/$1');
     $routes->get('blueprints/(:any)',                                   'Blueprints\Data\BlueprintDetail::get_detail/$1');
     $routes->post('blueprints/create',                                  'Blueprints\Action\Blueprints::create');
     $routes->post('blueprints/(:any)/update',                           'Blueprints\Action\Blueprints::update/$1');
@@ -110,7 +115,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('blueprints/modules/(:any)/design-pages',             'Blueprints\Action\DesignPages::create/$1');
     $routes->post('blueprints/design-pages/(:any)/update',              'Blueprints\Action\DesignPages::update/$1');
     $routes->post('blueprints/design-pages/(:any)/delete',              'Blueprints\Action\DesignPages::delete/$1');
-    $routes->post('blueprints/modules/(:any)/page-specifications',      'Blueprints\Action\PageSpecifications::create/$1');
+    $routes->post('blueprints/design-pages/(:any)/page-specifications',  'Blueprints\Action\PageSpecifications::create/$1');
     $routes->post('blueprints/page-specifications/(:any)/update',       'Blueprints\Action\PageSpecifications::update/$1');
     $routes->post('blueprints/page-specifications/(:any)/delete',       'Blueprints\Action\PageSpecifications::delete/$1');
 

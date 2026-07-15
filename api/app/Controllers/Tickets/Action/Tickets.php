@@ -43,7 +43,7 @@ class Tickets extends BaseApi
             $pageId = $this->resolveId($input['page_id']);
         }
 
-        $needsPage = in_array($type, [Enums::TICKET_TYPE_BUG, Enums::TICKET_TYPE_CHANGE_REQUEST, Enums::TICKET_TYPE_DATA_REQUEST], true);
+        $needsPage = in_array($type, [Enums::TICKET_TYPE_BUG, Enums::TICKET_TYPE_CHANGE_REQUEST, Enums::TICKET_TYPE_DATA_REQUEST, Enums::TICKET_TYPE_CHANGE_DATA_REQUEST], true);
         if ($needsPage && !$pageId) {
             return $this->JSONResponse('Untuk tipe ini, wajib memilih halaman', null, 400);
         }
@@ -65,6 +65,7 @@ class Tickets extends BaseApi
             'creator_id'     => $userId,
             'page_id'        => $pageId,
             'due_date'       => $dueDate,
+            'needs_approval' => !empty($input['needs_approval']) ? 1 : 0,
             'tracking_code'  => 'TKT-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2))),
             'created_at'     => date('Y-m-d H:i:s'),
             'updated_at'     => date('Y-m-d H:i:s'),
@@ -236,6 +237,217 @@ class Tickets extends BaseApi
         });
     }
 
+    public function approve_it(string $encryptedId): ResponseInterface
+    {
+        return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_IT, function ($ticket, $userId) {
+            $this->db()->table('tickets')->update([
+                'status'     => Enums::TICKET_STATUS_APPROVED,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ], ['id' => $ticket['id']]);
+
+            $this->db()->table('approval_requests')->insert([
+                'ticket_id'       => $ticket['id'],
+                'requester_id'    => $ticket['creator_id'],
+                'approver_id'     => $userId,
+                'stage_sequence'  => Enums::STAGE_PENDING_IT,
+                'status'          => Enums::APPROVAL_APPROVED,
+                'reviewed_at'     => date('Y-m-d H:i:s'),
+                'created_at'      => date('Y-m-d H:i:s'),
+            ]);
+
+            $this->audit->log($userId, 'ticket', $ticket['id'], 'approve_it',
+                ['status' => Enums::TICKET_STATUS_OPEN],
+                ['status' => Enums::TICKET_STATUS_APPROVED]
+            );
+            return 'IT Manager approval berhasil';
+        });
+    }
+
+    public function approve_dept(string $encryptedId): ResponseInterface
+    {
+        return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_DEPT, function ($ticket, $userId) {
+            $this->db()->table('tickets')->update([
+                'status'     => Enums::TICKET_STATUS_IN_PROGRESS,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ], ['id' => $ticket['id']]);
+
+            $this->db()->table('approval_requests')->insert([
+                'ticket_id'       => $ticket['id'],
+                'requester_id'    => $ticket['creator_id'],
+                'approver_id'     => $userId,
+                'stage_sequence'  => Enums::STAGE_PENDING_DEPT,
+                'status'          => Enums::APPROVAL_APPROVED,
+                'reviewed_at'     => date('Y-m-d H:i:s'),
+                'created_at'      => date('Y-m-d H:i:s'),
+            ]);
+
+            $this->audit->log($userId, 'ticket', $ticket['id'], 'approve_dept',
+                ['status' => Enums::TICKET_STATUS_APPROVED],
+                ['status' => Enums::TICKET_STATUS_IN_PROGRESS]
+            );
+            return 'Department Head approval berhasil';
+        });
+    }
+
+    public function reject_approval(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('tickets', 'can_approve')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk reject ticket', null, 403);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $notes = trim($input['notes'] ?? '');
+
+        if (empty($notes)) {
+            return $this->JSONResponse('Alasan penolakan wajib diisi', null, 400);
+        }
+
+        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+
+        if ((int) $ticket['needs_approval'] !== 1) {
+            return $this->JSONResponse('Ticket ini tidak memerlukan approval', null, 400);
+        }
+
+        $currentStatus = (int) $ticket['status'];
+        if (!in_array($currentStatus, [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED], true)) {
+            return $this->JSONResponse('Status ticket tidak sesuai untuk penolakan', null, 400);
+        }
+
+        $role = $this->getCurrentUserRole();
+        if ($role !== Enums::IT_MANAGER && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya IT Manager, Dept Head, atau Admin yang dapat reject', null, 403);
+        }
+
+        $stageSequence = $currentStatus === Enums::TICKET_STATUS_OPEN
+            ? Enums::STAGE_PENDING_IT
+            : Enums::STAGE_PENDING_DEPT;
+
+        $this->db()->transStart();
+        $this->db()->table('tickets')->update([
+            'status'         => Enums::TICKET_STATUS_REJECTED,
+            'rejection_note' => $notes,
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ], ['id' => $ticket['id']]);
+
+        $this->db()->table('approval_requests')->insert([
+            'ticket_id'       => $ticket['id'],
+            'requester_id'    => $ticket['creator_id'],
+            'approver_id'     => $userId,
+            'stage_sequence'  => $stageSequence,
+            'status'          => Enums::APPROVAL_REJECTED,
+            'notes'           => $notes,
+            'reviewed_at'     => date('Y-m-d H:i:s'),
+            'created_at'      => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->audit->log($userId, 'ticket', $ticket['id'], 'reject_approval',
+            ['status' => $currentStatus],
+            ['status' => Enums::TICKET_STATUS_REJECTED, 'notes' => $notes]
+        );
+        $this->db()->transComplete();
+
+        return $this->JSONResponse('Ticket berhasil di-reject');
+    }
+
+    public function resubmit(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('tickets', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk resubmit ticket', null, 403);
+        }
+
+        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+
+        if ((int) $ticket['status'] !== Enums::TICKET_STATUS_REJECTED) {
+            return $this->JSONResponse('Hanya ticket yang di-reject yang dapat di-resubmit', null, 400);
+        }
+
+        if ((int) $ticket['creator_id'] !== $userId && $this->getCurrentUserRole() !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya pembuat ticket yang dapat me-resubmit', null, 403);
+        }
+
+        $this->db()->transStart();
+        $this->db()->table('tickets')->update([
+            'status'         => Enums::TICKET_STATUS_OPEN,
+            'rejection_note' => null,
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ], ['id' => $ticket['id']]);
+
+        $this->db()->table('approval_requests')->insert([
+            'ticket_id'       => $ticket['id'],
+            'requester_id'    => $userId,
+            'approver_id'     => null,
+            'stage_sequence'  => Enums::STAGE_PENDING_IT,
+            'status'          => Enums::APPROVAL_PENDING,
+            'created_at'      => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->audit->log($userId, 'ticket', $ticket['id'], 'resubmit',
+            ['status' => Enums::TICKET_STATUS_REJECTED],
+            ['status' => Enums::TICKET_STATUS_OPEN]
+        );
+        $this->db()->transComplete();
+
+        return $this->JSONResponse('Ticket berhasil di-resubmit');
+    }
+
+    private function approvalAction(string $encryptedId, int $expectedStage, callable $onSuccess): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('tickets', 'can_approve')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk approve ticket', null, 403);
+        }
+
+        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+
+        if ((int) $ticket['needs_approval'] !== 1) {
+            return $this->JSONResponse('Ticket ini tidak memerlukan approval', null, 400);
+        }
+
+        $role = $this->getCurrentUserRole();
+        if (!$role) return $this->JSONResponse('User tidak ditemukan', null, 404);
+
+        if ($expectedStage === Enums::STAGE_PENDING_IT && $role !== Enums::IT_MANAGER && $role !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya IT Manager yang dapat approve tahap ini', null, 403);
+        }
+        if ($expectedStage === Enums::STAGE_PENDING_DEPT && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
+            return $this->JSONResponse('Hanya Department Head yang dapat approve tahap ini', null, 403);
+        }
+
+        $expectedStatus = $expectedStage === Enums::STAGE_PENDING_IT
+            ? Enums::TICKET_STATUS_OPEN
+            : Enums::TICKET_STATUS_APPROVED;
+
+        if ((int) $ticket['status'] !== $expectedStatus) {
+            return $this->JSONResponse('Status ticket tidak sesuai untuk tahap approval ini', null, 400);
+        }
+
+        $this->db()->transStart();
+        $message = $onSuccess($ticket, $userId);
+        $this->db()->transComplete();
+
+        return $this->JSONResponse($message);
+    }
+
     public function add_comment(string $encryptedId): ResponseInterface
     {
         $id = $this->resolveId($encryptedId);
@@ -341,7 +553,7 @@ class Tickets extends BaseApi
         $dueDate = $input['due_date'] ?? $ticket['due_date'];
         $assigneeId = isset($input['assignee_id']) ? ($input['assignee_id'] !== '' ? $this->resolveId($input['assignee_id']) : null) : $ticket['assignee_id'];
 
-        $needsPage = in_array($type, [Enums::TICKET_TYPE_BUG, Enums::TICKET_TYPE_CHANGE_REQUEST, Enums::TICKET_TYPE_DATA_REQUEST], true);
+        $needsPage = in_array($type, [Enums::TICKET_TYPE_BUG, Enums::TICKET_TYPE_CHANGE_REQUEST, Enums::TICKET_TYPE_DATA_REQUEST, Enums::TICKET_TYPE_CHANGE_DATA_REQUEST], true);
         if ($needsPage && empty($input['page_id']) && empty($ticket['page_id'])) {
             return $this->JSONResponse('Untuk tipe ini, wajib memilih halaman', null, 400);
         }

@@ -16,7 +16,7 @@ abstract class Enums
     const TICKET_TYPE_ISSUE          = 1;
     const TICKET_TYPE_TASK           = 2;
     const TICKET_TYPE_CHANGE_REQUEST = 3;
-    const TICKET_TYPE_DATA_REQUEST   = 4;
+    const TICKET_TYPE_CHANGE_DATA_REQUEST = 5;
 
     // Priorities
     const PRIORITY_LOW      = 0;
@@ -83,6 +83,7 @@ abstract class Enums
             self::TICKET_TYPE_TASK           => 'Task',
             self::TICKET_TYPE_CHANGE_REQUEST => 'Change Request',
             self::TICKET_TYPE_DATA_REQUEST   => 'Data Request',
+            self::TICKET_TYPE_CHANGE_DATA_REQUEST => 'Change Data Request',
             default                          => 'Unknown',
         };
     }

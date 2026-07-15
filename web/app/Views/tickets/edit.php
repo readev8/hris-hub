@@ -32,6 +32,7 @@
                             <option value="0" <?= ($ticket['type'] ?? '') == 0 ? 'selected' : '' ?>>Bug</option>
                             <option value="3" <?= ($ticket['type'] ?? '') == 3 ? 'selected' : '' ?>>Change Request</option>
                             <option value="4" <?= ($ticket['type'] ?? '') == 4 ? 'selected' : '' ?>>Data Request</option>
+                            <option value="5" <?= ($ticket['type'] ?? '') == 5 ? 'selected' : '' ?>>Change Data Request</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -59,7 +60,7 @@
                     </div>
                 </div>
 
-                <div class="mb-4" id="bugTraceSection" style="display:<?= in_array(($ticket['type'] ?? ''), [0, 3, 4], true) ? 'block' : 'none' ?>">
+                <div class="mb-4" id="bugTraceSection" style="display:<?= in_array(($ticket['type'] ?? ''), [0, 3, 4, 5], true) ? 'block' : 'none' ?>">
                     <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
                         <i class="fas fa-project-diagram me-1"></i> Affected Page
                     </h5>
@@ -83,6 +84,20 @@
                         </div>
                     </div>
                 </div>
+
+                <?php if (!empty($ticket['needs_approval'])): ?>
+                <div class="mb-4" style="padding:12px 16px;border-radius:var(--sap-radius-sm);border:1px solid var(--sap-border);background:var(--sap-surface)">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-shield-alt" style="color:var(--sap-info);font-size:16px"></i>
+                        <div>
+                            <strong style="color:var(--sap-text);font-size:13px">Approval Required</strong>
+                            <span class="text-muted" style="font-size:12px;margin-left:8px">
+                                Status: <?= esc($ticket['status_name'] ?? '') ?>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <?php if (!empty($ticket['attachments'])): ?>
                 <div class="mb-4">
@@ -183,7 +198,7 @@ $(function() {
     loadAssignees();
 
     $('#ticketType').on('change', function() {
-        if (['0','3','4'].includes($(this).val())) {
+        if (['0','3','4','5'].includes($(this).val())) {
             $('#bugTraceSection').slideDown(200);
             loadProjects();
         } else {
@@ -257,7 +272,7 @@ $(function() {
         }
     }
 
-    if (['0','3','4'].includes($('#ticketType').val())) {
+    if (['0','3','4','5'].includes($('#ticketType').val())) {
         loadProjects();
     }
 

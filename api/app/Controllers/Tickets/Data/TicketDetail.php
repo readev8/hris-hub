@@ -77,6 +77,32 @@ class TicketDetail extends BaseApi
         unset($c);
         $ticket['comments'] = $comments;
 
+        // Load approval history if needs_approval is set
+        if ((int) ($ticket['needs_approval'] ?? 0) === 1) {
+            $approvals = $this->db()->table('approval_requests')
+                ->select('approval_requests.*, approver.full_name as approver_name')
+                ->join('users as approver', 'approver.id = approval_requests.approver_id', 'left')
+                ->where('approval_requests.ticket_id', $id)
+                ->orderBy('approval_requests.stage_sequence', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            foreach ($approvals as &$a) {
+                $a['id'] = $this->api->encryptId($a['id']);
+                $a['status_name'] = match ((int) $a['status']) {
+                    0 => 'Pending',
+                    1 => 'Approved',
+                    2 => 'Rejected',
+                    3 => 'Skipped',
+                    default => 'Unknown',
+                };
+            }
+            unset($a);
+            $ticket['approval_history'] = $approvals;
+        } else {
+            $ticket['approval_history'] = [];
+        }
+
         return $this->JSONResponse('OK', $ticket, 200);
     }
 }

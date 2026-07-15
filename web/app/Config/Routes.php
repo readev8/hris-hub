@@ -33,6 +33,10 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/tickets/(:any)/upload-attachment', 'Tickets::uploadAttachment/$1');
     $routes->post('/attachments/(:any)/delete', 'Tickets::deleteAttachment/$1');
     $routes->get('/uploads/tickets/(:any)', 'Tickets::serveFile/$1');
+    $routes->post('/tickets/(:any)/approve-it', 'Tickets::approveIt/$1');
+    $routes->post('/tickets/(:any)/approve-dept', 'Tickets::approveDept/$1');
+    $routes->post('/tickets/(:any)/reject-approval', 'Tickets::rejectApproval/$1');
+    $routes->post('/tickets/(:any)/resubmit', 'Tickets::resubmit/$1');
     $routes->get('/tickets/(:any)/edit', 'Tickets::edit/$1');
     $routes->post('/tickets/(:any)/update', 'Tickets::update/$1');
     $routes->post('/tickets/(:any)/delete', 'Tickets::delete/$1');
@@ -76,7 +80,8 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/blueprints/modules/(:any)/design-pages',              'Blueprints::createDesignPage/$1');
     $routes->post('/blueprints/design-pages/(:any)/update',               'Blueprints::updateDesignPage/$1');
     $routes->post('/blueprints/design-pages/(:any)/delete',               'Blueprints::deleteDesignPage/$1');
-    $routes->post('/blueprints/modules/(:any)/page-specifications',       'Blueprints::createPageSpecification/$1');
+    $routes->get('/blueprints/design-pages/(:any)/specifications',        'Blueprints::pageSpecifications/$1');
+    $routes->post('/blueprints/design-pages/(:any)/page-specifications',  'Blueprints::createPageSpecification/$1');
     $routes->post('/blueprints/page-specifications/(:any)/update',        'Blueprints::updatePageSpecification/$1');
     $routes->post('/blueprints/page-specifications/(:any)/delete',        'Blueprints::deletePageSpecification/$1');
     $routes->post('/blueprints/(:any)/attachments',       'Blueprints::uploadAttachment/$1');
@@ -84,6 +89,7 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/blueprints/(:any)/update',           'Blueprints::update/$1');
     $routes->post('/blueprints/(:any)/delete',           'Blueprints::delete/$1');
     $routes->get('/uploads/blueprints/(:any)',           'Blueprints::serveFile/$1');
+    $routes->get('/blueprints/(:any)/refresh',           'Blueprints::refreshDetail/$1');
     $routes->get('/blueprints/(:any)',                   'Blueprints::detail/$1');
 
     $routes->get('/approvals', 'Approvals::index');

@@ -19,7 +19,7 @@
         <div>
             <h1 style="font-size:22px" class="mb-1"><?= esc($blueprint['name']) ?></h1>
             <div class="d-flex align-items-center gap-2">
-                <?= status_badge($blueprint['status_name'] ?? '') ?>
+                <span id="blueprintStatusBadge"><?= status_badge($blueprint['status_name'] ?? '') ?></span>
             </div>
         </div>
         <a href="<?= site_url('blueprints') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
@@ -137,7 +137,7 @@
                     </label>
                     <?php endif; ?>
                 </div>
-                <div class="sap-card-body">
+                <div id="attachmentsContainer" class="sap-card-body">
                     <?php if (!empty($blueprint['attachments'])): ?>
                     <div class="d-flex flex-wrap gap-2">
                         <?php foreach ($blueprint['attachments'] as $att): ?>
@@ -179,7 +179,7 @@
                 <div class="sap-card-header">
                     <i class="fas fa-bolt"></i> Actions
                 </div>
-                <div class="sap-card-body d-flex flex-column gap-2">
+                <div id="blueprintActions" class="sap-card-body d-flex flex-column gap-2">
                     <?php
                     $bpPerms = (session('permissions') ?? [])['blueprints'] ?? [];
                     $bpCanApprove = !empty($bpPerms['can_approve']);
@@ -228,11 +228,6 @@
                                 <i class="fas fa-palette me-1"></i> Design Pages
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-tab="specifications" href="#" onclick="switchTab('specifications'); return false;">
-                                <i class="fas fa-list-alt me-1"></i> Page Specifications
-                            </a>
-                        </li>
                     </ul>
 
                     <div id="tab-content-scenarios" class="tab-content-section">
@@ -270,33 +265,15 @@
                             </div>
                         </div>
                     </div>
-
-                    <div id="tab-content-specifications" class="tab-content-section" style="display:none">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 text-secondary" style="font-size:13px">Page Specifications</h6>
-                            <?php if (has_permission('blueprints', 'can_update')): ?>
-                            <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="showAddSpecification()">
-                                <i class="fas fa-plus"></i> Add Specification
-                            </button>
-                            <?php endif; ?>
-                        </div>
-                        <div id="specificationsContainer">
-                            <div class="sap-empty" style="padding:40px">
-                                <i class="fas fa-list-alt" style="font-size:36px"></i>
-                                <h4>No specifications</h4>
-                                <p>Select a module and add page specifications.</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
             <div class="sap-card mb-3">
                 <div class="sap-card-header">
                     <i class="fas fa-comment-dots"></i> Comments
-                    <span class="sap-badge closed" style="font-size:11px;margin-left:4px"><?= count($blueprint['comments'] ?? []) ?></span>
+                    <span id="commentCountBadge" class="sap-badge closed" style="font-size:11px;margin-left:4px"><?= count($blueprint['comments'] ?? []) ?></span>
                 </div>
-                <div class="sap-card-body">
+                <div id="commentsContainer" class="sap-card-body">
                     <?php if (empty($blueprint['comments'])): ?>
                         <div class="sap-empty" style="padding:20px">
                             <i class="fas fa-comment-dots" style="font-size:36px"></i>
@@ -326,24 +303,27 @@
     </div>
     <?php endif; ?>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
 
 <!-- Add Module Modal -->
-<div class="modal fade" id="moduleModal" tabindex="-1">
+<div class="modal fade sap-modal" id="moduleModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content sap-card">
-            <div class="modal-header sap-card-header">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h5 class="modal-title"><i class="fas fa-puzzle-piece me-2"></i>Add Module</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="moduleForm">
-                <div class="modal-body sap-card-body">
+                <div class="modal-body">
                     <input type="hidden" name="module_id" id="moduleFormId">
                     <div class="mb-3">
                         <label class="sap-label">Module Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="sap-input" id="moduleNameInput" required placeholder="e.g., Authentication Module">
                     </div>
                 </div>
-                <div class="modal-footer sap-card-body" style="border-top:1px solid var(--sap-border)">
+                <div class="modal-footer" style="border-top:1px solid var(--sap-border)">
                     <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
                 </div>
@@ -353,16 +333,17 @@
 </div>
 
 <!-- Add Scenario Modal -->
-<div class="modal fade" id="scenarioModal" tabindex="-1">
+<div class="modal fade sap-modal" id="scenarioModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content sap-card">
-            <div class="modal-header sap-card-header">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h5 class="modal-title"><i class="fas fa-briefcase me-2"></i>Add Business Scenario</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="scenarioForm">
-                <div class="modal-body sap-card-body">
+                <div class="modal-body">
                     <input type="hidden" name="scenario_id" id="scenarioFormId">
+                    <input type="hidden" name="blueprint_token" value="<?= esc($token, 'attr') ?>">
                     <div class="mb-3">
                         <label class="sap-label">Title <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="sap-input" id="scenarioTitleInput" required placeholder="e.g., User Login">
@@ -381,7 +362,7 @@
                         <div class="d-flex flex-wrap gap-2 mt-2" id="scenarioFilePreview"></div>
                     </div>
                 </div>
-                <div class="modal-footer sap-card-body" style="border-top:1px solid var(--sap-border)">
+                <div class="modal-footer" style="border-top:1px solid var(--sap-border)">
                     <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
                 </div>
@@ -391,16 +372,17 @@
 </div>
 
 <!-- Add Design Page Modal -->
-<div class="modal fade" id="designPageModal" tabindex="-1">
+<div class="modal fade sap-modal" id="designPageModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content sap-card">
-            <div class="modal-header sap-card-header">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h5 class="modal-title"><i class="fas fa-palette me-2"></i>Add Design Page</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="designPageForm">
-                <div class="modal-body sap-card-body">
+                <div class="modal-body">
                     <input type="hidden" name="design_page_id" id="designPageFormId">
+                    <input type="hidden" name="blueprint_token" value="<?= esc($token, 'attr') ?>">
                     <div class="mb-3">
                         <label class="sap-label">Title <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="sap-input" id="designPageTitleInput" required placeholder="e.g., Login Page">
@@ -419,7 +401,7 @@
                         <div class="d-flex flex-wrap gap-2 mt-2" id="designPageFilePreview"></div>
                     </div>
                 </div>
-                <div class="modal-footer sap-card-body" style="border-top:1px solid var(--sap-border)">
+                <div class="modal-footer" style="border-top:1px solid var(--sap-border)">
                     <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
                 </div>
@@ -428,91 +410,6 @@
     </div>
 </div>
 
-<!-- Add Specification Modal -->
-<div class="modal fade" id="specificationModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content sap-card">
-            <div class="modal-header sap-card-header">
-                <h5 class="modal-title"><i class="fas fa-list-alt me-2"></i>Add Page Specification</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="specificationForm">
-                <div class="modal-body sap-card-body">
-                    <input type="hidden" name="specification_id" id="specificationFormId">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="sap-label">Field Name <span class="text-danger">*</span></label>
-                            <input type="text" name="field_name" class="sap-input" id="specFieldNameInput" required placeholder="e.g., Username">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="sap-label">Data</label>
-                            <input type="text" name="data" class="sap-input" id="specDataInput" placeholder="e.g., varchar(100)">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="sap-label">Objective</label>
-                            <input type="text" name="objective" class="sap-input" id="specObjectiveInput" placeholder="e.g., User identification">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="sap-label">Initial Data</label>
-                            <input type="text" name="initial_data" class="sap-input" id="specInitialDataInput" placeholder="e.g., Empty">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="sap-label">Condition</label>
-                            <input type="text" name="condition" class="sap-input" id="specConditionInput" placeholder="e.g., Required for login">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="sap-label">Validation</label>
-                            <input type="text" name="validation" class="sap-input" id="specValidationInput" placeholder="e.g., Min 6 chars">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="sap-label">Input/Display</label>
-                            <select name="input_display" class="sap-select" id="specInputDisplayInput">
-                                <option value="Input">Input</option>
-                                <option value="Display">Display</option>
-                                <option value="Both">Both</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="sap-label">Datatype</label>
-                            <select name="datatype" class="sap-select" id="specDatatypeInput">
-                                <option value="text">Text</option>
-                                <option value="number">Number</option>
-                                <option value="date">Date</option>
-                                <option value="datetime">DateTime</option>
-                                <option value="time">Time</option>
-                                <option value="image">Image</option>
-                                <option value="pdf">PDF</option>
-                                <option value="excel">Excel</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="sap-label">Control Type</label>
-                            <select name="control_type" class="sap-select" id="specControlTypeInput">
-                                <option value="text">Text</option>
-                                <option value="password">Password</option>
-                                <option value="date">Date</option>
-                                <option value="datetime">DateTime</option>
-                                <option value="combobox">Combobox</option>
-                                <option value="radiobutton">Radio Button</option>
-                                <option value="checkbox">Checkbox</option>
-                                <option value="multipleselect">Multiple Select</option>
-                                <option value="uploadfile">Upload File</option>
-                            </select>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="sap-label">UX</label>
-                            <textarea name="ux" class="sap-input" rows="2" id="specUxInput" placeholder="UX description or notes..." style="min-height:60px"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer sap-card-body" style="border-top:1px solid var(--sap-border)">
-                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -521,16 +418,6 @@
 .nav-tabs .nav-link { font-size: 13px; padding: 8px 16px; color: var(--sap-text-secondary); }
 .nav-tabs .nav-link.active { color: var(--sap-brand); border-bottom: 2px solid var(--sap-brand); background: transparent; }
 .tab-content-section { min-height: 200px; }
-.spec-table { font-size: 12px; }
-.spec-table th { background: var(--sap-background); font-weight: 600; white-space: nowrap; }
-.spec-table td { vertical-align: middle; }
-.spec-table input, .spec-table select, .spec-table textarea {
-    width: 100%; padding: 4px 8px; border: 1px solid var(--sap-border);
-    border-radius: var(--sap-radius); font-size: 12px; background: var(--sap-bg); color: var(--sap-text);
-}
-.spec-table input:focus, .spec-table select:focus, .spec-table textarea:focus {
-    outline: none; border-color: var(--sap-brand);
-}
 .card-item { border: 1px solid var(--sap-border); border-radius: var(--sap-radius); padding: 16px; margin-bottom: 12px; background: var(--sap-bg); }
 .card-item:hover { border-color: var(--sap-brand); }
 .card-item-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
@@ -572,7 +459,206 @@ function loadModuleContent(moduleId) {
     if (!mod) return;
     renderScenarios(mod.business_scenarios || []);
     renderDesignPages(mod.design_pages || []);
-    renderSpecifications(mod.page_specifications || []);
+}
+
+// ============================================================
+// AJAX Refresh System
+// ============================================================
+function refreshBlueprintDetail(callback) {
+    $.ajax({
+        url: site_url + '/blueprints/' + token + '/refresh',
+        type: 'GET',
+        dataType: 'json',
+        beforeSend: function() {
+            $('#modulesList').css('opacity', '0.6');
+        },
+        success: function(res) {
+            $('#modulesList').css('opacity', '');
+            if (res.status) {
+                blueprintModules = res.data.modules || [];
+                updateModulesSidebar(res.data.modules);
+                updateBlueprintHeader(res.data);
+                updateCommentsSection(res.data.comments);
+                updateAttachmentsSection(res.data.attachments);
+                if (callback) callback(res.data);
+            } else {
+                toastr.error(res.message || 'Failed to refresh data');
+            }
+        },
+        error: function() {
+            $('#modulesList').css('opacity', '');
+            toastr.error('Failed to refresh data');
+        }
+    });
+}
+
+function updateModulesSidebar(modules) {
+    var container = $('#modulesList');
+    container.empty();
+    if (!modules || !modules.length) {
+        container.html('<div class="sap-empty" style="padding:20px"><i class="fas fa-puzzle-piece" style="font-size:24px"></i><p class="mb-0 mt-2" style="font-size:13px">No modules yet</p></div>');
+        return;
+    }
+    var canUpdate = userPermissions.blueprints && userPermissions.blueprints.can_update;
+    modules.forEach(function(mod) {
+        var moduleId = mod.id_encrypted || mod.id;
+        var isActive = moduleId == currentModuleId;
+        var scenarioCount = (mod.business_scenarios || []).length;
+        var designCount = (mod.design_pages || []).length;
+        var specCount = 0;
+        (mod.design_pages || []).forEach(function(dp) { specCount += (dp.page_specifications || []).length; });
+        var actionsHtml = '';
+        if (canUpdate) {
+            actionsHtml = '<span class="module-actions">' +
+                '<button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="event.stopPropagation(); editModule(\'' + moduleId + '\')" style="padding:2px 6px;font-size:11px"><i class="fas fa-edit"></i></button> ' +
+                '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="event.stopPropagation(); deleteModule(\'' + moduleId + '\')" style="padding:2px 6px;font-size:11px"><i class="fas fa-trash"></i></button>' +
+                '</span>';
+        }
+        var moduleHtml = '<a href="#" class="list-group-item list-group-item-action module-item ' + (isActive ? 'active' : '') + '" ' +
+            'data-module-id="' + moduleId + '" ' +
+            'onclick="selectModule(\'' + moduleId + '\', this); return false;">' +
+            '<div class="d-flex justify-content-between align-items-center">' +
+            '<span class="fw-medium" style="font-size:13px">' + escHtml(mod.name) + '</span>' +
+            '<span class="text-muted" style="font-size:11px">' + scenarioCount + 'S / ' + designCount + 'D / ' + specCount + 'P</span>' +
+            '</div></a>';
+        container.append(moduleHtml);
+    });
+    if (!currentModuleId && modules.length) {
+        currentModuleId = modules[0].id_encrypted || modules[0].id;
+    }
+    if (currentModuleId) {
+        loadModuleContent(currentModuleId);
+    }
+}
+
+function updateBlueprintHeader(data) {
+    var badge = $('#blueprintStatusBadge');
+    if (badge.length) {
+        badge.replaceWith(status_badge_js(data.status_name));
+    }
+    updateActionButtons(data);
+}
+
+function status_badge_js(statusName) {
+    var map = {
+        'Draft': 'closed',
+        'Open': 'open',
+        'Approved': 'approved',
+        'In Progress': 'in-progress',
+        'Resolved': 'resolved',
+        'Closed': 'closed',
+        'Rejected': 'rejected',
+        'Pending': 'pending'
+    };
+    var cls = map[statusName] || 'closed';
+    return '<span id="blueprintStatusBadge" class="sap-badge ' + cls + '"><span class="badge-dot"></span>' + escHtml(statusName) + '</span>';
+}
+
+function updateActionButtons(data) {
+    var container = $('#blueprintActions');
+    if (!container.length) return;
+    var actions = data.available_actions || [];
+    var html = '';
+    if (actions.indexOf('approve-it') !== -1) {
+        html += '<button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction(\'approve-it\')"><i class="fas fa-check"></i> Approve (IT)</button>';
+    }
+    if (actions.indexOf('approve-dept') !== -1) {
+        html += '<button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction(\'approve-dept\')"><i class="fas fa-check"></i> Approve (Dept)</button>';
+    }
+    if (actions.indexOf('reject') !== -1) {
+        html += '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptReject()"><i class="fas fa-times"></i> Reject</button>';
+    }
+    if (actions.indexOf('resubmit') !== -1) {
+        html += '<button class="sap-btn sap-btn-warning sap-btn-sm" onclick="doAction(\'resubmit\')"><i class="fas fa-undo"></i> Resubmit</button>';
+    }
+    if (html) html += '<hr class="my-1">';
+    if (actions.indexOf('edit') !== -1) {
+        html += '<a href="' + site_url + '/blueprints/' + token + '/edit" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>';
+    }
+    if (actions.indexOf('delete') !== -1) {
+        html += '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="confirmDelete()"><i class="fas fa-trash"></i> Delete</button>';
+    }
+    container.html(html);
+}
+
+function updateCommentsSection(comments) {
+    var container = $('#commentsContainer');
+    if (!container.length) return;
+    var badge = $('#commentCountBadge');
+    if (badge.length) badge.text(comments ? comments.length : 0);
+    var formHtml = '<form id="commentForm" class="mt-3" style="border-top:1px solid var(--sap-border-light);padding-top:16px">' +
+        '<div class="mb-2"><textarea class="sap-input" id="commentText" rows="2" placeholder="Write a comment..." style="min-height:60px"></textarea></div>' +
+        '<button class="sap-btn sap-btn-primary sap-btn-sm" type="submit"><i class="fas fa-paper-plane"></i> Send</button>' +
+        '</form>';
+    if (!comments || !comments.length) {
+        container.html('<div class="sap-empty" style="padding:20px"><i class="fas fa-comment-dots" style="font-size:36px"></i><h4>No comments</h4></div>' + formHtml);
+        bindCommentForm();
+        return;
+    }
+    var html = '';
+    comments.forEach(function(c) {
+        html += '<div class="sap-comment">' +
+            '<div class="sap-comment-header">' +
+            '<div class="avatar-circle avatar-circle-sm" style="background:#758CA4;color:#fff">' + (c.full_name ? c.full_name.charAt(0).toUpperCase() : '?') + '</div>' +
+            '<span class="sap-comment-author">' + escHtml(c.full_name || '') + '</span>' +
+            '<span class="sap-comment-time">' + escHtml(c.created_at || '') + '</span>' +
+            '</div>' +
+            '<div class="sap-comment-body">' + (c.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</div>' +
+            '</div>';
+    });
+    container.html(html + formHtml);
+    bindCommentForm();
+}
+
+function bindCommentForm() {
+    $('#commentForm').off('submit').on('submit', function(e) {
+        e.preventDefault();
+        var text = $('#commentText').val();
+        if (!text.trim()) return;
+        $.post(site_url + '/blueprints/' + token + '/comments', { content: text }, function(res) {
+            if (res.status) {
+                toastr.success('Comment added');
+                $('#commentText').val('');
+                refreshBlueprintDetail();
+            } else {
+                toastr.error(res.data.message || 'Failed');
+            }
+        }).fail(function(xhr) {
+            toastr.error('Failed to add comment (HTTP ' + xhr.status + ')');
+        });
+    });
+}
+
+function updateAttachmentsSection(attachments) {
+    var container = $('#attachmentsContainer');
+    if (!container.length) return;
+    if (!attachments || !attachments.length) {
+        container.html('<p class="text-muted mb-0" style="font-size:13px">No attachments yet.</p>');
+        return;
+    }
+    var html = '<div class="d-flex flex-wrap gap-2">';
+    attachments.forEach(function(att) {
+        var isImage = att.mime_type && att.mime_type.indexOf('image/') === 0;
+        if (isImage) {
+            html += '<a href="' + site_url + '/uploads/blueprints/' + att.stored_name + '" class="glightbox blueprint-attachment-link" data-gallery="blueprint-attachments" data-description="' + escHtml(att.filename) + '">' +
+                '<img src="' + site_url + '/uploads/blueprints/' + att.stored_name + '" alt="' + escHtml(att.filename) + '" style="max-width:80px;max-height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border);cursor:pointer" class="sap-hover-lift"></a>';
+        } else {
+            var mime = att.mime_type || '';
+            var iconClass = 'fas fa-file';
+            var iconColor = 'var(--sap-text-muted)';
+            if (mime === 'application/pdf') { iconClass = 'fas fa-file-pdf'; iconColor = 'var(--sap-error)'; }
+            else if (mime.indexOf('spreadsheet') !== -1 || mime === 'application/vnd.ms-excel') { iconClass = 'fas fa-file-excel'; iconColor = '#217346'; }
+            else if (mime.indexOf('word') !== -1 || mime === 'application/msword') { iconClass = 'fas fa-file-word'; iconColor = '#2B579A'; }
+            html += '<a href="' + site_url + '/uploads/blueprints/' + att.stored_name + '" target="_blank">' +
+                '<div style="padding:8px 12px;background:var(--sap-background);border-radius:6px;border:1px solid var(--sap-border);font-size:12px">' +
+                '<i class="' + iconClass + '" style="color:' + iconColor + ';margin-right:4px"></i>' + escHtml(att.filename) + '</div></a>';
+        }
+    });
+    html += '</div>';
+    container.html(html);
+    if (typeof GLightbox !== 'undefined') {
+        GLightbox({ selector: '.blueprint-attachment-link', touchNavigation: true, keyboardNavigation: true, loop: false, preload: true });
+    }
 }
 
 function switchTab(tab) {
@@ -636,91 +722,19 @@ function renderDesignPages(pages) {
             });
             imagesHtml += '</div>';
         }
+        var specCount = (p.page_specifications || []).length;
         html += '<div class="card-item">' +
             '<div class="card-item-title">' + escHtml(p.title) + '</div>' +
             '<div class="card-item-desc">' + escHtml(p.description || '') + '</div>' +
             imagesHtml +
             '<div class="card-item-actions">' +
+            '<a href="' + site_url + '/blueprints/design-pages/' + (p.id_encrypted || p.id) + '/specifications" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-list-alt"></i> Manage Specs (' + specCount + ')</a>' +
             (canUpdate ? '<button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="editDesignPage(\'' + (p.id_encrypted || p.id) + '\')"><i class="fas fa-edit"></i></button>' : '') +
             (canUpdate ? '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="deleteDesignPage(\'' + (p.id_encrypted || p.id) + '\')"><i class="fas fa-trash"></i></button>' : '') +
             '</div></div>';
     });
     container.html(html);
     GLightbox({ selector: '.designpage-image-link', touchNavigation: true, loop: false });
-}
-
-function renderSpecifications(specs) {
-    var container = $('#specificationsContainer');
-    if (!specs.length) {
-        container.html('<div class="sap-empty" style="padding:40px"><i class="fas fa-list-alt" style="font-size:36px"></i><h4>No specifications</h4><p>Add page specifications for this module.</p></div>');
-        return;
-    }
-    var canUpdate = userPermissions.blueprints && userPermissions.blueprints.can_update;
-    var html = '<div style="overflow-x:auto"><table class="sap-table spec-table" style="width:100%"><thead><tr>' +
-        '<th>Field Name</th><th>Data</th><th>Objective</th><th>Initial Data</th><th>Condition</th><th>Validation</th><th>I/D</th><th>Datatype</th><th>Control</th><th>UX</th>' +
-        (canUpdate ? '<th style="width:80px">Action</th>' : '') +
-        '</tr></thead><tbody>';
-    specs.forEach(function(sp) {
-        var encId = sp.id_encrypted || sp.id;
-        html += '<tr data-spec-id="' + encId + '">' +
-            '<td><input type="text" value="' + escHtml(sp.field_name || '') + '" data-field="field_name" onchange="updateSpecField(\'' + encId + '\', this)"></td>' +
-            '<td><input type="text" value="' + escHtml(sp.data || '') + '" data-field="data" onchange="updateSpecField(\'' + encId + '\', this)"></td>' +
-            '<td><input type="text" value="' + escHtml(sp.objective || '') + '" data-field="objective" onchange="updateSpecField(\'' + encId + '\', this)"></td>' +
-            '<td><input type="text" value="' + escHtml(sp.initial_data || '') + '" data-field="initial_data" onchange="updateSpecField(\'' + encId + '\', this)"></td>' +
-            '<td><input type="text" value="' + escHtml(sp.condition || '') + '" data-field="condition" onchange="updateSpecField(\'' + encId + '\', this)"></td>' +
-            '<td><input type="text" value="' + escHtml(sp.validation || '') + '" data-field="validation" onchange="updateSpecField(\'' + encId + '\', this)"></td>' +
-            '<td><select data-field="input_display" onchange="updateSpecField(\'' + encId + '\', this)">' +
-            '<option value="Input"' + (sp.input_display === 'Input' ? ' selected' : '') + '>Input</option>' +
-            '<option value="Display"' + (sp.input_display === 'Display' ? ' selected' : '') + '>Display</option>' +
-            '<option value="Both"' + (sp.input_display === 'Both' ? ' selected' : '') + '>Both</option>' +
-            '</select></td>' +
-            '<td><select data-field="datatype" onchange="updateSpecField(\'' + encId + '\', this)">' +
-            '<option value="text"' + (sp.datatype === 'text' ? ' selected' : '') + '>Text</option>' +
-            '<option value="number"' + (sp.datatype === 'number' ? ' selected' : '') + '>Number</option>' +
-            '<option value="date"' + (sp.datatype === 'date' ? ' selected' : '') + '>Date</option>' +
-            '<option value="datetime"' + (sp.datatype === 'datetime' ? ' selected' : '') + '>DateTime</option>' +
-            '<option value="time"' + (sp.datatype === 'time' ? ' selected' : '') + '>Time</option>' +
-            '<option value="image"' + (sp.datatype === 'image' ? ' selected' : '') + '>Image</option>' +
-            '<option value="pdf"' + (sp.datatype === 'pdf' ? ' selected' : '') + '>PDF</option>' +
-            '<option value="excel"' + (sp.datatype === 'excel' ? ' selected' : '') + '>Excel</option>' +
-            '</select></td>' +
-            '<td><select data-field="control_type" onchange="updateSpecField(\'' + encId + '\', this)">' +
-            '<option value="text"' + (sp.control_type === 'text' ? ' selected' : '') + '>Text</option>' +
-            '<option value="password"' + (sp.control_type === 'password' ? ' selected' : '') + '>Password</option>' +
-            '<option value="date"' + (sp.control_type === 'date' ? ' selected' : '') + '>Date</option>' +
-            '<option value="datetime"' + (sp.control_type === 'datetime' ? ' selected' : '') + '>DateTime</option>' +
-            '<option value="combobox"' + (sp.control_type === 'combobox' ? ' selected' : '') + '>Combobox</option>' +
-            '<option value="radiobutton"' + (sp.control_type === 'radiobutton' ? ' selected' : '') + '>Radio Button</option>' +
-            '<option value="checkbox"' + (sp.control_type === 'checkbox' ? ' selected' : '') + '>Checkbox</option>' +
-            '<option value="multipleselect"' + (sp.control_type === 'multipleselect' ? ' selected' : '') + '>Multiple Select</option>' +
-            '<option value="uploadfile"' + (sp.control_type === 'uploadfile' ? ' selected' : '') + '>Upload File</option>' +
-            '</select></td>' +
-            '<td><textarea data-field="ux" onchange="updateSpecField(\'' + encId + '\', this)" rows="1" style="min-height:30px">' + escHtml(sp.ux || '') + '</textarea></td>' +
-            (canUpdate ? '<td><button class="sap-btn sap-btn-danger sap-btn-sm" onclick="deleteSpecification(\'' + encId + '\')"><i class="fas fa-trash"></i></button></td>' : '') +
-            '</tr>';
-    });
-    html += '</tbody></table></div>';
-    container.html(html);
-}
-
-function updateSpecField(specId, el) {
-    var field = $(el).data('field');
-    var value = $(el).val();
-    var data = {};
-    data[field] = value;
-    $.ajax({
-        url: site_url + '/blueprints/page-specifications/' + specId + '/update',
-        type: 'POST',
-        data: data,
-        success: function(res) {
-            if (res.status) {
-                toastr.success('Updated');
-            } else {
-                toastr.error(res.message || 'Failed to update');
-            }
-        },
-        error: function() { toastr.error('Update failed'); }
-    });
 }
 
 function showAddModule() {
@@ -749,7 +763,7 @@ $('#moduleForm').on('submit', function(e) {
             if (res.status) {
                 toastr.success(id ? 'Module updated' : 'Module added');
                 $('#moduleModal').modal('hide');
-                setTimeout(function() { location.reload(); }, 500);
+                refreshBlueprintDetail();
             } else {
                 toastr.error(res.message || 'Failed');
             }
@@ -772,7 +786,8 @@ function deleteModule(moduleId) {
             $.post(site_url + '/blueprints/modules/' + moduleId + '/delete', {}, function(res) {
                 if (res.status) {
                     toastr.success('Module deleted');
-                    setTimeout(function() { location.reload(); }, 500);
+                    currentModuleId = null;
+                    refreshBlueprintDetail();
                 } else {
                     toastr.error(res.message || 'Failed');
                 }
@@ -818,7 +833,7 @@ function deleteScenario(scenarioId) {
             $.post(site_url + '/blueprints/business-scenarios/' + scenarioId + '/delete', {}, function(res) {
                 if (res.status) {
                     toastr.success('Scenario deleted');
-                    loadModuleContent(currentModuleId);
+                    refreshBlueprintDetail();
                 } else {
                     toastr.error(res.message || 'Failed');
                 }
@@ -886,7 +901,7 @@ $('#scenarioForm').on('submit', function(e) {
             if (res.status) {
                 toastr.success(id ? 'Scenario updated' : 'Scenario added');
                 $('#scenarioModal').modal('hide');
-                loadModuleContent(currentModuleId);
+                refreshBlueprintDetail();
             } else {
                 toastr.error(res.message || 'Failed');
             }
@@ -932,7 +947,7 @@ function deleteDesignPage(pageId) {
             $.post(site_url + '/blueprints/design-pages/' + pageId + '/delete', {}, function(res) {
                 if (res.status) {
                     toastr.success('Design page deleted');
-                    loadModuleContent(currentModuleId);
+                    refreshBlueprintDetail();
                 } else {
                     toastr.error(res.message || 'Failed');
                 }
@@ -997,7 +1012,7 @@ $('#designPageForm').on('submit', function(e) {
             if (res.status) {
                 toastr.success(id ? 'Design page updated' : 'Design page added');
                 $('#designPageModal').modal('hide');
-                loadModuleContent(currentModuleId);
+                refreshBlueprintDetail();
             } else {
                 toastr.error(res.message || 'Failed');
             }
@@ -1005,71 +1020,12 @@ $('#designPageForm').on('submit', function(e) {
         error: function() { toastr.error('Request failed'); }
     });
 });
-
-function showAddSpecification() {
-    if (!currentModuleId) { toastr.warning('Select a module first'); return; }
-    $('#specificationFormId').val('');
-    $('#specFieldNameInput').val('');
-    $('#specDataInput').val('');
-    $('#specObjectiveInput').val('');
-    $('#specInitialDataInput').val('');
-    $('#specConditionInput').val('');
-    $('#specValidationInput').val('');
-    $('#specInputDisplayInput').val('Input');
-    $('#specDatatypeInput').val('text');
-    $('#specControlTypeInput').val('text');
-    $('#specUxInput').val('');
-    $('#specificationModal').modal('show');
-}
-
-$('#specificationForm').on('submit', function(e) {
-    e.preventDefault();
-    var id = $('#specificationFormId').val();
-    var url = id ? site_url + '/blueprints/page-specifications/' + id + '/update' : site_url + '/blueprints/modules/' + currentModuleId + '/page-specifications';
-    $.ajax({
-        url: url,
-        type: 'POST',
-        data: $(this).serialize(),
-        success: function(res) {
-            if (res.status) {
-                toastr.success(id ? 'Specification updated' : 'Specification added');
-                $('#specificationModal').modal('hide');
-                loadModuleContent(currentModuleId);
-            } else {
-                toastr.error(res.message || 'Failed');
-            }
-        },
-        error: function() { toastr.error('Request failed'); }
-    });
-});
-
-function deleteSpecification(specId) {
-    Swal.fire({
-        title: 'Delete Specification?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Delete',
-        confirmButtonColor: '#AA0808',
-        cancelButtonColor: '#758CA4',
-    }).then(function(result) {
-        if (result.isConfirmed) {
-            $.post(site_url + '/blueprints/page-specifications/' + specId + '/delete', {}, function(res) {
-                if (res.status) {
-                    toastr.success('Specification deleted');
-                    loadModuleContent(currentModuleId);
-                } else {
-                    toastr.error(res.message || 'Failed');
-                }
-            });
-        }
-    });
-}
 
 function doAction(action) {
     $.post(site_url + '/blueprints/' + token + '/' + action, {}, function(res) {
         if (res.status) {
             toastr.success(res.data.message);
-            setTimeout(function() { location.reload(); }, 800);
+            refreshBlueprintDetail();
         } else {
             toastr.error(res.data.message || 'Action failed');
         }
@@ -1092,7 +1048,7 @@ function promptReject() {
             $.post(site_url + '/blueprints/' + token + '/reject', { notes: result.value }, function(res) {
                 if (res.status) {
                     toastr.success(res.data.message);
-                    setTimeout(function() { location.reload(); }, 800);
+                    refreshBlueprintDetail();
                 } else {
                     toastr.error(res.data.message || 'Failed');
                 }
@@ -1128,23 +1084,6 @@ function confirmDelete() {
     });
 }
 
-$('#commentForm').on('submit', function(e) {
-    e.preventDefault();
-    var text = $('#commentText').val();
-    if (!text.trim()) return;
-    $.post(site_url + '/blueprints/' + token + '/comments', { content: text }, function(res) {
-        if (res.status) {
-            toastr.success('Comment added');
-            $('#commentText').val('');
-            setTimeout(function() { location.reload(); }, 500);
-        } else {
-            toastr.error(res.data.message || 'Failed');
-        }
-    }).fail(function(xhr) {
-        toastr.error('Failed to add comment (HTTP ' + xhr.status + ')');
-    });
-});
-
 $('#attachmentInput').on('change', function() {
     var files = this.files;
     if (!files.length) return;
@@ -1175,7 +1114,7 @@ $('#attachmentInput').on('change', function() {
         success: function(res) {
             if (res.status) {
                 toastr.success('Attachment(s) uploaded');
-                setTimeout(function() { location.reload(); }, 800);
+                refreshBlueprintDetail();
             } else {
                 toastr.error(res.message || 'Failed to upload');
                 btn.css('pointer-events', '').css('opacity', '');

@@ -16,10 +16,10 @@ class PageSpecifications extends BaseApi
         $this->audit = new AuditLogger();
     }
 
-    public function create($encryptedModuleId = null): ResponseInterface
+    public function create($encryptedDesignPageId = null): ResponseInterface
     {
-        $moduleId = $this->resolveId($encryptedModuleId);
-        if (!$moduleId) return $this->JSONResponse('ID tidak valid', null, 400);
+        $designPageId = $this->resolveId($encryptedDesignPageId);
+        if (!$designPageId) return $this->JSONResponse('ID tidak valid', null, 400);
 
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
@@ -47,31 +47,32 @@ class PageSpecifications extends BaseApi
             return $this->JSONResponse('Control type tidak valid', null, 400);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $moduleId)->get()->getRowArray();
-        if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
+        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $designPageId)->get()->getRowArray();
+        if (!$designPage) return $this->JSONResponse('Design page tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_page_specifications')->where('module_id', $moduleId)->countAllResults();
+        $maxSort = $this->db()->table('blueprint_page_specifications')->where('design_page_id', $designPageId)->countAllResults();
 
         $this->db()->transStart();
         $this->db()->table('blueprint_page_specifications')->insert([
-            'module_id'     => $moduleId,
-            'field_name'    => $fieldName,
-            'data'          => trim($input['data'] ?? ''),
-            'objective'     => trim($input['objective'] ?? ''),
-            'initial_data'  => trim($input['initial_data'] ?? ''),
-            'condition'     => trim($input['condition'] ?? ''),
-            'validation'    => trim($input['validation'] ?? ''),
-            'input_display' => trim($input['input_display'] ?? ''),
-            'datatype'      => $datatype,
-            'control_type'  => $controlType,
-            'ux'            => trim($input['ux'] ?? ''),
-            'sort_order'    => $maxSort,
-            'created_at'    => date('Y-m-d H:i:s'),
-            'updated_at'    => date('Y-m-d H:i:s'),
+            'design_page_id' => $designPageId,
+            'module_id'      => $designPage['module_id'],
+            'field_name'     => $fieldName,
+            'data'           => trim($input['data'] ?? ''),
+            'objective'      => trim($input['objective'] ?? ''),
+            'initial_data'   => trim($input['initial_data'] ?? ''),
+            'condition'      => trim($input['condition'] ?? ''),
+            'validation'     => trim($input['validation'] ?? ''),
+            'input_display'  => trim($input['input_display'] ?? ''),
+            'datatype'       => $datatype,
+            'control_type'   => $controlType,
+            'ux'             => trim($input['ux'] ?? ''),
+            'sort_order'     => $maxSort,
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
         ]);
         $specId = $this->db()->insertID();
 
-        $this->audit->log($userId, 'blueprint_page_spec', $specId, 'create', null, ['module_id' => $moduleId, 'field_name' => $fieldName]);
+        $this->audit->log($userId, 'blueprint_page_spec', $specId, 'create', null, ['design_page_id' => $designPageId, 'module_id' => $designPage['module_id'], 'field_name' => $fieldName]);
         $this->db()->transComplete();
 
         return $this->JSONResponse('Page specification berhasil ditambahkan', [

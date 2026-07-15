@@ -64,10 +64,10 @@ class Tickets extends BaseController
                 $rules = [
                     'title'       => 'required|min_length[5]|max_length[255]',
                     'description' => 'required|min_length[10]',
-                    'type'        => 'required|in_list[0,1,2,3,4]',
+                    'type'        => 'required|in_list[0,1,2,3,4,5]',
                     'priority'    => 'required|in_list[0,1,2,3]',
                 ];
-                if (in_array($post['type'] ?? '', ['0', '3', '4'], true)) {
+                if (in_array($post['type'] ?? '', ['0', '3', '4', '5'], true)) {
                     $rules['page_id'] = 'required';
                 }
                 if (!$this->validate($rules)) {
@@ -165,7 +165,7 @@ class Tickets extends BaseController
         $rules = [
             'title'       => 'permit_empty|min_length[5]|max_length[255]',
             'description' => 'permit_empty|min_length[10]',
-            'type'        => 'permit_empty|in_list[0,1,2,3,4]',
+            'type'        => 'permit_empty|in_list[0,1,2,3,4,5]',
             'priority'    => 'permit_empty|in_list[0,1,2,3]',
         ];
         if (!$this->validate($rules)) {
@@ -481,6 +481,69 @@ class Tickets extends BaseController
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Tickets deleteAttachment API failed for ' . $encryptedId . ': ' . json_encode($result));
         }
+        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+    }
+
+    public function approveIt(string $encryptedId)
+    {
+        if (!$this->guard('can_approve')) {
+            return $this->denyResponse();
+        }
+        $result = $this->api->post_data('tickets/' . $encryptedId . '/approve-it');
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets approveIt API failed for ' . $encryptedId . ': ' . json_encode($result));
+        }
+
+        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+    }
+
+    public function approveDept(string $encryptedId)
+    {
+        if (!$this->guard('can_approve')) {
+            return $this->denyResponse();
+        }
+        $result = $this->api->post_data('tickets/' . $encryptedId . '/approve-dept');
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets approveDept API failed for ' . $encryptedId . ': ' . json_encode($result));
+        }
+
+        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+    }
+
+    public function rejectApproval(string $encryptedId)
+    {
+        if (!$this->guard('can_approve')) {
+            return $this->denyResponse();
+        }
+        $data = $this->request->getPost();
+
+        if (empty(trim($data['notes'] ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Alasan penolakan wajib diisi']);
+        }
+
+        $result = $this->api->post_data('tickets/' . $encryptedId . '/reject-approval', $data);
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets rejectApproval API failed for ' . $encryptedId . ': ' . json_encode($result));
+        }
+
+        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+    }
+
+    public function resubmit(string $encryptedId)
+    {
+        if (!$this->guard('can_create')) {
+            return $this->denyResponse();
+        }
+        $data = $this->request->getPost();
+        $result = $this->api->post_data('tickets/' . $encryptedId . '/resubmit', $data);
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets resubmit API failed for ' . $encryptedId . ': ' . json_encode($result));
+        }
+
         return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
     }
 

@@ -4,7 +4,7 @@
 
 /* ── Page Transitions ────────────────────────────────────────── */
 .sap-page-enter {
-  animation: sapFadeInUp 350ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: sapFadeInUp 350ms cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
 
 @keyframes sapFadeInUp {

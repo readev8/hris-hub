@@ -16,6 +16,56 @@
     </div>
 
     <div class="row g-3">
+        <?php $needsApproval = (int)($ticket['needs_approval'] ?? 0); ?>
+        <?php if ($needsApproval === 1): ?>
+        <div class="col-12">
+            <div class="sap-card mb-3">
+                <div class="sap-card-body">
+                    <div class="approval-stepper">
+                        <?php
+                        $st = (int) ($ticket['status'] ?? -1);
+                        $steps = [
+                            ['label' => 'Open',       'key' => 'open'],
+                            ['label' => 'IT Manager',  'key' => 'it'],
+                            ['label' => 'Dept Head',   'key' => 'dept'],
+                            ['label' => 'In Progress', 'key' => 'final'],
+                        ];
+                        $stepStates = ['open' => 'completed'];
+                        if ($st === 0) { $stepStates['it'] = 'active'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
+                        elseif ($st === 1) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'active'; $stepStates['final'] = ''; }
+                        elseif ($st === 2) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'completed'; $stepStates['final'] = 'active'; }
+                        elseif ($st === 5) {
+                            $history = $ticket['approval_history'] ?? [];
+                            $rejectedStage = 0;
+                            foreach ($history as $h) {
+                                if ((int)($h['status'] ?? 0) === 2) {
+                                    $rejectedStage = (int)($h['stage_sequence'] ?? 0);
+                                    break;
+                                }
+                            }
+                            if ($rejectedStage <= 1) { $stepStates['it'] = 'rejected'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
+                            else { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'rejected'; $stepStates['final'] = ''; }
+                        }
+                        $icons = ['open' => 'fa-door-open', 'it' => 'fa-laptop', 'dept' => 'fa-users', 'final' => 'fa-play-circle'];
+                        foreach ($steps as $i => $s):
+                            $state = $stepStates[$s['key']] ?? '';
+                            $icon = $icons[$s['key']];
+                        ?>
+                        <div class="stepper-step <?= esc($state, 'attr') ?>">
+                            <div class="stepper-node">
+                                <?php if ($state === 'completed'): ?><i class="fas fa-check"></i>
+                                <?php elseif ($state === 'rejected'): ?><i class="fas fa-times"></i>
+                                <?php else: ?><?= $i + 1 ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="stepper-label"><?= esc($s['label']) ?></div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
         <div class="col-md-8">
             <div class="sap-card mb-3">
                 <div class="sap-card-body">
@@ -78,6 +128,44 @@
                     <?php endif; ?>
                 </div>
             </div>
+
+            <?php if ($needsApproval === 1): ?>
+            <div class="sap-card mb-3">
+                <div class="sap-card-header">
+                    <i class="fas fa-history"></i> Approval History
+                </div>
+                <div class="sap-card-body">
+                    <?php if (empty($ticket['approval_history'])): ?>
+                        <div class="sap-empty" style="padding:20px">
+                            <i class="fas fa-history" style="font-size:36px"></i>
+                            <h4>No approval history</h4>
+                        </div>
+                    <?php else: ?>
+                        <div class="sap-timeline">
+                            <?php foreach ($ticket['approval_history'] as $a): ?>
+                            <div class="sap-timeline-item">
+                                <div class="sap-timeline-dot <?= (int)($a['status'] ?? 0) === 1 ? 'approved' : ((int)($a['status'] ?? 0) === 2 ? 'rejected' : '') ?>"></div>
+                                <div class="sap-timeline-content">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <?= status_badge($a['status_name'] ?? '') ?>
+                                        <span class="fw-medium">Stage <?= esc($a['stage_sequence']) ?></span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <?= avatar_initials($a['approver_name'] ?? '?', 'sm', '#758CA4') ?>
+                                        <span class="text-secondary"><?= esc($a['approver_name'] ?? '') ?></span>
+                                        <span class="text-muted" style="font-size:12px"><?= esc($a['reviewed_at'] ?? '') ?></span>
+                                    </div>
+                                    <?php if (!empty($a['notes'])): ?>
+                                    <p class="mt-1 mb-0 text-secondary" style="font-size:13px;font-style:italic">"<?= esc($a['notes']) ?>"</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <div class="sap-card">
                 <div class="sap-card-header">
@@ -228,29 +316,56 @@
                     $ticketPerms = $perms['tickets'] ?? [];
                     $canUpdate = !empty($ticketPerms['can_update']);
                     $canDelete = !empty($ticketPerms['can_delete']);
+                    $canApprove = !empty($ticketPerms['can_approve']);
                     $isAssignee = isset($ticket['assignee_id']) && (string)$ticket['assignee_id'] === (string)$userId;
                     $isCreator = isset($ticket['creator_id']) && (string)$ticket['creator_id'] === (string)$userId;
                     $roleId = session('role_id');
                     $isAdmin = $roleId == 5;
                     ?>
-                    <?php if ($status === 0 && $canUpdate): ?>
-                        <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reject','Rejection note')"><i class="fas fa-times"></i> Reject</button>
-                    <?php endif; ?>
-                    <?php if ($status === 2 && $isAssignee): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="promptAction('resolve','Resolution note')"><i class="fas fa-check-double"></i> Resolve</button>
-                    <?php endif; ?>
-                    <?php if ($status === 3 && $isCreator): ?>
-                        <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="doAction('close')"><i class="fas fa-lock"></i> Close</button>
-                    <?php endif; ?>
-                    <?php if ($status === 3 && ($isCreator || $roleId == 2)): ?>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
-                    <?php endif; ?>
-                    <?php if ($status === 4 && ($isCreator || $roleId == 2 || $isAdmin)): ?>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
-                    <?php endif; ?>
-                    <?php if ($status === 5 && ($isCreator || $isAdmin)): ?>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                    <?php if ($needsApproval === 1): ?>
+                        <?php if ($status === 0 && $canApprove): ?>
+                            <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doApproval('approve-it')"><i class="fas fa-check"></i> Approve (IT)</button>
+                            <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptRejectApproval()"><i class="fas fa-times"></i> Reject</button>
+                        <?php endif; ?>
+                        <?php if ($status === 1 && $canApprove): ?>
+                            <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doApproval('approve-dept')"><i class="fas fa-check"></i> Approve (Dept)</button>
+                            <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptRejectApproval()"><i class="fas fa-times"></i> Reject</button>
+                        <?php endif; ?>
+                        <?php if ($status === 5 && $canCreate && $isCreator): ?>
+                            <button class="sap-btn sap-btn-warning sap-btn-sm" onclick="doApproval('resubmit')"><i class="fas fa-undo"></i> Resubmit</button>
+                        <?php endif; ?>
+                        <?php if ($status === 2): ?>
+                            <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
+                        <?php endif; ?>
+                        <?php if ($status === 2 && $isAssignee): ?>
+                            <button class="sap-btn sap-btn-success sap-btn-sm" onclick="promptAction('resolve','Resolution note')"><i class="fas fa-check-double"></i> Resolve</button>
+                        <?php endif; ?>
+                        <?php if ($status === 3 && $isCreator): ?>
+                            <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="doAction('close')"><i class="fas fa-lock"></i> Close</button>
+                        <?php endif; ?>
+                        <?php if ($status === 5 && ($isCreator || $isAdmin)): ?>
+                            <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <?php if ($status === 0 && $canUpdate): ?>
+                            <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
+                            <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reject','Rejection note')"><i class="fas fa-times"></i> Reject</button>
+                        <?php endif; ?>
+                        <?php if ($status === 2 && $isAssignee): ?>
+                            <button class="sap-btn sap-btn-success sap-btn-sm" onclick="promptAction('resolve','Resolution note')"><i class="fas fa-check-double"></i> Resolve</button>
+                        <?php endif; ?>
+                        <?php if ($status === 3 && $isCreator): ?>
+                            <button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="doAction('close')"><i class="fas fa-lock"></i> Close</button>
+                        <?php endif; ?>
+                        <?php if ($status === 3 && ($isCreator || $roleId == 2)): ?>
+                            <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                        <?php endif; ?>
+                        <?php if ($status === 4 && ($isCreator || $roleId == 2 || $isAdmin)): ?>
+                            <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                        <?php endif; ?>
+                        <?php if ($status === 5 && ($isCreator || $isAdmin)): ?>
+                            <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reopen','Reopen reason')"><i class="fas fa-undo"></i> Reopen</button>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <hr class="my-1">
                     <?php if ($canUpdate): ?>
@@ -444,6 +559,45 @@ $(function() {
         });
     });
 });
+
+function doApproval(action) {
+    var btn = event && event.target ? $(event.target).closest('button') : null;
+    $.post(site_url + '/tickets/' + token + '/' + action, {}, function(res) {
+        if (res.status) {
+            toastr.success(res.data.message);
+            setTimeout(function() { location.reload(); }, 800);
+        } else {
+            toastr.error(res.data.message || 'Action failed');
+        }
+    }).fail(function(xhr) {
+        toastr.error('Gagal melakukan aksi (HTTP ' + xhr.status + ')');
+    }, btn);
+}
+
+function promptRejectApproval() {
+    Swal.fire({
+        title: 'Rejection Notes',
+        input: 'textarea',
+        inputPlaceholder: 'Enter reason for rejection...',
+        showCancelButton: true,
+        confirmButtonText: 'Reject',
+        confirmButtonColor: '#AA0808',
+        cancelButtonColor: '#758CA4',
+    }).then(function(result) {
+        if (result.isConfirmed && result.value) {
+            $.post(site_url + '/tickets/' + token + '/reject-approval', { notes: result.value }, function(res) {
+                if (res.status) {
+                    toastr.success(res.data.message);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    toastr.error(res.data.message || 'Failed to reject');
+                }
+            }).fail(function(xhr) {
+                toastr.error('Gagal melakukan aksi (HTTP ' + xhr.status + ')');
+            });
+        }
+    });
+}
 
 // GLightbox initialization
 var ticketLightbox = GLightbox({

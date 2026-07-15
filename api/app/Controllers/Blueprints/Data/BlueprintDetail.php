@@ -51,28 +51,53 @@ class BlueprintDetail extends BaseApi
                 ->getResultArray();
             foreach ($mod['design_pages'] as &$dp) {
                 $dp['id_encrypted'] = $this->api->encryptId($dp['id']);
-            }
 
-            $mod['page_specifications'] = $this->db()->table('blueprint_page_specifications')
-                ->where('module_id', $mod['id'])
-                ->orderBy('sort_order', 'ASC')
-                ->get()
-                ->getResultArray();
-            foreach ($mod['page_specifications'] as &$ps) {
-                $ps['id_encrypted'] = $this->api->encryptId($ps['id']);
+                $dp['page_specifications'] = $this->db()->table('blueprint_page_specifications')
+                    ->where('design_page_id', $dp['id'])
+                    ->orderBy('sort_order', 'ASC')
+                    ->get()
+                    ->getResultArray();
+                foreach ($dp['page_specifications'] as &$ps) {
+                    $ps['id_encrypted'] = $this->api->encryptId($ps['id']);
+                }
             }
         }
         $blueprint['modules'] = $modules;
 
-        $attachments = $this->db()->table('blueprint_attachments')
+        $allAttachments = $this->db()->table('blueprint_attachments')
             ->where('blueprint_id', $id)
             ->orderBy('created_at', 'ASC')
             ->get()
             ->getResultArray();
-        foreach ($attachments as &$att) {
+        foreach ($allAttachments as &$att) {
             $att['id'] = $this->api->encryptId($att['id']);
         }
-        $blueprint['attachments'] = $attachments;
+
+        $blueprintAttachments = [];
+        $attachmentsBySection = [];
+        foreach ($allAttachments as $att) {
+            $sectionType = trim($att['section_type'] ?? '');
+            $sectionId = $att['section_id'] ?? 0;
+            if ($sectionType === '' || $sectionId == 0) {
+                $blueprintAttachments[] = $att;
+            } else {
+                $key = $sectionType . ':' . $sectionId;
+                if (!isset($attachmentsBySection[$key])) {
+                    $attachmentsBySection[$key] = [];
+                }
+                $attachmentsBySection[$key][] = $att;
+            }
+        }
+        $blueprint['attachments'] = $blueprintAttachments;
+
+        foreach ($modules as &$mod) {
+            foreach ($mod['business_scenarios'] as &$bs) {
+                $bs['attachments'] = $attachmentsBySection['business_scenario:' . $bs['id']] ?? [];
+            }
+            foreach ($mod['design_pages'] as &$dp) {
+                $dp['attachments'] = $attachmentsBySection['design_page:' . $dp['id']] ?? [];
+            }
+        }
 
         $approvals = $this->db()->table('blueprint_approval_requests')
             ->select('blueprint_approval_requests.*, approver.full_name as approver_name')

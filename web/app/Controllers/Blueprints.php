@@ -155,6 +155,60 @@ class Blueprints extends BaseController
         ]);
     }
 
+    public function refreshDetail(string $encryptedId)
+    {
+        if (!$this->guard()) {
+            return $this->denyResponse();
+        }
+
+        $result = $this->api->get_data('blueprints/' . $encryptedId);
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Blueprints refreshDetail API failed for ' . $encryptedId . ': ' . json_encode($result));
+            return $this->response->setJSON([
+                'status' => false,
+                'message' => 'Failed to fetch blueprint data',
+            ]);
+        }
+
+        $blueprint = $result['data']['result'] ?? [];
+        $st = (int) ($blueprint['status'] ?? -1);
+
+        $bpPerms = (session('permissions') ?? [])['blueprints'] ?? [];
+        $availableActions = [];
+        if ($st === 0 && !empty($bpPerms['can_approve'])) {
+            $availableActions[] = 'approve-it';
+            $availableActions[] = 'reject';
+        }
+        if ($st === 1 && !empty($bpPerms['can_approve'])) {
+            $availableActions[] = 'approve-dept';
+            $availableActions[] = 'reject';
+        }
+        if ($st === 3 && !empty($bpPerms['can_create'])) {
+            $availableActions[] = 'resubmit';
+        }
+        if (($st === -1 || $st === 0) && !empty($bpPerms['can_update'])) {
+            $availableActions[] = 'edit';
+        }
+        if (($st === -1 || $st === 0) && !empty($bpPerms['can_delete'])) {
+            $availableActions[] = 'delete';
+        }
+
+        return $this->response->setJSON([
+            'status' => true,
+            'data' => [
+                'blueprint' => $blueprint,
+                'modules' => $blueprint['modules'] ?? [],
+                'comments' => $blueprint['comments'] ?? [],
+                'attachments' => $blueprint['attachments'] ?? [],
+                'status' => $st,
+                'status_name' => $blueprint['status_name'] ?? 'Draft',
+                'available_actions' => $availableActions,
+                'approval_history' => $blueprint['approval_history'] ?? [],
+            ],
+        ]);
+    }
+
     public function edit(string $encryptedId): string
     {
         if (!$this->guard('can_update')) {
@@ -418,13 +472,43 @@ class Blueprints extends BaseController
             return $this->denyResponse();
         }
         $data = $this->request->getPost();
+        $blueprintToken = $data['blueprint_token'] ?? null;
+        unset($data['blueprint_token']);
+
         $result = $this->api->post_data('blueprints/modules/' . $moduleId . '/business-scenarios', $data);
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Blueprints createBusinessScenario API failed for ' . $moduleId . ': ' . json_encode($result));
+            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
         }
 
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+        $scenarioId = $result['data']['result']['id'] ?? null;
+        if ($scenarioId && $blueprintToken) {
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
+            if (!empty($files)) {
+                $error = $this->validateUploadedFiles($files, 'design_pages');
+                if ($error) {
+                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                }
+                $savedFiles = $this->saveUploadedFiles($files);
+                foreach ($savedFiles as $sf) {
+                    $attData = $sf;
+                    $attData['section_type'] = 'business_scenario';
+                    $attData['section_id'] = $scenarioId;
+                    $attData['module_id'] = $moduleId;
+                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                    if (!$attResult || !($attResult['status'] ?? false)) {
+                        $this->deleteUploadedFiles($savedFiles);
+                        log_message('error', 'Blueprint scenario attachment save failed for scenario ' . $scenarioId);
+                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+                    }
+                }
+            }
+        }
+
+        return $this->response->setJSON($result);
     }
 
     public function updateBusinessScenario(string $encryptedId)
@@ -433,13 +517,41 @@ class Blueprints extends BaseController
             return $this->denyResponse();
         }
         $data = $this->request->getPost();
+        $blueprintToken = $data['blueprint_token'] ?? null;
+        unset($data['blueprint_token']);
+
         $result = $this->api->post_data('blueprints/business-scenarios/' . $encryptedId . '/update', $data);
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Blueprints updateBusinessScenario API failed for ' . $encryptedId . ': ' . json_encode($result));
+            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
         }
 
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+        if ($blueprintToken) {
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
+            if (!empty($files)) {
+                $error = $this->validateUploadedFiles($files, 'design_pages');
+                if ($error) {
+                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                }
+                $savedFiles = $this->saveUploadedFiles($files);
+                foreach ($savedFiles as $sf) {
+                    $attData = $sf;
+                    $attData['section_type'] = 'business_scenario';
+                    $attData['section_id'] = $encryptedId;
+                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                    if (!$attResult || !($attResult['status'] ?? false)) {
+                        $this->deleteUploadedFiles($savedFiles);
+                        log_message('error', 'Blueprint scenario attachment save failed for scenario ' . $encryptedId);
+                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+                    }
+                }
+            }
+        }
+
+        return $this->response->setJSON($result);
     }
 
     public function deleteBusinessScenario(string $encryptedId)
@@ -462,13 +574,43 @@ class Blueprints extends BaseController
             return $this->denyResponse();
         }
         $data = $this->request->getPost();
+        $blueprintToken = $data['blueprint_token'] ?? null;
+        unset($data['blueprint_token']);
+
         $result = $this->api->post_data('blueprints/modules/' . $moduleId . '/design-pages', $data);
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Blueprints createDesignPage API failed for ' . $moduleId . ': ' . json_encode($result));
+            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
         }
 
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+        $designPageId = $result['data']['result']['id'] ?? null;
+        if ($designPageId && $blueprintToken) {
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
+            if (!empty($files)) {
+                $error = $this->validateUploadedFiles($files, 'design_pages');
+                if ($error) {
+                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                }
+                $savedFiles = $this->saveUploadedFiles($files);
+                foreach ($savedFiles as $sf) {
+                    $attData = $sf;
+                    $attData['section_type'] = 'design_page';
+                    $attData['section_id'] = $designPageId;
+                    $attData['module_id'] = $moduleId;
+                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                    if (!$attResult || !($attResult['status'] ?? false)) {
+                        $this->deleteUploadedFiles($savedFiles);
+                        log_message('error', 'Blueprint design page attachment save failed for page ' . $designPageId);
+                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+                    }
+                }
+            }
+        }
+
+        return $this->response->setJSON($result);
     }
 
     public function updateDesignPage(string $encryptedId)
@@ -477,13 +619,41 @@ class Blueprints extends BaseController
             return $this->denyResponse();
         }
         $data = $this->request->getPost();
+        $blueprintToken = $data['blueprint_token'] ?? null;
+        unset($data['blueprint_token']);
+
         $result = $this->api->post_data('blueprints/design-pages/' . $encryptedId . '/update', $data);
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Blueprints updateDesignPage API failed for ' . $encryptedId . ': ' . json_encode($result));
+            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
         }
 
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+        if ($blueprintToken) {
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
+            if (!empty($files)) {
+                $error = $this->validateUploadedFiles($files, 'design_pages');
+                if ($error) {
+                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                }
+                $savedFiles = $this->saveUploadedFiles($files);
+                foreach ($savedFiles as $sf) {
+                    $attData = $sf;
+                    $attData['section_type'] = 'design_page';
+                    $attData['section_id'] = $encryptedId;
+                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                    if (!$attResult || !($attResult['status'] ?? false)) {
+                        $this->deleteUploadedFiles($savedFiles);
+                        log_message('error', 'Blueprint design page attachment save failed for page ' . $encryptedId);
+                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+                    }
+                }
+            }
+        }
+
+        return $this->response->setJSON($result);
     }
 
     public function deleteDesignPage(string $encryptedId)
@@ -500,16 +670,37 @@ class Blueprints extends BaseController
         return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
     }
 
-    public function createPageSpecification(string $moduleId)
+    public function pageSpecifications(string $encryptedDesignPageId): string
+    {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
+        $result = $this->api->get_data('blueprints/design-pages/' . $encryptedDesignPageId);
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Blueprints pageSpecifications API failed for ' . $encryptedDesignPageId . ': ' . json_encode($result));
+            return redirect()->to('/blueprints');
+        }
+
+        $designPage = $result['data']['result'] ?? null;
+
+        return $this->view('blueprints/page_specifications', [
+            'title'      => 'Page Specifications - ' . ($designPage['title'] ?? ''),
+            'designPage' => $designPage,
+            'token'      => $encryptedDesignPageId,
+        ]);
+    }
+
+    public function createPageSpecification(string $encryptedDesignPageId)
     {
         if (!$this->guard('can_create')) {
             return $this->denyResponse();
         }
         $data = $this->request->getPost();
-        $result = $this->api->post_data('blueprints/modules/' . $moduleId . '/page-specifications', $data);
+        $result = $this->api->post_data('blueprints/design-pages/' . $encryptedDesignPageId . '/page-specifications', $data);
 
         if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints createPageSpecification API failed for ' . $moduleId . ': ' . json_encode($result));
+            log_message('error', 'Blueprints createPageSpecification API failed for ' . $encryptedDesignPageId . ': ' . json_encode($result));
         }
 
         return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);

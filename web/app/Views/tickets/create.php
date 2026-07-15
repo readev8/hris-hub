@@ -30,6 +30,7 @@
                             <option value="0">Bug</option>
                             <option value="3">Change Request</option>
                             <option value="4">Data Request</option>
+                            <option value="5">Change Data Request</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -89,6 +90,15 @@
                     </div>
                     <div class="d-flex flex-wrap gap-2 mt-2" id="imagePreview"></div>
                 </div>
+                <div class="mb-3" style="padding:12px 16px;border-radius:var(--sap-radius-sm);border:1px solid var(--sap-border);background:var(--sap-surface)">
+                    <div class="form-check" style="margin:0">
+                        <input type="checkbox" name="needs_approval" value="1" id="needsApproval" class="form-check-input" style="width:18px;height:18px;cursor:pointer">
+                        <label for="needsApproval" class="form-check-label" style="cursor:pointer;margin-left:8px">
+                            <strong style="color:var(--sap-text)">Requires Approval</strong>
+                            <span class="text-muted d-block" style="font-size:12px;margin-top:2px">2-stage approval: IT Manager → Dept Head</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="d-flex gap-2">
                     <button type="submit" class="sap-btn sap-btn-primary">
                         <i class="fas fa-paper-plane"></i> Submit
@@ -128,7 +138,7 @@ $(function() {
     });
 
     $('#ticketType').on('change', function() {
-        if (['0','3','4'].includes($(this).val())) {
+        if (['0','3','4','5'].includes($(this).val())) {
             $('#bugTraceSection').slideDown(200);
             loadProjects();
         } else {
@@ -276,7 +286,7 @@ $(function() {
         e.preventDefault();
         var type = $('#ticketType').val();
         var pageId = $('#pageIdValue').val();
-        if (['0','3','4'].includes(type) && !pageId) {
+        if (['0','3','4','5'].includes(type) && !pageId) {
             toastr.warning('Untuk tipe ini, wajib memilih halaman di bagian Affected Page');
             $('#bugTraceSection').slideDown(200);
             return;
