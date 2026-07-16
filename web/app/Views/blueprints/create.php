@@ -22,7 +22,7 @@
                         <i class="fas fa-link me-1"></i> Select Improvement
                     </h5>
                     <div class="mb-3">
-                        <label class="sap-label" for="improvementDisplay">Improvement <span class="text-danger">*</span></label>
+                        <label class="sap-label" for="improvementDisplay">Improvement</label>
                         <div class="improvement-search-wrapper">
                             <div class="improvement-search-input-wrap">
                                 <i class="fas fa-link improvement-search-icon"></i>
@@ -33,7 +33,7 @@
                                     <i class="fas fa-search"></i> Search
                                 </button>
                             </div>
-                            <div class="improvement-hint" id="improvementHint">Click search to find and select an improvement</div>
+                            <div class="improvement-hint" id="improvementHint">Optional — click search to link an improvement</div>
                             <!-- Selected Improvement Card (hidden by default) -->
                             <div id="improvementSelectedCard" class="improvement-selected-card" style="display:none">
                                 <div class="improvement-selected-info">

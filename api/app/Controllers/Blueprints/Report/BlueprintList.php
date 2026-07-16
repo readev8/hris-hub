@@ -17,10 +17,9 @@ class BlueprintList extends BaseApi
 
         $builder = $this->db()->table('blueprints')
             ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name')
-            ->join('projects as p', 'p.id = blueprints.improvement_id', 'left')
+            ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
             ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
-            ->where('blueprints.active', 0)
-            ->where('p.active', 0);
+            ->where('blueprints.active', 0);
 
         if ($status !== '') $builder->where('blueprints.status', (int) $status);
 
@@ -58,11 +57,10 @@ class BlueprintList extends BaseApi
         if ($role === \App\Config\Enums::IT_MANAGER || $role === \App\Config\Enums::ADMIN) {
             $draft = $this->db()->table('blueprints')
                 ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name')
-                ->join('projects as p', 'p.id = blueprints.improvement_id', 'left')
+                ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
                 ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
                 ->where('blueprints.status', \App\Config\Enums::PROJECT_STATUS_DRAFT)
                 ->where('blueprints.active', 0)
-                ->where('p.active', 0)
                 ->orderBy('blueprints.id', 'DESC')
                 ->get()
                 ->getResultArray();
@@ -72,11 +70,10 @@ class BlueprintList extends BaseApi
         if ($role === \App\Config\Enums::DEPT_HEAD || $role === \App\Config\Enums::ADMIN) {
             $pending = $this->db()->table('blueprints')
                 ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name')
-                ->join('projects as p', 'p.id = blueprints.improvement_id', 'left')
+                ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
                 ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
                 ->where('blueprints.status', \App\Config\Enums::PROJECT_STATUS_PENDING)
                 ->where('blueprints.active', 0)
-                ->where('p.active', 0)
                 ->orderBy('blueprints.id', 'DESC')
                 ->get()
                 ->getResultArray();

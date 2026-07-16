@@ -31,21 +31,20 @@ class Blueprints extends BaseApi
         $name = trim($input['name'] ?? '');
         $description = trim($input['description'] ?? '');
 
-        if (!$improvementId) {
-            return $this->JSONResponse('Improvement wajib dipilih', null, 400);
-        }
         if (empty($name)) {
             return $this->JSONResponse('Nama blueprint wajib diisi', null, 400);
         }
 
-        $project = $this->db()->table('projects')->where('id', $improvementId)->where('active', 0)->get()->getRowArray();
-        if (!$project) {
-            return $this->JSONResponse('Improvement tidak ditemukan', null, 404);
-        }
+        if ($improvementId) {
+            $project = $this->db()->table('projects')->where('id', $improvementId)->where('active', 0)->get()->getRowArray();
+            if (!$project) {
+                return $this->JSONResponse('Improvement tidak ditemukan', null, 404);
+            }
 
-        $existing = $this->db()->table('blueprints')->where('improvement_id', $improvementId)->where('active', 0)->countAllResults();
-        if ($existing > 0) {
-            return $this->JSONResponse('Improvement ini sudah memiliki blueprint', null, 400);
+            $existing = $this->db()->table('blueprints')->where('improvement_id', $improvementId)->where('active', 0)->countAllResults();
+            if ($existing > 0) {
+                return $this->JSONResponse('Improvement ini sudah memiliki blueprint', null, 400);
+            }
         }
 
         $this->db()->transStart();
