@@ -14,12 +14,11 @@ class BlueprintDetail extends BaseApi
 
         $blueprint = $this->db()->table('blueprints')
             ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name, approver.full_name as approver_name')
-            ->join('projects as p', 'p.id = blueprints.improvement_id', 'left')
+            ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
             ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
             ->join('users as approver', 'approver.id = blueprints.approver_id', 'left')
             ->where('blueprints.id', $id)
             ->where('blueprints.active', 0)
-            ->where('p.active', 0)
             ->get()
             ->getRowArray();
 
