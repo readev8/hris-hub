@@ -27,12 +27,13 @@ class Modules extends BaseApi
             return $this->JSONResponse('Nama modul wajib diisi', null, 400);
         }
 
-        $project = $this->db()->table('master_projects')->where('id', $projectId)->get()->getRowArray();
+        $project = $this->db()->table('master_projects')->where('id', $projectId)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Project tidak ditemukan', null, 404);
 
         $maxSort = $this->db()->table('modules')
             ->selectMax('sort_order')
             ->where('master_project_id', $projectId)
+            ->where('active', 0)
             ->get()
             ->getRowArray();
 
@@ -86,7 +87,7 @@ class Modules extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus modul', null, 403);
         }
 
-        $this->db()->table('modules')->delete(['id' => $id]);
+        $this->db()->table('modules')->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Modul berhasil dihapus');
     }
 }

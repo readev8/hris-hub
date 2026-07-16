@@ -85,7 +85,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah improvement', null, 403);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $role = $this->getCurrentUserRole();
@@ -135,7 +135,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus improvement', null, 403);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $role = $this->getCurrentUserRole();
@@ -148,7 +148,7 @@ class Projects extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('projects')->delete(['id' => $id]);
+        $this->db()->table('projects')->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'project', $id, 'delete_improvement', ['status' => $project['status']], null);
         $this->db()->transComplete();
 
@@ -232,7 +232,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Alasan penolakan wajib diisi', null, 400);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         if (!in_array((int) $project['status'], [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING], true)) {
@@ -296,7 +296,7 @@ class Projects extends BaseApi
         $description = trim($input['description'] ?? '');
         $businessCase = trim($input['business_case'] ?? '');
 
-        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         if ((int) $project['status'] !== Enums::PROJECT_STATUS_REJECTED) {
@@ -350,7 +350,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Komentar tidak boleh kosong', null, 400);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $this->db()->transStart();
@@ -377,7 +377,7 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $project = $this->db()->table('projects')->where('id', $id)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $role = $this->getCurrentUserRole();

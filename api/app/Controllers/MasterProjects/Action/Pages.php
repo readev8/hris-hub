@@ -27,12 +27,13 @@ class Pages extends BaseApi
             return $this->JSONResponse('Nama halaman wajib diisi', null, 400);
         }
 
-        $module = $this->db()->table('modules')->where('id', $moduleId)->get()->getRowArray();
+        $module = $this->db()->table('modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Modul tidak ditemukan', null, 404);
 
         $maxSort = $this->db()->table('pages')
             ->selectMax('sort_order')
             ->where('module_id', $moduleId)
+            ->where('active', 0)
             ->get()
             ->getRowArray();
 
@@ -88,7 +89,7 @@ class Pages extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus halaman', null, 403);
         }
 
-        $this->db()->table('pages')->delete(['id' => $id]);
+        $this->db()->table('pages')->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Halaman berhasil dihapus');
     }
 }

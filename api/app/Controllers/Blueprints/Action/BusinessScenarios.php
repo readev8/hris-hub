@@ -34,10 +34,10 @@ class BusinessScenarios extends BaseApi
             return $this->JSONResponse('Judul wajib diisi', null, 400);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $moduleId)->get()->getRowArray();
+        $module = $this->db()->table('blueprint_modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_business_scenarios')->where('module_id', $moduleId)->countAllResults();
+        $maxSort = $this->db()->table('blueprint_business_scenarios')->where('module_id', $moduleId)->where('active', 0)->countAllResults();
 
         $this->db()->transStart();
         $this->db()->table('blueprint_business_scenarios')->insert([
@@ -70,7 +70,7 @@ class BusinessScenarios extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $scenario = $this->db()->table('blueprint_business_scenarios')->where('id', $id)->get()->getRowArray();
+        $scenario = $this->db()->table('blueprint_business_scenarios')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$scenario) return $this->JSONResponse('Business scenario tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -101,11 +101,11 @@ class BusinessScenarios extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $scenario = $this->db()->table('blueprint_business_scenarios')->where('id', $id)->get()->getRowArray();
+        $scenario = $this->db()->table('blueprint_business_scenarios')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$scenario) return $this->JSONResponse('Business scenario tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_business_scenarios')->delete(['id' => $id]);
+        $this->db()->table('blueprint_business_scenarios')->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint_scenario', $id, 'delete', null, ['title' => $scenario['title']]);
         $this->db()->transComplete();
 

@@ -18,6 +18,7 @@ class Stats extends BaseApi
 
         $ticketCounts = $db->table('tickets')
             ->select('status, COUNT(*) as count')
+            ->where('active', 0)
             ->where('created_at >=', $dateStart . ' 00:00:00')
             ->where('created_at <=', $dateEnd . ' 23:59:59')
             ->groupBy('status')
@@ -26,6 +27,7 @@ class Stats extends BaseApi
 
         $typeCounts = $db->table('tickets')
             ->select('type, COUNT(*) as count')
+            ->where('active', 0)
             ->where('created_at >=', $dateStart . ' 00:00:00')
             ->where('created_at <=', $dateEnd . ' 23:59:59')
             ->groupBy('type')
@@ -33,11 +35,13 @@ class Stats extends BaseApi
             ->getResultArray();
 
         $totalTickets = $db->table('tickets')
+            ->where('active', 0)
             ->where('created_at >=', $dateStart . ' 00:00:00')
             ->where('created_at <=', $dateEnd . ' 23:59:59')
             ->countAllResults();
 
         $totalProjects = $db->table('projects')
+            ->where('active', 0)
             ->where('created_at >=', $dateStart . ' 00:00:00')
             ->where('created_at <=', $dateEnd . ' 23:59:59')
             ->countAllResults();
@@ -55,6 +59,7 @@ class Stats extends BaseApi
         }
 
         $pendingApprovals = $db->table('projects')
+            ->where('active', 0)
             ->whereIn('status', [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING])
             ->countAllResults();
 
@@ -63,6 +68,10 @@ class Stats extends BaseApi
             ->join('pages', 'pages.id = tickets.page_id')
             ->join('modules', 'modules.id = pages.module_id')
             ->join('master_projects', 'master_projects.id = modules.master_project_id')
+            ->where('tickets.active', 0)
+            ->where('pages.active', 0)
+            ->where('modules.active', 0)
+            ->where('master_projects.active', 0)
             ->where('tickets.type', Enums::TICKET_TYPE_BUG)
             ->where('tickets.created_at >=', $dateStart . ' 00:00:00')
             ->where('tickets.created_at <=', $dateEnd . ' 23:59:59')

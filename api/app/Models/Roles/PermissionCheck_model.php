@@ -17,6 +17,7 @@ class PermissionCheck_model
         if (!$user || empty($user['role_id'])) return [];
 
         $permissions = $this->db->table('role_permissions')
+            ->where('active', 0)
             ->where('role_id', $user['role_id'])
             ->get()
             ->getResultArray();

@@ -25,6 +25,10 @@ class TicketDetail extends BaseApi
             ->join('modules', 'modules.id = pages.module_id', 'left')
             ->join('master_projects', 'master_projects.id = modules.master_project_id', 'left')
             ->where('tickets.id', $id)
+            ->where('tickets.active', 0)
+            ->where('pages.active', 0)
+            ->where('modules.active', 0)
+            ->where('master_projects.active', 0)
             ->get()
             ->getRowArray();
 
@@ -36,6 +40,7 @@ class TicketDetail extends BaseApi
             ->select('ticket_comments.*, users.full_name')
             ->join('users', 'users.id = ticket_comments.user_id')
             ->where('ticket_comments.ticket_id', $id)
+            ->where('ticket_comments.active', 0)
             ->orderBy('ticket_comments.created_at', 'ASC')
             ->get()
             ->getResultArray();
@@ -43,6 +48,7 @@ class TicketDetail extends BaseApi
         $allAttachments = $this->db()->table('ticket_attachments')
             ->select('id, ticket_id, comment_id, filename, stored_name, mime_type, file_size, created_at')
             ->where('ticket_id', $id)
+            ->where('active', 0)
             ->orderBy('created_at', 'ASC')
             ->get()
             ->getResultArray();
@@ -83,6 +89,7 @@ class TicketDetail extends BaseApi
                 ->select('approval_requests.*, approver.full_name as approver_name')
                 ->join('users as approver', 'approver.id = approval_requests.approver_id', 'left')
                 ->where('approval_requests.ticket_id', $id)
+                ->where('approval_requests.active', 0)
                 ->orderBy('approval_requests.stage_sequence', 'ASC')
                 ->get()
                 ->getResultArray();

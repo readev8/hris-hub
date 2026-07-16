@@ -18,7 +18,8 @@ class ProjectList extends BaseApi
 
         $builder = $this->db()->table('projects')
             ->select('projects.*, creator.full_name as creator_name')
-            ->join('users as creator', 'creator.id = projects.created_by', 'left');
+            ->join('users as creator', 'creator.id = projects.created_by', 'left')
+            ->where('projects.active', 0);
 
         if ($status !== '') $builder->where('projects.status', (int) $status);
         if ($priority !== '') $builder->where('projects.priority', (int) $priority);
@@ -62,6 +63,7 @@ class ProjectList extends BaseApi
             $draft = $this->db()->table('projects')
                 ->select('projects.*, creator.full_name as creator_name')
                 ->join('users as creator', 'creator.id = projects.created_by', 'left')
+                ->where('projects.active', 0)
                 ->where('projects.status', \App\Config\Enums::PROJECT_STATUS_DRAFT)
                 ->orderBy('projects.id', 'DESC')
                 ->get()
@@ -73,6 +75,7 @@ class ProjectList extends BaseApi
             $pending = $this->db()->table('projects')
                 ->select('projects.*, creator.full_name as creator_name')
                 ->join('users as creator', 'creator.id = projects.created_by', 'left')
+                ->where('projects.active', 0)
                 ->where('projects.status', \App\Config\Enums::PROJECT_STATUS_PENDING)
                 ->orderBy('projects.id', 'DESC')
                 ->get()

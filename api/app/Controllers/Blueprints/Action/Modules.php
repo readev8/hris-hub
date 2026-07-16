@@ -34,10 +34,10 @@ class Modules extends BaseApi
             return $this->JSONResponse('Nama module wajib diisi', null, 400);
         }
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $blueprintId)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $blueprintId)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_modules')->where('blueprint_id', $blueprintId)->countAllResults();
+        $maxSort = $this->db()->table('blueprint_modules')->where('blueprint_id', $blueprintId)->where('active', 0)->countAllResults();
 
         $this->db()->transStart();
         $this->db()->table('blueprint_modules')->insert([
@@ -70,7 +70,7 @@ class Modules extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $id)->get()->getRowArray();
+        $module = $this->db()->table('blueprint_modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -106,11 +106,11 @@ class Modules extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $id)->get()->getRowArray();
+        $module = $this->db()->table('blueprint_modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_modules')->delete(['id' => $id]);
+        $this->db()->table('blueprint_modules')->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint_module', $id, 'delete', null, ['name' => $module['name']]);
         $this->db()->transComplete();
 

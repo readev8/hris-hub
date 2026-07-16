@@ -18,6 +18,8 @@ class BlueprintDetail extends BaseApi
             ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
             ->join('users as approver', 'approver.id = blueprints.approver_id', 'left')
             ->where('blueprints.id', $id)
+            ->where('blueprints.active', 0)
+            ->where('p.active', 0)
             ->get()
             ->getRowArray();
 
@@ -27,6 +29,7 @@ class BlueprintDetail extends BaseApi
 
         $modules = $this->db()->table('blueprint_modules')
             ->where('blueprint_id', $id)
+            ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
             ->orderBy('id', 'ASC')
             ->get()
@@ -37,6 +40,7 @@ class BlueprintDetail extends BaseApi
 
             $mod['business_scenarios'] = $this->db()->table('blueprint_business_scenarios')
                 ->where('module_id', $mod['id'])
+                ->where('active', 0)
                 ->orderBy('sort_order', 'ASC')
                 ->get()
                 ->getResultArray();
@@ -46,6 +50,7 @@ class BlueprintDetail extends BaseApi
 
             $mod['design_pages'] = $this->db()->table('blueprint_design_pages')
                 ->where('module_id', $mod['id'])
+                ->where('active', 0)
                 ->orderBy('sort_order', 'ASC')
                 ->get()
                 ->getResultArray();
@@ -54,6 +59,7 @@ class BlueprintDetail extends BaseApi
 
                 $dp['page_specifications'] = $this->db()->table('blueprint_page_specifications')
                     ->where('design_page_id', $dp['id'])
+                    ->where('active', 0)
                     ->orderBy('sort_order', 'ASC')
                     ->get()
                     ->getResultArray();
@@ -66,6 +72,7 @@ class BlueprintDetail extends BaseApi
 
         $allAttachments = $this->db()->table('blueprint_attachments')
             ->where('blueprint_id', $id)
+            ->where('active', 0)
             ->orderBy('created_at', 'ASC')
             ->get()
             ->getResultArray();
@@ -106,6 +113,7 @@ class BlueprintDetail extends BaseApi
             ->select('blueprint_approval_requests.*, approver.full_name as approver_name')
             ->join('users as approver', 'approver.id = blueprint_approval_requests.approver_id', 'left')
             ->where('blueprint_approval_requests.blueprint_id', $id)
+            ->where('blueprint_approval_requests.active', 0)
             ->orderBy('blueprint_approval_requests.stage_sequence', 'ASC')
             ->get()
             ->getResultArray();
@@ -114,6 +122,7 @@ class BlueprintDetail extends BaseApi
             ->select('blueprint_comments.*, users.full_name')
             ->join('users', 'users.id = blueprint_comments.user_id')
             ->where('blueprint_comments.blueprint_id', $id)
+            ->where('blueprint_comments.active', 0)
             ->orderBy('blueprint_comments.created_at', 'ASC')
             ->get()
             ->getResultArray();

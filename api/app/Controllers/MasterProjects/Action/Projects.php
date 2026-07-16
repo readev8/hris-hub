@@ -75,7 +75,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus project', null, 403);
         }
 
-        $this->db()->table('master_projects')->delete(['id' => $id]);
+        $this->db()->table('master_projects')->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Project berhasil dihapus');
     }
 }

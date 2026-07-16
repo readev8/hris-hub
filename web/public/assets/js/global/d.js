@@ -18,66 +18,62 @@ toastr.options = {
   hideMethod: "fadeOut",
 };
 $.post = function (url, data, response, sender = null) {
-  /*
-    contoh penggunaan
-    $.post('<?= site_url('hiring/onjobtraining/task/action/update') ?>', {
-        id: 1,
-        is_active: 1,
-        token: '<?= $this->security->get_csrf_hash() ?>'
-    }, (res) => {
-        if (res.statuscode == 200) {
-            toastr.success(res.message, 'Berhasil')
-        } else {
-            toastr.error(res.message, 'Terjadi Kesalahan')
-        }
-    }, $("#btnUpdate"))
-    */
-  var sender_text = null; // FIX: Store original text before changing
+  var sender_text = null;
   if (sender != null) {
-    sender_text = $(sender).html(); // FIX: Save original button text
+    sender_text = $(sender).html();
     $(sender).attr("disabled", "true");
     $(sender).html(
       `<span style='height:15px;width:15px' class="spinner-border spinner-border-reverse align-self-center loader-sm "></span> Memproses...`,
     );
   }
 
-  regenerate().then((token) => {
-    $.ajax({
-      url: url,
-      type: "POST",
-      dataType: "JSON",
-      data: data,
-      headers: {
-        "X-CSRF-TOKEN": token[$("#i").val()],
-      },
-      success: (res) => {
-        if (sender != null) {
-          $(sender).attr("disabled", false);
-          $(sender).html(sender_text); // FIX: Restore original text
-        }
-        // Call the response callback with the result
-        if (typeof response === "function") {
-          response(res);
-        }
-      },
-      error: (err) => {
-        // FIX: Restore button on error
-        if (sender != null) {
-          $(sender).attr("disabled", false);
-          $(sender).html(sender_text);
-        }
-        // FIX: Proper error handling
-        toastr.error(
-          typeof err === "string" ? err : "Terjadi Kesalahanxxx",
-          "Error",
-        );
-        // Call the response callback with error object
-        if (typeof response === "function") {
-          response({ statuscode: 500, message: "Network error", data: null });
-        }
-      },
+  var deferred = $.Deferred();
+
+  regenerate()
+    .then((token) => {
+      $.ajax({
+        url: url,
+        type: "POST",
+        dataType: "JSON",
+        data: data,
+        headers: {
+          "X-CSRF-TOKEN": token[$("#i").val()],
+        },
+        success: (res) => {
+          if (sender != null) {
+            $(sender).attr("disabled", false);
+            $(sender).html(sender_text);
+          }
+          if (typeof response === "function") {
+            response(res);
+          }
+          deferred.resolve(res);
+        },
+        error: (err) => {
+          if (sender != null) {
+            $(sender).attr("disabled", false);
+            $(sender).html(sender_text);
+          }
+          toastr.error(
+            typeof err === "string" ? err : "Terjadi Kesalahan",
+            "Error",
+          );
+          if (typeof response === "function") {
+            response({ statuscode: 500, message: "Network error", data: null });
+          }
+          deferred.reject(err);
+        },
+      });
+    })
+    .catch(() => {
+      if (sender != null) {
+        $(sender).attr("disabled", false);
+        $(sender).html(sender_text);
+      }
+      deferred.reject({ status: 0, statusText: "CSRF token regeneration failed" });
     });
-  });
+
+  return deferred.promise();
 };
 $.postForm = function (url, data, response, sender = null) {
   var sender_text = null;
@@ -88,63 +84,95 @@ $.postForm = function (url, data, response, sender = null) {
       `<span style='height:15px;width:15px' class="spinner-border spinner-border-reverse align-self-center loader-sm "></span> Memproses...`,
     );
   }
-  regenerate().then((token) => {
-    $.ajax({
-      url: url,
-      type: "POST",
-      dataType: "JSON",
-      data: data,
-      // Konfigurasi penting agar FormData bisa dikirim dengan benar
-      processData: false, // Mencegah jQuery memproses data (mengubah jadi string)
-      contentType: false, // Mencegah jQuery mengatur Content-Type header
-      headers: {
-        "X-CSRF-TOKEN": token[$("#i").val()],
-      },
-      success: (res) => {
-        if (sender != null) {
-          $(sender).attr("disabled", false);
-          $(sender).html(sender_text);
-        }
-        return response(res); // FIX: Add return statement
-      },
-      error: (err) => {
-        // FIX: Restore button on error
-        if (sender != null) {
-          $(sender).attr("disabled", false);
-          $(sender).html(sender_text);
-        }
-        // FIX: Proper error handling
-        toastr.error(
-          typeof err === "string" ? err : "Terjadi Kesalahan",
-          "Error",
-        );
-      },
+
+  var deferred = $.Deferred();
+
+  regenerate()
+    .then((token) => {
+      $.ajax({
+        url: url,
+        type: "POST",
+        dataType: "JSON",
+        data: data,
+        processData: false,
+        contentType: false,
+        headers: {
+          "X-CSRF-TOKEN": token[$("#i").val()],
+        },
+        success: (res) => {
+          if (sender != null) {
+            $(sender).attr("disabled", false);
+            $(sender).html(sender_text);
+          }
+          if (typeof response === "function") {
+            response(res);
+          }
+          deferred.resolve(res);
+        },
+        error: (err) => {
+          if (sender != null) {
+            $(sender).attr("disabled", false);
+            $(sender).html(sender_text);
+          }
+          toastr.error(
+            typeof err === "string" ? err : "Terjadi Kesalahan",
+            "Error",
+          );
+          deferred.reject(err);
+        },
+      });
+    })
+    .catch(() => {
+      if (sender != null) {
+        $(sender).attr("disabled", false);
+        $(sender).html(sender_text);
+      }
+      deferred.reject({ status: 0, statusText: "CSRF token regeneration failed" });
     });
-  });
+
+  return deferred.promise();
 };
 $.get = function (url, data, response) {
-  if (typeof data === 'function') { response = data; data = undefined; }
-  regenerate().then((token) => {
-    $.ajax({
-      type: "GET",
-      url: url,
-      data: data,
-      dataType: "JSON",
-      headers: {
-        "X-CSRF-TOKEN": token[$("#i").val()],
-      },
-      success: (res) => {
-        if (typeof response === "function") return response(res);
-      },
-      error: (err) => {
-        toastr.error(
-          typeof err === "string" ? err : "Terjadi Kesalahan",
-          "Error",
-        );
-        if (typeof response === "function") return response({ statuscode: 500, message: "Network error", data: null });
-      },
+  if (typeof data === "function") {
+    response = data;
+    data = undefined;
+  }
+
+  var deferred = $.Deferred();
+
+  regenerate()
+    .then((token) => {
+      $.ajax({
+        type: "GET",
+        url: url,
+        data: data,
+        dataType: "JSON",
+        headers: {
+          "X-CSRF-TOKEN": token[$("#i").val()],
+        },
+        success: (res) => {
+          if (typeof response === "function") {
+            response(res);
+          }
+          deferred.resolve(res);
+        },
+        error: (err) => {
+          toastr.error(
+            typeof err === "string" ? err : "Terjadi Kesalahan",
+            "Error",
+          );
+          if (typeof response === "function") {
+            response({ statuscode: 500, message: "Network error", data: null });
+          }
+          deferred.reject(err);
+        },
+      });
+    })
+    .catch(() => {
+      deferred.reject({ status: 0, statusText: "CSRF token regeneration failed" });
     });
-  });
+
+  return deferred.promise();
 };
 
 $.getInputValue = function (selector = "form") {

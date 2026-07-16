@@ -18,7 +18,9 @@ class BlueprintList extends BaseApi
         $builder = $this->db()->table('blueprints')
             ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name')
             ->join('projects as p', 'p.id = blueprints.improvement_id', 'left')
-            ->join('users as creator', 'creator.id = blueprints.created_by', 'left');
+            ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
+            ->where('blueprints.active', 0)
+            ->where('p.active', 0);
 
         if ($status !== '') $builder->where('blueprints.status', (int) $status);
 
@@ -31,7 +33,7 @@ class BlueprintList extends BaseApi
         foreach ($rows as &$r) {
             $r['id'] = $this->api->encryptId($r['id']);
             $r['status_name'] = \App\Config\Enums::projectStatusName($r['status']);
-            $moduleCount = $this->db()->table('blueprint_modules')->where('blueprint_id', $r['id'])->countAllResults();
+            $moduleCount = $this->db()->table('blueprint_modules')->where('blueprint_id', $r['id'])->where('active', 0)->countAllResults();
             $r['module_count'] = $moduleCount;
         }
 
@@ -59,6 +61,8 @@ class BlueprintList extends BaseApi
                 ->join('projects as p', 'p.id = blueprints.improvement_id', 'left')
                 ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
                 ->where('blueprints.status', \App\Config\Enums::PROJECT_STATUS_DRAFT)
+                ->where('blueprints.active', 0)
+                ->where('p.active', 0)
                 ->orderBy('blueprints.id', 'DESC')
                 ->get()
                 ->getResultArray();
@@ -71,6 +75,8 @@ class BlueprintList extends BaseApi
                 ->join('projects as p', 'p.id = blueprints.improvement_id', 'left')
                 ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
                 ->where('blueprints.status', \App\Config\Enums::PROJECT_STATUS_PENDING)
+                ->where('blueprints.active', 0)
+                ->where('p.active', 0)
                 ->orderBy('blueprints.id', 'DESC')
                 ->get()
                 ->getResultArray();

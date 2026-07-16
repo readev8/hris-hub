@@ -15,7 +15,7 @@ class Attachments extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $blueprintId)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $blueprintId)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -64,10 +64,10 @@ class Attachments extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $attachment = $this->db()->table('blueprint_attachments')->where('id', $id)->get()->getRowArray();
+        $attachment = $this->db()->table('blueprint_attachments')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$attachment) return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);
 
-        $this->db()->table('blueprint_attachments')->delete(['id' => $id]);
+        $this->db()->table('blueprint_attachments')->update(['active' => 1], ['id' => $id]);
 
         return $this->JSONResponse('Lampiran dihapus', [
             'stored_name' => $attachment['stored_name'],

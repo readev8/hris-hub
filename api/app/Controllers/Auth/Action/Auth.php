@@ -42,6 +42,7 @@ class Auth extends BaseApi
             if ($this->db()->tableExists('role_permissions')) {
                 $permissions = $this->db()->table('role_permissions')
                     ->where('role_id', $user['role_id'])
+                    ->where('active', 0)
                     ->get()
                     ->getResultArray();
             }

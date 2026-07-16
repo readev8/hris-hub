@@ -29,7 +29,8 @@ class TicketList extends BaseApi
         $builder = $this->db()->table('tickets')
             ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
             ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left');
+            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
+            ->where('tickets.active', 0);
 
         if (!empty($search)) {
             $builder->like('tickets.title', $search);
@@ -76,6 +77,7 @@ class TicketList extends BaseApi
             ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
             ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
             ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
+            ->where('tickets.active', 0)
             ->where('tickets.creator_id', $userId)
             ->orWhere('tickets.assignee_id', $userId)
             ->orderBy('tickets.id', 'DESC')
@@ -103,6 +105,7 @@ class TicketList extends BaseApi
         $rows = $this->db()->table('tickets')
             ->select('tickets.*, creator.full_name as creator_name')
             ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
+            ->where('tickets.active', 0)
             ->where('tickets.status', \App\Config\Enums::TICKET_STATUS_OPEN)
             ->orderBy('tickets.id', 'DESC')
             ->limit(50)

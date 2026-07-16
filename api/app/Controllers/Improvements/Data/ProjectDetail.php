@@ -18,6 +18,7 @@ class ProjectDetail extends BaseApi
             ->join('users as assignee', 'assignee.id = projects.assignee_id', 'left')
             ->join('users as approver', 'approver.id = projects.approver_id', 'left')
             ->where('projects.id', $id)
+            ->where('projects.active', 0)
             ->get()
             ->getRowArray();
 
@@ -32,6 +33,9 @@ class ProjectDetail extends BaseApi
                 ->join('modules', 'modules.id = pages.module_id', 'left')
                 ->join('master_projects as mp', 'mp.id = modules.master_project_id', 'left')
                 ->where('pages.id', $project['page_id'])
+                ->where('pages.active', 0)
+                ->where('modules.active', 0)
+                ->where('mp.active', 0)
                 ->get()
                 ->getRowArray();
             if ($page) {
@@ -44,6 +48,7 @@ class ProjectDetail extends BaseApi
         // Attachments
         $attachments = $this->db()->table('project_attachments')
             ->where('project_id', $id)
+            ->where('active', 0)
             ->orderBy('created_at', 'ASC')
             ->get()
             ->getResultArray();
@@ -67,6 +72,7 @@ class ProjectDetail extends BaseApi
             ->select('approval_requests.*, approver.full_name as approver_name')
             ->join('users as approver', 'approver.id = approval_requests.approver_id', 'left')
             ->where('approval_requests.project_id', $id)
+            ->where('approval_requests.active', 0)
             ->orderBy('approval_requests.stage_sequence', 'ASC')
             ->get()
             ->getResultArray();
@@ -75,6 +81,7 @@ class ProjectDetail extends BaseApi
             ->select('project_comments.*, users.full_name')
             ->join('users', 'users.id = project_comments.user_id')
             ->where('project_comments.project_id', $id)
+            ->where('project_comments.active', 0)
             ->orderBy('project_comments.created_at', 'ASC')
             ->get()
             ->getResultArray();

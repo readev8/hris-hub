@@ -20,7 +20,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->where('active', 0)->get()->getRowArray();
         if (!$ticket) {
             return $this->JSONResponse('Tiket tidak ditemukan', null, 404);
         }
@@ -48,6 +48,7 @@ class Attachments extends BaseApi
             $comment = $this->db()->table('ticket_comments')
                 ->where('id', $commentId)
                 ->where('ticket_id', $ticketId)
+                ->where('active', 0)
                 ->get()
                 ->getRowArray();
             if (!$comment) {
@@ -87,7 +88,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $attachment = $this->db()->table('ticket_attachments')->where('id', $id)->get()->getRowArray();
+        $attachment = $this->db()->table('ticket_attachments')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$attachment) {
             return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);
         }
@@ -97,6 +98,7 @@ class Attachments extends BaseApi
         $isTicketCreator = $this->db()->table('tickets')
             ->where('id', $attachment['ticket_id'])
             ->where('creator_id', $userId)
+            ->where('active', 0)
             ->countAllResults() > 0;
         $isAdmin = $this->getCurrentUserRole() === Enums::ADMIN;
 
@@ -104,7 +106,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki akses untuk menghapus lampiran ini', null, 403);
         }
 
-        $this->db()->table('ticket_attachments')->delete(['id' => $id]);
+        $this->db()->table('ticket_attachments')->update(['active' => 1], ['id' => $id]);
 
         return $this->JSONResponse('Lampiran dihapus', [
             'stored_name' => $attachment['stored_name'],

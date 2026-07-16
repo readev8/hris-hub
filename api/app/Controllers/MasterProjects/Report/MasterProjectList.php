@@ -13,6 +13,7 @@ class MasterProjectList extends BaseApi
         $projects = $this->db()->table('master_projects')
             ->select('master_projects.*, users.full_name as creator_name')
             ->join('users', 'users.id = master_projects.created_by', 'left')
+            ->where('master_projects.active', 0)
             ->orderBy('master_projects.created_at', 'DESC')
             ->get()
             ->getResultArray();
@@ -20,13 +21,18 @@ class MasterProjectList extends BaseApi
         $result = [];
         foreach ($projects as $p) {
             $moduleCount = $this->db()->table('modules')
-                ->where('master_project_id', $p['id'])->countAllResults();
+                ->where('master_project_id', $p['id'])
+                ->where('active', 0)
+                ->countAllResults();
 
             $bugCount = $this->db()->table('tickets')
                 ->join('pages', 'pages.id = tickets.page_id')
                 ->join('modules', 'modules.id = pages.module_id')
                 ->where('modules.master_project_id', $p['id'])
                 ->where('tickets.type', Enums::TICKET_TYPE_BUG)
+                ->where('tickets.active', 0)
+                ->where('pages.active', 0)
+                ->where('modules.active', 0)
                 ->countAllResults();
 
             $result[] = [
@@ -50,6 +56,7 @@ class MasterProjectList extends BaseApi
         $projects = $this->db()->table('master_projects')
             ->select('id, name')
             ->where('status', 1)
+            ->where('active', 0)
             ->orderBy('name', 'ASC')
             ->get()
             ->getResultArray();
@@ -72,6 +79,7 @@ class MasterProjectList extends BaseApi
 
         $modules = $this->db()->table('modules')
             ->where('master_project_id', $projectId)
+            ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
             ->get()
             ->getResultArray();
@@ -94,6 +102,7 @@ class MasterProjectList extends BaseApi
 
         $pages = $this->db()->table('pages')
             ->where('module_id', $moduleId)
+            ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
             ->get()
             ->getResultArray();
@@ -122,6 +131,9 @@ class MasterProjectList extends BaseApi
             ->join('modules', 'modules.id = pages.module_id', 'left')
             ->where('modules.master_project_id', $projectId)
             ->where('tickets.status !=', Enums::TICKET_STATUS_REJECTED)
+            ->where('tickets.active', 0)
+            ->where('pages.active', 0)
+            ->where('modules.active', 0)
             ->orderBy('tickets.priority', 'DESC')
             ->orderBy('tickets.created_at', 'ASC')
             ->get()
@@ -175,6 +187,7 @@ class MasterProjectList extends BaseApi
             ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
             ->where('tickets.page_id', $pageId)
             ->where('tickets.type', Enums::TICKET_TYPE_BUG)
+            ->where('tickets.active', 0)
             ->orderBy('tickets.created_at', 'DESC')
             ->get()
             ->getResultArray();

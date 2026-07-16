@@ -28,6 +28,7 @@ class TicketTracking extends BaseApi
 
         $ticket = $this->db()->table('tickets')
             ->where('tracking_code', $code)
+            ->where('active', 0)
             ->get()
             ->getRowArray();
 

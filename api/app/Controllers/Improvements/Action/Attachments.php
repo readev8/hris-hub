@@ -19,7 +19,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $project = $this->db()->table('projects')->where('id', $projectId)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $projectId)->where('active', 0)->get()->getRowArray();
         if (!$project) {
             return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
         }
@@ -60,12 +60,12 @@ class Attachments extends BaseApi
             return $this->JSONResponse('ID tidak valid', null, 400);
         }
 
-        $attachment = $this->db()->table('project_attachments')->where('id', $id)->get()->getRowArray();
+        $attachment = $this->db()->table('project_attachments')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$attachment) {
             return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);
         }
 
-        $this->db()->table('project_attachments')->delete(['id' => $id]);
+        $this->db()->table('project_attachments')->update(['active' => 1], ['id' => $id]);
 
         return $this->JSONResponse('Lampiran dihapus', [
             'stored_name' => $attachment['stored_name'],

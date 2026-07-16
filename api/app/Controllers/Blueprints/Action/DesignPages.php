@@ -34,10 +34,10 @@ class DesignPages extends BaseApi
             return $this->JSONResponse('Judul wajib diisi', null, 400);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $moduleId)->get()->getRowArray();
+        $module = $this->db()->table('blueprint_modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_design_pages')->where('module_id', $moduleId)->countAllResults();
+        $maxSort = $this->db()->table('blueprint_design_pages')->where('module_id', $moduleId)->where('active', 0)->countAllResults();
 
         $this->db()->transStart();
         $this->db()->table('blueprint_design_pages')->insert([
@@ -70,7 +70,7 @@ class DesignPages extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $id)->get()->getRowArray();
+        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$designPage) return $this->JSONResponse('Design page tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -101,11 +101,11 @@ class DesignPages extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $id)->get()->getRowArray();
+        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$designPage) return $this->JSONResponse('Design page tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_design_pages')->delete(['id' => $id]);
+        $this->db()->table('blueprint_design_pages')->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint_design_page', $id, 'delete', null, ['title' => $designPage['title']]);
         $this->db()->transComplete();
 

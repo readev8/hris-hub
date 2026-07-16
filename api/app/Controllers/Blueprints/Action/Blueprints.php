@@ -38,12 +38,12 @@ class Blueprints extends BaseApi
             return $this->JSONResponse('Nama blueprint wajib diisi', null, 400);
         }
 
-        $project = $this->db()->table('projects')->where('id', $improvementId)->get()->getRowArray();
+        $project = $this->db()->table('projects')->where('id', $improvementId)->where('active', 0)->get()->getRowArray();
         if (!$project) {
             return $this->JSONResponse('Improvement tidak ditemukan', null, 404);
         }
 
-        $existing = $this->db()->table('blueprints')->where('improvement_id', $improvementId)->countAllResults();
+        $existing = $this->db()->table('blueprints')->where('improvement_id', $improvementId)->where('active', 0)->countAllResults();
         if ($existing > 0) {
             return $this->JSONResponse('Improvement ini sudah memiliki blueprint', null, 400);
         }
@@ -82,7 +82,7 @@ class Blueprints extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah blueprint', null, 403);
         }
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $id)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -117,7 +117,7 @@ class Blueprints extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus blueprint', null, 403);
         }
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $id)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
         if (!in_array((int) $blueprint['status'], [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_REJECTED], true)) {
@@ -125,7 +125,7 @@ class Blueprints extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('blueprints')->delete(['id' => $id]);
+        $this->db()->table('blueprints')->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint', $id, 'delete', ['status' => $blueprint['status']], null);
         $this->db()->transComplete();
 
@@ -208,7 +208,7 @@ class Blueprints extends BaseApi
             return $this->JSONResponse('Alasan penolakan wajib diisi', null, 400);
         }
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $id)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
         if (!in_array((int) $blueprint['status'], [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING], true)) {
@@ -266,7 +266,7 @@ class Blueprints extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $id)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
         if ((int) $blueprint['status'] !== Enums::PROJECT_STATUS_REJECTED) {
@@ -315,7 +315,7 @@ class Blueprints extends BaseApi
             return $this->JSONResponse('Komentar tidak boleh kosong', null, 400);
         }
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $id)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
         $this->db()->transStart();
@@ -342,7 +342,7 @@ class Blueprints extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $id)->get()->getRowArray();
+        $blueprint = $this->db()->table('blueprints')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
         $role = $this->getCurrentUserRole();

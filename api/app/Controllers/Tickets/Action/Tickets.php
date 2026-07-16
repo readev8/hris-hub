@@ -133,7 +133,7 @@ class Tickets extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         $creatorId = (int) $ticket['creator_id'];
@@ -216,7 +216,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Catatan penolakan wajib diisi', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['creator_id'] !== $userId && $this->getCurrentUserRole() !== Enums::ADMIN) {
@@ -308,7 +308,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Alasan penolakan wajib diisi', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['needs_approval'] !== 1) {
@@ -368,7 +368,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk resubmit ticket', null, 403);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['status'] !== Enums::TICKET_STATUS_REJECTED) {
@@ -416,7 +416,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk approve ticket', null, 403);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['needs_approval'] !== 1) {
@@ -467,7 +467,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Komentar tidak boleh kosong', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         $this->db()->transStart();
@@ -537,7 +537,7 @@ class Tickets extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if (!$this->checkTicketOwnership($id)) {
@@ -597,7 +597,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) {
             return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
         }

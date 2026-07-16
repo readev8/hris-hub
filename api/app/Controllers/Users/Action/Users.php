@@ -335,7 +335,7 @@ class Users extends BaseApi
         $target = $this->db()->table('users')->where('id', $id)->get()->getRowArray();
         if (!$target) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
-        $this->db()->table('users')->where('id', $id)->delete();
+        $this->db()->table('users')->where('id', $id)->update(['is_active' => 0]);
 
         log_message('info', "User deleted: id=$id, user_id={$target['user_id']}, by user=$currentUserId");
 

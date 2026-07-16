@@ -17,6 +17,9 @@ class DesignPageDetail extends BaseApi
             ->join('blueprint_modules as m', 'm.id = blueprint_design_pages.module_id', 'left')
             ->join('blueprints as b', 'b.id = m.blueprint_id', 'left')
             ->where('blueprint_design_pages.id', $designPageId)
+            ->where('blueprint_design_pages.active', 0)
+            ->where('m.active', 0)
+            ->where('b.active', 0)
             ->get()
             ->getRowArray();
 
@@ -29,6 +32,7 @@ class DesignPageDetail extends BaseApi
 
         $specs = $this->db()->table('blueprint_page_specifications')
             ->where('design_page_id', $designPageId)
+            ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
             ->orderBy('id', 'ASC')
             ->get()

@@ -10,6 +10,7 @@ class RoleList extends BaseApi
     public function get_list(): ResponseInterface
     {
         $roles = $this->db()->table('roles')
+            ->where('active', 0)
             ->orderBy('is_active', 'DESC')
             ->orderBy('name', 'ASC')
             ->get()
@@ -39,11 +40,12 @@ class RoleList extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $role = $this->db()->table('roles')->where('id', $id)->get()->getRowArray();
+        $role = $this->db()->table('roles')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
 
         $permissions = $this->db()->table('role_permissions')
             ->where('role_id', $id)
+            ->where('active', 0)
             ->get()
             ->getResultArray();
 
@@ -61,6 +63,7 @@ class RoleList extends BaseApi
     public function get_modules(): ResponseInterface
     {
         $modules = $this->db()->table('access_modules')
+            ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
             ->get()
             ->getResultArray();
@@ -81,6 +84,7 @@ class RoleList extends BaseApi
 
         $permissions = $this->db()->table('role_permissions')
             ->where('role_id', $roleId)
+            ->where('active', 0)
             ->get()
             ->getResultArray();
 

@@ -15,6 +15,7 @@ class ModuleDetail extends BaseApi
 
         $module = $this->db()->table('modules')
             ->where('id', $moduleId)
+            ->where('active', 0)
             ->get()
             ->getRowArray();
 
@@ -22,6 +23,7 @@ class ModuleDetail extends BaseApi
 
         $pages = $this->db()->table('pages')
             ->where('module_id', $moduleId)
+            ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
             ->get()
             ->getResultArray();
@@ -31,18 +33,21 @@ class ModuleDetail extends BaseApi
             $bugTotal = $this->db()->table('tickets')
                 ->where('page_id', $p['id'])
                 ->where('type', Enums::TICKET_TYPE_BUG)
+                ->where('active', 0)
                 ->countAllResults();
 
             $bugOpen = $this->db()->table('tickets')
                 ->where('page_id', $p['id'])
                 ->where('type', Enums::TICKET_TYPE_BUG)
                 ->whereIn('status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
+                ->where('active', 0)
                 ->countAllResults();
 
             $bugResolved = $this->db()->table('tickets')
                 ->where('page_id', $p['id'])
                 ->where('type', Enums::TICKET_TYPE_BUG)
                 ->whereIn('status', [Enums::TICKET_STATUS_RESOLVED, Enums::TICKET_STATUS_CLOSED])
+                ->where('active', 0)
                 ->countAllResults();
 
             $pageList[] = [

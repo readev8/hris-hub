@@ -118,7 +118,7 @@ abstract class BaseApi extends ResourceController
         $userId = $this->getCurrentUserId();
         if (!$userId) return false;
 
-        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray();
+        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return false;
 
         $role = $this->getCurrentUserRole();
