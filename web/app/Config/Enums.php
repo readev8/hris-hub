@@ -15,7 +15,8 @@ abstract class Enums
     const TICKET_TYPE_BUG            = 0;
     const TICKET_TYPE_ISSUE          = 1;
     const TICKET_TYPE_TASK           = 2;
-    const TICKET_TYPE_CHANGE_REQUEST = 3;
+    const TICKET_TYPE_CHANGE_REQUEST      = 3;
+    const TICKET_TYPE_DATA_REQUEST        = 4;
     const TICKET_TYPE_CHANGE_DATA_REQUEST = 5;
 
     // Priorities

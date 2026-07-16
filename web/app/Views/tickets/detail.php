@@ -24,29 +24,53 @@
                     <div class="approval-stepper">
                         <?php
                         $st = (int) ($ticket['status'] ?? -1);
-                        $steps = [
-                            ['label' => 'Open',       'key' => 'open'],
-                            ['label' => 'IT Manager',  'key' => 'it'],
-                            ['label' => 'Dept Head',   'key' => 'dept'],
-                            ['label' => 'In Progress', 'key' => 'final'],
-                        ];
-                        $stepStates = ['open' => 'completed'];
-                        if ($st === 0) { $stepStates['it'] = 'active'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                        elseif ($st === 1) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'active'; $stepStates['final'] = ''; }
-                        elseif ($st === 2) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'completed'; $stepStates['final'] = 'active'; }
-                        elseif ($st === 5) {
-                            $history = $ticket['approval_history'] ?? [];
-                            $rejectedStage = 0;
-                            foreach ($history as $h) {
-                                if ((int)($h['status'] ?? 0) === 2) {
-                                    $rejectedStage = (int)($h['stage_sequence'] ?? 0);
-                                    break;
+                        $hasSpecificApprover = !empty($ticket['approver_id']);
+                        if ($hasSpecificApprover) {
+                            $steps = [
+                                ['label' => 'Open',       'key' => 'open'],
+                                ['label' => 'Approved',    'key' => 'approved'],
+                                ['label' => 'In Progress', 'key' => 'final'],
+                            ];
+                            $stepStates = ['open' => 'completed'];
+                            if ($st === 0) { $stepStates['approved'] = 'active'; $stepStates['final'] = ''; }
+                            elseif ($st === 2) { $stepStates['approved'] = 'completed'; $stepStates['final'] = 'active'; }
+                            elseif ($st === 5) {
+                                $history = $ticket['approval_history'] ?? [];
+                                $rejectedStage = 0;
+                                foreach ($history as $h) {
+                                    if ((int)($h['status'] ?? 0) === 2) {
+                                        $rejectedStage = (int)($h['stage_sequence'] ?? 0);
+                                        break;
+                                    }
                                 }
+                                if ($rejectedStage <= 1) { $stepStates['approved'] = 'rejected'; $stepStates['final'] = ''; }
                             }
-                            if ($rejectedStage <= 1) { $stepStates['it'] = 'rejected'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                            else { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'rejected'; $stepStates['final'] = ''; }
+                            $icons = ['open' => 'fa-door-open', 'approved' => 'fa-check-circle', 'final' => 'fa-play-circle'];
+                        } else {
+                            $steps = [
+                                ['label' => 'Open',       'key' => 'open'],
+                                ['label' => 'IT Manager',  'key' => 'it'],
+                                ['label' => 'Dept Head',   'key' => 'dept'],
+                                ['label' => 'In Progress', 'key' => 'final'],
+                            ];
+                            $stepStates = ['open' => 'completed'];
+                            if ($st === 0) { $stepStates['it'] = 'active'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
+                            elseif ($st === 1) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'active'; $stepStates['final'] = ''; }
+                            elseif ($st === 2) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'completed'; $stepStates['final'] = 'active'; }
+                            elseif ($st === 5) {
+                                $history = $ticket['approval_history'] ?? [];
+                                $rejectedStage = 0;
+                                foreach ($history as $h) {
+                                    if ((int)($h['status'] ?? 0) === 2) {
+                                        $rejectedStage = (int)($h['stage_sequence'] ?? 0);
+                                        break;
+                                    }
+                                }
+                                if ($rejectedStage <= 1) { $stepStates['it'] = 'rejected'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
+                                else { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'rejected'; $stepStates['final'] = ''; }
+                            }
+                            $icons = ['open' => 'fa-door-open', 'it' => 'fa-laptop', 'dept' => 'fa-users', 'final' => 'fa-play-circle'];
                         }
-                        $icons = ['open' => 'fa-door-open', 'it' => 'fa-laptop', 'dept' => 'fa-users', 'final' => 'fa-play-circle'];
                         foreach ($steps as $i => $s):
                             $state = $stepStates[$s['key']] ?? '';
                             $icon = $icons[$s['key']];
@@ -257,6 +281,15 @@
                         <dd class="col-7"><?= esc($ticket['creator_name'] ?? '') ?></dd>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Assignee</dt>
                         <dd class="col-7"><?= esc($ticket['assignee_name'] ?? '-') ?></dd>
+                        <?php if (!empty($ticket['approver_name'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Approver</dt>
+                        <dd class="col-7">
+                            <span style="display:inline-flex;align-items:center;gap:4px">
+                                <?= avatar_initials($ticket['approver_name'] ?? '?', 'sm', '#0070F2') ?>
+                                <?= esc($ticket['approver_name']) ?>
+                            </span>
+                        </dd>
+                        <?php endif; ?>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Created</dt>
                         <dd class="col-7"><?= esc($ticket['created_at']) ?></dd>
                         <?php $status = (int)($ticket['status'] ?? -1); ?>
@@ -321,17 +354,19 @@
                     $isCreator = isset($ticket['creator_id']) && (string)$ticket['creator_id'] === (string)$userId;
                     $roleId = session('role_id');
                     $isAdmin = $roleId == 5;
+                    $hasSpecificApprover = !empty($ticket['approver_id']);
+                    $isApprover = $hasSpecificApprover && (string)($ticket['approver_id'] ?? '') === (string)$userId;
                     ?>
                     <?php if ($needsApproval === 1): ?>
-                        <?php if ($status === 0 && $canApprove): ?>
-                            <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doApproval('approve-it')"><i class="fas fa-check"></i> Approve (IT)</button>
+                        <?php if ($status === 0 && (($hasSpecificApprover && ($isApprover || $isAdmin)) || (!$hasSpecificApprover && $canApprove))): ?>
+                            <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doApproval('approve-it')"><i class="fas fa-check"></i> <?= $hasSpecificApprover ? 'Approve' : 'Approve (IT)' ?></button>
                             <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptRejectApproval()"><i class="fas fa-times"></i> Reject</button>
                         <?php endif; ?>
-                        <?php if ($status === 1 && $canApprove): ?>
+                        <?php if ($status === 1 && !$hasSpecificApprover && $canApprove): ?>
                             <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doApproval('approve-dept')"><i class="fas fa-check"></i> Approve (Dept)</button>
                             <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptRejectApproval()"><i class="fas fa-times"></i> Reject</button>
                         <?php endif; ?>
-                        <?php if ($status === 5 && $canCreate && $isCreator): ?>
+                        <?php if ($status === 5 && $isCreator): ?>
                             <button class="sap-btn sap-btn-warning sap-btn-sm" onclick="doApproval('resubmit')"><i class="fas fa-undo"></i> Resubmit</button>
                         <?php endif; ?>
                         <?php if ($status === 2): ?>

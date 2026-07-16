@@ -24,9 +24,12 @@ class MasterProjectDetail extends BaseApi
         if (!$project) return $this->JSONResponse('Project tidak ditemukan', null, 404);
 
         $modules = $this->db()->table('modules')
-            ->where('master_project_id', $id)
-            ->where('active', 0)
-            ->orderBy('sort_order', 'ASC')
+            ->select('modules.*, bm.name as blueprint_module_name, b.name as blueprint_name')
+            ->join('blueprint_modules as bm', 'bm.id = modules.blueprint_module_id AND bm.active = 0', 'left')
+            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
+            ->where('modules.master_project_id', $id)
+            ->where('modules.active', 0)
+            ->orderBy('modules.sort_order', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -74,11 +77,14 @@ class MasterProjectDetail extends BaseApi
             }
 
             $moduleList[] = [
-                'id'          => $this->api->encryptId($m['id']),
-                'name'        => $m['name'],
-                'description' => $m['description'],
-                'sort_order'  => (int) $m['sort_order'],
-                'pages'       => $pageList,
+                'id'                    => $this->api->encryptId($m['id']),
+                'name'                  => $m['name'],
+                'description'           => $m['description'],
+                'sort_order'            => (int) $m['sort_order'],
+                'blueprint_module_id'   => $m['blueprint_module_id'] ? $this->api->encryptId($m['blueprint_module_id']) : null,
+                'blueprint_module_name' => $m['blueprint_module_name'] ?? null,
+                'blueprint_name'        => $m['blueprint_name'] ?? null,
+                'pages'                 => $pageList,
             ];
         }
 

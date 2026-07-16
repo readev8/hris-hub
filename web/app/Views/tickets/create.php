@@ -99,6 +99,16 @@
                         </label>
                     </div>
                 </div>
+                <div class="mb-3" id="approverSection" style="display:none;padding:12px 16px;border-radius:var(--sap-radius-sm);border:1px solid var(--sap-info-border, #b3d4ff);background:var(--sap-surface)">
+                    <label class="sap-label">Designated Approver <span style="font-weight:400;color:var(--sap-text-muted)">(optional)</span></label>
+                    <select name="approver_id" class="sap-select" id="approverSelect">
+                        <option value="">Role-based approval (default)</option>
+                        <?php foreach ($users ?? [] as $u): ?>
+                        <option value="<?= esc($u['id']) ?>"><?= esc($u['full_name']) ?> — <?= esc($u['role_name'] ?? '') ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="sap-hint">Leave empty for standard 2-stage approval. Select a specific user for single-stage approval.</div>
+                </div>
                 <div class="d-flex gap-2">
                     <button type="submit" class="sap-btn sap-btn-primary">
                         <i class="fas fa-paper-plane"></i> Submit

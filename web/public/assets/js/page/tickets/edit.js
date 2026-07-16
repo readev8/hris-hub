@@ -130,7 +130,8 @@ var TicketEdit = (function () {
                             url: site_url + '/modules/' + m.id + '/pages',
                             type: 'GET', timeout: 10000,
                             success: function (pages) {
-                                if (!Array.isArray(pages)) return;
+                                pages = Array.isArray(pages) ? pages : (pages && Array.isArray(pages.pages)) ? pages.pages : [];
+                                if (!pages.length) return;
                                 for (var pg of pages) {
                                     if (String(pg.id) === String(currentPageId)) {
                                         $('#projectSelect').val(p.id).trigger('change');
@@ -199,13 +200,14 @@ var TicketEdit = (function () {
                 url: site_url + '/modules/' + mid + '/pages',
                 type: 'GET', timeout: 10000,
                 success: function (res) {
-                    if (!Array.isArray(res)) {
+                    var pages = Array.isArray(res) ? res : (res && Array.isArray(res.pages)) ? res.pages : [];
+                    if (!pages.length) {
                         $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false);
                         return;
                     }
                     var html = '<option value="">Select Page...</option>';
-                    for (var i = 0; i < res.length; i++) {
-                        html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+                    for (var i = 0; i < pages.length; i++) {
+                        html += '<option value="' + pages[i].id + '">' + pages[i].name + '</option>';
                     }
                     $('#pageSelect').html(html).prop('disabled', false);
                 },
@@ -276,7 +278,8 @@ var TicketEdit = (function () {
                 priority: $('#priorityValue').val(),
                 due_date: $('input[name="due_date"]').val(),
                 assignee_id: $('select[name="assignee_id"]').val(),
-                page_id: $('#pageIdValue').val()
+                page_id: $('#pageIdValue').val(),
+                approver_id: $('select[name="approver_id"]').val() || ''
             };
 
             $.ajax({

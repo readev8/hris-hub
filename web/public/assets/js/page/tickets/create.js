@@ -28,6 +28,16 @@ $(function() {
         $('#priorityValue').val($(this).data('value'));
     });
 
+    // Approval checkbox - show/hide approver dropdown
+    $('#needsApproval').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#approverSection').slideDown(200);
+        } else {
+            $('#approverSection').slideUp(200);
+            $('#approverSelect').val('');
+        }
+    });
+
     // Type change - show/hide bug trace section
     $('#ticketType').on('change', function() {
         if (['0','3','4','5'].includes($(this).val())) {
@@ -88,10 +98,11 @@ $(function() {
             type: 'GET',
             timeout: 10000,
             success: function(res) {
-                if (!Array.isArray(res)) { $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false); return; }
+                var pages = Array.isArray(res) ? res : (res && Array.isArray(res.pages)) ? res.pages : [];
+                if (!pages.length) { $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false); return; }
                 var html = '<option value="">Select Page...</option>';
-                for (var i = 0; i < res.length; i++) {
-                    html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
+                for (var i = 0; i < pages.length; i++) {
+                    html += '<option value="' + pages[i].id + '">' + pages[i].name + '</option>';
                 }
                 $('#pageSelect').html(html).prop('disabled', false);
             },

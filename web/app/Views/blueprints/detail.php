@@ -225,12 +225,12 @@
                 <div class="sap-card-body">
                     <ul class="nav nav-tabs mb-3" id="moduleTabs">
                         <li class="nav-item">
-                            <a class="nav-link active" data-tab="scenarios" href="#" onclick="switchTab('scenarios'); return false;">
+                            <a class="nav-link active" data-tab="scenarios" href="#" onclick="BlueprintDetail.switchTab('scenarios'); return false;">
                                 <i class="fas fa-briefcase me-1"></i> Business Scenarios
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-tab="design-pages" href="#" onclick="switchTab('design-pages'); return false;">
+                            <a class="nav-link" data-tab="design-pages" href="#" onclick="BlueprintDetail.switchTab('design-pages'); return false;">
                                 <i class="fas fa-palette me-1"></i> Design Pages
                             </a>
                         </li>

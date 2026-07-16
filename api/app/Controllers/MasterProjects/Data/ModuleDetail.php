@@ -14,8 +14,11 @@ class ModuleDetail extends BaseApi
         if (!$moduleId) return $this->JSONResponse('ID tidak valid', null, 400);
 
         $module = $this->db()->table('modules')
-            ->where('id', $moduleId)
-            ->where('active', 0)
+            ->select('modules.*, bm.name as blueprint_module_name, b.name as blueprint_name')
+            ->join('blueprint_modules as bm', 'bm.id = modules.blueprint_module_id AND bm.active = 0', 'left')
+            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
+            ->where('modules.id', $moduleId)
+            ->where('modules.active', 0)
             ->get()
             ->getRowArray();
 
@@ -63,11 +66,14 @@ class ModuleDetail extends BaseApi
         }
 
         return $this->JSONResponse('OK', [
-            'id'          => $this->api->encryptId($module['id']),
-            'name'        => $module['name'],
-            'description' => $module['description'],
-            'sort_order'  => (int) $module['sort_order'],
-            'pages'       => $pageList,
+            'id'                    => $this->api->encryptId($module['id']),
+            'name'                  => $module['name'],
+            'description'           => $module['description'],
+            'sort_order'            => (int) $module['sort_order'],
+            'blueprint_module_id'   => $module['blueprint_module_id'] ? $this->api->encryptId($module['blueprint_module_id']) : null,
+            'blueprint_module_name' => $module['blueprint_module_name'] ?? null,
+            'blueprint_name'        => $module['blueprint_name'] ?? null,
+            'pages'                 => $pageList,
         ], 200);
     }
 }

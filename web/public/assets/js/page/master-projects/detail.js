@@ -125,6 +125,100 @@ var MasterProjectDetail = (function () {
         });
     }
 
+    // ── Blueprint Module Assignment ─────────────────────
+    var blueprintModuleModalInstance = null;
+
+    function getBlueprintModuleModal() {
+        if (!blueprintModuleModalInstance) {
+            blueprintModuleModalInstance = new bootstrap.Modal(document.getElementById('blueprintModuleModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+        }
+        return blueprintModuleModalInstance;
+    }
+
+    function openAssignBlueprintModal(moduleId) {
+        $('#assignModuleId').val(moduleId);
+        $('#blueprintModulesLoading').show();
+        $('#blueprintModulesEmpty').hide();
+        $('#blueprintModulesList').html('');
+        getBlueprintModuleModal().show();
+
+        $.get(site_url + '/blueprint-modules/available', function (res) {
+            $('#blueprintModulesLoading').hide();
+            if (!res || !res.length) {
+                $('#blueprintModulesEmpty').show();
+                return;
+            }
+            var html = '';
+            for (var g = 0; g < res.length; g++) {
+                var group = res[g];
+                html += '<div class="blueprint-module-group">';
+                html += '<div class="blueprint-module-group-header"><i class="fas fa-drafting-compass"></i> ' + escHtml(group.blueprint_name) + '</div>';
+                for (var k = 0; k < group.modules.length; k++) {
+                    var bm = group.modules[k];
+                    html += '<div class="blueprint-module-row" data-id="' + bm.id + '">';
+                    html += '<div class="blueprint-module-row-info">';
+                    html += '<span class="blueprint-module-row-name">' + escHtml(bm.name) + '</span>';
+                    html += '<span class="blueprint-module-row-meta">' + bm.scenario_count + ' scenarios / ' + bm.design_page_count + ' pages</span>';
+                    html += '</div>';
+                    html += '<button type="button" class="blueprint-module-row-action"><i class="fas fa-check"></i></button>';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            $('#blueprintModulesList').html(html);
+            $('#blueprintModulesList .blueprint-module-row').on('click', function () {
+                var bpModId = $(this).data('id');
+                assignBlueprintModule(bpModId);
+            });
+        }).fail(function () {
+            $('#blueprintModulesLoading').hide();
+            toastr.error('Failed to load blueprint modules');
+        });
+    }
+
+    function assignBlueprintModule(blueprintModuleId) {
+        var moduleId = $('#assignModuleId').val();
+        $.post(site_url + '/modules/' + moduleId + '/assign-blueprint', { blueprint_module_id: blueprintModuleId }, function (res) {
+            if (res.status) {
+                toastr.success('Blueprint module assigned');
+                bootstrap.Modal.getInstance(document.getElementById('blueprintModuleModal')).hide();
+                window.location.reload();
+            } else {
+                toastr.error(res.data && res.data.message ? res.data.message : 'Failed');
+            }
+        }).fail(function (xhr) {
+            toastr.error('Failed to assign blueprint module (HTTP ' + xhr.status + ')');
+        });
+    }
+
+    function unassignBlueprintModule(moduleId) {
+        Swal.fire({
+            title: 'Remove blueprint assignment?',
+            text: 'This module will no longer be linked to a blueprint module.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#AA0808',
+            cancelButtonColor: '#758CA4',
+            confirmButtonText: 'Remove',
+        }).then(function (r) {
+            if (r.isConfirmed) {
+                $.post(site_url + '/modules/' + moduleId + '/unassign-blueprint', function (res) {
+                    if (res.status) {
+                        toastr.success('Blueprint module unassigned');
+                        window.location.reload();
+                    } else {
+                        toastr.error(res.data && res.data.message ? res.data.message : 'Failed');
+                    }
+                }).fail(function (xhr) {
+                    toastr.error('Failed to unassign blueprint module (HTTP ' + xhr.status + ')');
+                });
+            }
+        });
+    }
+
     function renderModules(modules) {
         if (!modules || !modules.length) {
             $('#modulesList').html('<div class="sap-empty" style="padding:32px 20px"><i class="fas fa-puzzle-piece"></i><h4>No modules yet</h4><p>Add modules to organize your project pages.</p></div>');
@@ -157,6 +251,19 @@ var MasterProjectDetail = (function () {
             html += '<span class="module-card-stat"><i class="fas fa-file-alt"></i> ' + pages.length + ' pages</span>';
             if (totalBugs > 0) html += '<span class="module-card-stat"><i class="fas fa-bug"></i> ' + totalBugs + ' bugs</span>';
             if (openBugs > 0) html += '<span class="module-card-stat module-card-stat--open"><i class="fas fa-exclamation-circle"></i> ' + openBugs + ' open</span>';
+            html += '</div>';
+            html += '<div class="module-blueprint-bar mt-2">';
+            if (m.blueprint_module_id) {
+                html += '<div class="module-blueprint-assigned">';
+                html += '<span class="module-blueprint-icon"><i class="fas fa-link"></i></span>';
+                html += '<span class="module-blueprint-label">' + escHtml(m.blueprint_name || '') + ' → ' + escHtml(m.blueprint_module_name || '') + '</span>';
+                html += '<button type="button" class="module-blueprint-remove" onclick="MasterProjectDetail.unassignBlueprintModule(\'' + m.id + '\')" title="Remove assignment"><i class="fas fa-times"></i></button>';
+                html += '</div>';
+            } else {
+                html += '<button type="button" class="module-blueprint-unassigned" onclick="MasterProjectDetail.openAssignBlueprintModal(\'' + m.id + '\')">';
+                html += '<i class="fas fa-link"></i> Assign Blueprint Module';
+                html += '</button>';
+            }
             html += '</div>';
             html += '</div>';
             html += '<div class="module-card-footer">';
@@ -362,10 +469,13 @@ var MasterProjectDetail = (function () {
 
     // ── Public API ─────────────────────────────────────────────
     return {
-        switchDetailTab: switchDetailTab,
-        openModuleModal: openModuleModal,
-        editModule:      editModule,
-        deleteModule:    deleteModule,
-        refreshModules:  refreshModules
+        switchDetailTab:         switchDetailTab,
+        openModuleModal:         openModuleModal,
+        editModule:              editModule,
+        deleteModule:            deleteModule,
+        refreshModules:          refreshModules,
+        openAssignBlueprintModal: openAssignBlueprintModal,
+        assignBlueprintModule:   assignBlueprintModule,
+        unassignBlueprintModule: unassignBlueprintModule
     };
 })();

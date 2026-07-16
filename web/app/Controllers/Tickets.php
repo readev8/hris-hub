@@ -145,7 +145,13 @@ class Tickets extends BaseController
             }
         }
 
-        return $this->view('tickets/create', ['title' => 'Create Ticket']);
+        $usersResult = $this->api->get_data('users');
+        $usersList = $usersResult['data']['result'] ?? [];
+
+        return $this->view('tickets/create', [
+            'title' => 'Create Ticket',
+            'users' => $usersList,
+        ]);
     }
 
     public function update(string $encryptedId)
@@ -248,10 +254,14 @@ class Tickets extends BaseController
             log_message('error', 'Tickets edit API failed for ' . $encryptedId . ': ' . json_encode($result));
         }
 
+        $usersResult = $this->api->get_data('users');
+        $usersList = $usersResult['data']['result'] ?? [];
+
         return $this->view('tickets/edit', [
             'title'  => 'Edit Ticket',
             'ticket' => $result['data']['result'] ?? null,
             'token'  => $encryptedId,
+            'users'  => $usersList,
         ]);
     }
 

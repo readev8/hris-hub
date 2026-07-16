@@ -83,6 +83,19 @@
                                 <span class="module-card-stat module-card-stat--open"><i class="fas fa-exclamation-circle"></i> <?= $openBugs ?> open</span>
                                 <?php endif; ?>
                             </div>
+                            <div class="module-blueprint-bar mt-2">
+                                <?php if (!empty($mod['blueprint_module_id'])): ?>
+                                <div class="module-blueprint-assigned">
+                                    <span class="module-blueprint-icon"><i class="fas fa-link"></i></span>
+                                    <span class="module-blueprint-label"><?= esc($mod['blueprint_name'] ?? '') ?> → <?= esc($mod['blueprint_module_name'] ?? '') ?></span>
+                                    <button type="button" class="module-blueprint-remove" onclick="MasterProjectDetail.unassignBlueprintModule('<?= $mod['id'] ?>')" title="Remove assignment"><i class="fas fa-times"></i></button>
+                                </div>
+                                <?php else: ?>
+                                <button type="button" class="module-blueprint-unassigned" onclick="MasterProjectDetail.openAssignBlueprintModal('<?= $mod['id'] ?>')">
+                                    <i class="fas fa-link"></i> Assign Blueprint Module
+                                </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="module-card-footer">
                             <a href="<?= site_url('master-projects/' . $project['id'] . '/modules/' . $mod['id']) ?>" class="module-card-link">
@@ -163,6 +176,33 @@
                     <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-check"></i> Save</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+<!-- Blueprint Module Assignment Modal -->
+<div class="modal fade sap-modal" id="blueprintModuleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-link me-2"></i>Assign Blueprint Module</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <input type="hidden" id="assignModuleId">
+                <div id="blueprintModulesLoading" class="text-center p-4">
+                    <i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--sap-brand)"></i>
+                    <p class="mt-2 mb-0 text-secondary" style="font-size:13px">Loading blueprint modules...</p>
+                </div>
+                <div id="blueprintModulesEmpty" class="text-center p-4" style="display:none">
+                    <i class="fas fa-inbox" style="font-size:36px;color:var(--sap-text-muted)"></i>
+                    <h5 class="mt-2">No blueprint modules found</h5>
+                    <p class="mb-0 text-secondary" style="font-size:13px">Create a blueprint with modules first.</p>
+                </div>
+                <div id="blueprintModulesList"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
         </div>
     </div>
 </div>

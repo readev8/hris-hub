@@ -38,6 +38,11 @@ class Tickets extends BaseApi
         $priority = (int) ($input['priority'] ?? Enums::PRIORITY_MEDIUM);
         $dueDate = !empty($input['due_date']) ? $input['due_date'] : null;
 
+        $approverId = null;
+        if (!empty($input['approver_id'])) {
+            $approverId = $this->resolveId($input['approver_id']);
+        }
+
         $pageId = null;
         if (!empty($input['page_id'])) {
             $pageId = $this->resolveId($input['page_id']);
@@ -63,6 +68,7 @@ class Tickets extends BaseApi
             'priority'       => $priority,
             'status'         => Enums::TICKET_STATUS_OPEN,
             'creator_id'     => $userId,
+            'approver_id'    => $approverId,
             'page_id'        => $pageId,
             'due_date'       => $dueDate,
             'needs_approval' => !empty($input['needs_approval']) ? 1 : 0,
@@ -240,8 +246,13 @@ class Tickets extends BaseApi
     public function approve_it(string $encryptedId): ResponseInterface
     {
         return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_IT, function ($ticket, $userId) {
+            $hasSpecificApprover = !empty($ticket['approver_id']);
+            $newStatus = $hasSpecificApprover
+                ? Enums::TICKET_STATUS_IN_PROGRESS
+                : Enums::TICKET_STATUS_APPROVED;
+
             $this->db()->table('tickets')->update([
-                'status'     => Enums::TICKET_STATUS_APPROVED,
+                'status'     => $newStatus,
                 'updated_at' => date('Y-m-d H:i:s'),
             ], ['id' => $ticket['id']]);
 
@@ -257,9 +268,9 @@ class Tickets extends BaseApi
 
             $this->audit->log($userId, 'ticket', $ticket['id'], 'approve_it',
                 ['status' => Enums::TICKET_STATUS_OPEN],
-                ['status' => Enums::TICKET_STATUS_APPROVED]
+                ['status' => $newStatus]
             );
-            return 'IT Manager approval berhasil';
+            return $hasSpecificApprover ? 'Approval berhasil' : 'IT Manager approval berhasil';
         });
     }
 
@@ -321,8 +332,16 @@ class Tickets extends BaseApi
         }
 
         $role = $this->getCurrentUserRole();
-        if ($role !== Enums::IT_MANAGER && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya IT Manager, Dept Head, atau Admin yang dapat reject', null, 403);
+
+        $hasSpecificApprover = !empty($ticket['approver_id']);
+        if ($hasSpecificApprover) {
+            if ((int) $ticket['approver_id'] !== $userId && $role !== Enums::ADMIN) {
+                return $this->JSONResponse('Hanya approver yang ditunjuk yang dapat menolak ticket ini', null, 403);
+            }
+        } else {
+            if ($role !== Enums::IT_MANAGER && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
+                return $this->JSONResponse('Hanya IT Manager, Dept Head, atau Admin yang dapat reject', null, 403);
+            }
         }
 
         $stageSequence = $currentStatus === Enums::TICKET_STATUS_OPEN
@@ -426,19 +445,33 @@ class Tickets extends BaseApi
         $role = $this->getCurrentUserRole();
         if (!$role) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
-        if ($expectedStage === Enums::STAGE_PENDING_IT && $role !== Enums::IT_MANAGER && $role !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya IT Manager yang dapat approve tahap ini', null, 403);
-        }
-        if ($expectedStage === Enums::STAGE_PENDING_DEPT && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya Department Head yang dapat approve tahap ini', null, 403);
-        }
+        $hasSpecificApprover = !empty($ticket['approver_id']);
 
-        $expectedStatus = $expectedStage === Enums::STAGE_PENDING_IT
-            ? Enums::TICKET_STATUS_OPEN
-            : Enums::TICKET_STATUS_APPROVED;
+        if ($hasSpecificApprover) {
+            // Single-stage: only the designated approver (or admin) can approve
+            if ((int) $ticket['approver_id'] !== $userId && $role !== Enums::ADMIN) {
+                return $this->JSONResponse('Hanya approver yang ditunjuk yang dapat menyetujui ticket ini', null, 403);
+            }
+            // Expected status must be OPEN (single stage starts and ends here)
+            if ((int) $ticket['status'] !== Enums::TICKET_STATUS_OPEN) {
+                return $this->JSONResponse('Status ticket tidak sesuai untuk approval', null, 400);
+            }
+        } else {
+            // 2-stage role-based: current behavior unchanged
+            if ($expectedStage === Enums::STAGE_PENDING_IT && $role !== Enums::IT_MANAGER && $role !== Enums::ADMIN) {
+                return $this->JSONResponse('Hanya IT Manager yang dapat approve tahap ini', null, 403);
+            }
+            if ($expectedStage === Enums::STAGE_PENDING_DEPT && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
+                return $this->JSONResponse('Hanya Department Head yang dapat approve tahap ini', null, 403);
+            }
 
-        if ((int) $ticket['status'] !== $expectedStatus) {
-            return $this->JSONResponse('Status ticket tidak sesuai untuk tahap approval ini', null, 400);
+            $expectedStatus = $expectedStage === Enums::STAGE_PENDING_IT
+                ? Enums::TICKET_STATUS_OPEN
+                : Enums::TICKET_STATUS_APPROVED;
+
+            if ((int) $ticket['status'] !== $expectedStatus) {
+                return $this->JSONResponse('Status ticket tidak sesuai untuk tahap approval ini', null, 400);
+            }
         }
 
         $this->db()->transStart();
@@ -552,6 +585,7 @@ class Tickets extends BaseApi
         $priority = (int) ($input['priority'] ?? $ticket['priority']);
         $dueDate = $input['due_date'] ?? $ticket['due_date'];
         $assigneeId = isset($input['assignee_id']) ? ($input['assignee_id'] !== '' ? $this->resolveId($input['assignee_id']) : null) : $ticket['assignee_id'];
+        $approverId = isset($input['approver_id']) ? ($input['approver_id'] !== '' ? $this->resolveId($input['approver_id']) : null) : $ticket['approver_id'];
 
         $needsPage = in_array($type, [Enums::TICKET_TYPE_BUG, Enums::TICKET_TYPE_CHANGE_REQUEST, Enums::TICKET_TYPE_DATA_REQUEST, Enums::TICKET_TYPE_CHANGE_DATA_REQUEST], true);
         if ($needsPage && empty($input['page_id']) && empty($ticket['page_id'])) {
@@ -574,12 +608,14 @@ class Tickets extends BaseApi
             'title' => $ticket['title'], 'description' => $ticket['description'],
             'type' => $ticket['type'], 'priority' => $ticket['priority'],
             'due_date' => $ticket['due_date'], 'assignee_id' => $ticket['assignee_id'],
+            'approver_id' => $ticket['approver_id'],
         ];
         $new = [
             'title' => $title, 'description' => $description,
             'type' => $type, 'priority' => $priority,
             'due_date' => $dueDate, 'assignee_id' => $assigneeId,
-            'page_id' => $pageId, 'updated_at' => date('Y-m-d H:i:s'),
+            'page_id' => $pageId, 'approver_id' => $approverId,
+            'updated_at' => date('Y-m-d H:i:s'),
         ];
 
         $this->db()->transStart();

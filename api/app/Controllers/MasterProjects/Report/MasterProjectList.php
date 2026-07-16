@@ -208,4 +208,40 @@ class MasterProjectList extends BaseApi
 
         return $this->JSONResponse('OK', $result, 200);
     }
+
+    public function get_available_blueprint_modules(): ResponseInterface
+    {
+        $modules = $this->db()->table('blueprint_modules')
+            ->select('blueprint_modules.*, blueprints.name as blueprint_name')
+            ->join('blueprints', 'blueprints.id = blueprint_modules.blueprint_id', 'left')
+            ->where('blueprint_modules.active', 0)
+            ->where('blueprints.active', 0)
+            ->orderBy('blueprints.name', 'ASC')
+            ->orderBy('blueprint_modules.sort_order', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $grouped = [];
+        foreach ($modules as $m) {
+            $bpId = $m['blueprint_id'];
+            if (!isset($grouped[$bpId])) {
+                $grouped[$bpId] = [
+                    'blueprint_id'   => $this->api->encryptId($bpId),
+                    'blueprint_name' => $m['blueprint_name'] ?? 'Untitled Blueprint',
+                    'modules'        => [],
+                ];
+            }
+            $scenarioCount = $this->db()->table('blueprint_business_scenarios')->where('module_id', $m['id'])->where('active', 0)->countAllResults();
+            $designPageCount = $this->db()->table('blueprint_design_pages')->where('module_id', $m['id'])->where('active', 0)->countAllResults();
+
+            $grouped[$bpId]['modules'][] = [
+                'id'              => $this->api->encryptId($m['id']),
+                'name'            => $m['name'],
+                'scenario_count'  => $scenarioCount,
+                'design_page_count' => $designPageCount,
+            ];
+        }
+
+        return $this->JSONResponse('OK', array_values($grouped), 200);
+    }
 }

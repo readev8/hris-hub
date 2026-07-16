@@ -10,27 +10,34 @@ class TicketDetail extends BaseApi
     public function get_detail(string $encryptedId): ResponseInterface
     {
         $id = $this->resolveId($encryptedId);
+        log_message('debug', 'TicketDetail: encryptedId=' . $encryptedId . ' → decryptedId=' . var_export($id, true));
+
         if (!$id) {
             return $this->JSONResponse('ID tidak valid', null, 400);
         }
 
+        $rawTicket = $this->db()->table('tickets')
+            ->where('id', $id)
+            ->get()
+            ->getRowArray();
+        log_message('debug', 'TicketDetail: raw ticket exists=' . ($rawTicket ? 'YES (id=' . $rawTicket['id'] . ', page_id=' . var_export($rawTicket['page_id'], true) . ')' : 'NO'));
+
         $ticket = $this->db()->table('tickets')
             ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name,
                       tickets.assignee_id as assignee_raw_id,
+                      approver.full_name as approver_name,
                       pages.name as page_name, modules.name as module_name, master_projects.name as project_name,
                       master_projects.id as project_raw_id')
             ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
             ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
+            ->join('users as approver', 'approver.id = tickets.approver_id', 'left')
             ->join('pages', 'pages.id = tickets.page_id', 'left')
             ->join('modules', 'modules.id = pages.module_id', 'left')
             ->join('master_projects', 'master_projects.id = modules.master_project_id', 'left')
             ->where('tickets.id', $id)
-            ->where('tickets.active', 0)
-            ->where('pages.active', 0)
-            ->where('modules.active', 0)
-            ->where('master_projects.active', 0)
             ->get()
             ->getRowArray();
+        log_message('debug', 'TicketDetail: joined query result=' . ($ticket ? 'FOUND' : 'NULL'));
 
         if (!$ticket) {
             return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
@@ -74,6 +81,10 @@ class TicketDetail extends BaseApi
             $ticket['project_id'] = $this->api->encryptId($ticket['project_raw_id']);
         }
         unset($ticket['project_raw_id']);
+
+        if (!empty($ticket['approver_id'])) {
+            $ticket['approver_id'] = $this->api->encryptId($ticket['approver_id']);
+        }
 
         foreach ($comments as &$c) {
             $rawId = (int) $c['id'];

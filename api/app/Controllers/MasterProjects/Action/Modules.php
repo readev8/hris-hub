@@ -90,4 +90,58 @@ class Modules extends BaseApi
         $this->db()->table('modules')->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Modul berhasil dihapus');
     }
+
+    public function assign_blueprint_module(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('master_projects', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah modul', null, 403);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $blueprintModuleId = !empty($input['blueprint_module_id']) ? $this->resolveId($input['blueprint_module_id']) : null;
+
+        $module = $this->db()->table('modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
+
+        if ($blueprintModuleId) {
+            $blueprintModule = $this->db()->table('blueprint_modules')->where('id', $blueprintModuleId)->where('active', 0)->get()->getRowArray();
+            if (!$blueprintModule) return $this->JSONResponse('Blueprint module tidak ditemukan', null, 404);
+        }
+
+        $this->db()->table('modules')->update([
+            'blueprint_module_id' => $blueprintModuleId,
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ], ['id' => $id]);
+
+        return $this->JSONResponse('Blueprint module berhasil diassign');
+    }
+
+    public function unassign_blueprint_module(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('master_projects', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah modul', null, 403);
+        }
+
+        $module = $this->db()->table('modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
+
+        $this->db()->table('modules')->update([
+            'blueprint_module_id' => null,
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ], ['id' => $id]);
+
+        return $this->JSONResponse('Blueprint module berhasil diunassign');
+    }
 }

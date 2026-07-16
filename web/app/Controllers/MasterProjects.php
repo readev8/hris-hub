@@ -191,6 +191,40 @@ class MasterProjects extends BaseController
         return $this->response->setJSON($result);
     }
 
+    public function assignBlueprintModule(string $encryptedId)
+    {
+        if (!$this->guard('can_update')) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
+        }
+
+        $post = $this->request->getPost();
+        $result = $this->api->post_data('modules/' . $encryptedId . '/assign-blueprint', $post);
+        return $this->response->setJSON($result);
+    }
+
+    public function unassignBlueprintModule(string $encryptedId)
+    {
+        if (!$this->guard('can_update')) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
+        }
+
+        $result = $this->api->post_data('modules/' . $encryptedId . '/unassign-blueprint');
+        return $this->response->setJSON($result);
+    }
+
+    public function getAvailableBlueprintModules()
+    {
+        if (!$this->guard()) {
+            return $this->response->setJSON([]);
+        }
+
+        $result = $this->api->get_data('blueprint-modules/available');
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON([]);
+        }
+        return $this->response->setJSON($result['data']['result'] ?? []);
+    }
+
     public function createPage(string $encryptedModuleId)
     {
         if (!$this->guard('can_create')) {

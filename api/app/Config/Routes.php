@@ -77,8 +77,8 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('master-projects/(:any)/kanban',      'MasterProjects\Report\MasterProjectList::get_kanban/$1');
     $routes->get('master-projects/(:any)/modules',     'MasterProjects\Report\MasterProjectList::get_modules/$1');
     $routes->get('master-projects/(:any)',             'MasterProjects\Data\MasterProjectDetail::get_detail/$1');
-    $routes->get('modules/(:any)',                     'MasterProjects\Data\ModuleDetail::get_detail/$1');
     $routes->get('modules/(:any)/pages',               'MasterProjects\Report\MasterProjectList::get_pages/$1');
+    $routes->get('modules/(:any)',                     'MasterProjects\Data\ModuleDetail::get_detail/$1');
     $routes->get('pages/(:any)/bugs',                  'MasterProjects\Report\MasterProjectList::get_bugs/$1');
     $routes->post('tickets/(:any)/move',               'Tickets\Action\Tickets::move_ticket/$1');
     $routes->post('master-projects/create',            'MasterProjects\Action\Projects::create_project');
@@ -87,6 +87,9 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('master-projects/(:any)/modules',    'MasterProjects\Action\Modules::create_module/$1');
     $routes->post('modules/(:any)/update',             'MasterProjects\Action\Modules::update_module/$1');
     $routes->post('modules/(:any)/delete',             'MasterProjects\Action\Modules::delete_module/$1');
+    $routes->post('modules/(:any)/assign-blueprint',   'MasterProjects\Action\Modules::assign_blueprint_module/$1');
+    $routes->post('modules/(:any)/unassign-blueprint', 'MasterProjects\Action\Modules::unassign_blueprint_module/$1');
+    $routes->get('blueprint-modules/available',         'MasterProjects\Report\MasterProjectList::get_available_blueprint_modules');
     $routes->post('modules/(:any)/pages',              'MasterProjects\Action\Pages::create_page/$1');
     $routes->post('pages/(:any)/update',               'MasterProjects\Action\Pages::update_page/$1');
     $routes->post('pages/(:any)/delete',               'MasterProjects\Action\Pages::delete_page/$1');
