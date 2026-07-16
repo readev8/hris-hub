@@ -1,15 +1,7 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<style>
-.field-error {
-    font-size: 12px;
-    color: var(--sap-error);
-    margin-top: 4px;
-    display: none;
-}
-.field-error.visible { display: block; }
-</style>
+<link rel="stylesheet" href="<?= base_url('public/assets/css/page/_shared/field-errors.css?v=' . config('App')->assetVersion) ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -115,64 +107,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
-var token = '<?= esc($token) ?>';
-
-$(function() {
-    function clearFieldErrors() {
-        $('.field-error').removeClass('visible').text('');
-        $('.sap-input, .sap-select').removeClass('is-invalid');
-    }
-
-    $('[name="name"], [name="description"], [name="business_case"], [name="priority"]').on('input change', function() {
-        $(this).removeClass('is-invalid');
-        var fieldName = $(this).attr('name');
-        $('#error-' + fieldName).removeClass('visible').text('');
-    });
-
-    $('#improvementForm').on('submit', function(e) {
-        e.preventDefault();
-        clearFieldErrors();
-        var btn = $(this).find('[type="submit"]');
-        btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Updating...');
-
-        $.ajax({
-            url: site_url + '/improvements/' + token + '/update',
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function(res) {
-                if (res.status) {
-                    toastr.success('Improvement updated');
-                    setTimeout(function() { window.location.href = site_url + '/improvements/' + token; }, 500);
-                } else {
-                    if (res.errors && typeof res.errors === 'object') {
-                        Object.keys(res.errors).forEach(function(field) {
-                            var input = $('[name="' + field + '"]');
-                            if (input.length) {
-                                input.addClass('is-invalid');
-                                $('#error-' + field).text(res.errors[field]).addClass('visible');
-                            }
-                        });
-                        toastr.error('Please fix the errors below');
-                    } else {
-                        toastr.error(res.message || 'Failed to update');
-                    }
-                    btn.prop('disabled', false).html('<i class="fas fa-save"></i> Update');
-                }
-            },
-            error: function(xhr) {
-                var res = null;
-                try { res = JSON.parse(xhr.responseText); } catch(e) {}
-                if (res && res.redirect) {
-                    window.location.href = res.redirect;
-                    return;
-                }
-                var msg = res && res.message ? res.message : 'Request failed (HTTP ' + xhr.status + ')';
-                toastr.error(msg);
-                btn.prop('disabled', false).html('<i class="fas fa-save"></i> Update');
-            }
-        });
-    });
-});
-</script>
+<script>window.PageData = <?= json_encode(['token' => $token]) ?>;</script>
+<script src="<?= base_url('public/assets/js/page/improvements/edit.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

@@ -1,0 +1,41 @@
+/**
+ * Dashboard Main Page Styles
+ * Metric cards, Chart.js containers, activity log
+ */
+
+.dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.dashboard-chart-container {
+    background: var(--sap-card-bg, #fff);
+    border: 1px solid var(--sap-border, #e5e7eb);
+    border-radius: var(--sap-radius-lg, 12px);
+    padding: 20px;
+    min-height: 280px;
+}
+
+.dashboard-chart-container h6 {
+    margin: 0 0 16px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text-secondary, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.dashboard-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}

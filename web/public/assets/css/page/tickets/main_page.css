@@ -1,0 +1,12 @@
+/**
+ * Tickets Main Page Styles
+ */
+
+@import url('../_shared/column-search.css');
+
+#tickets-table tbody tr { cursor: pointer; transition: background var(--sap-transition); }
+#tickets-table tbody tr:hover { background: var(--sap-brand-hover); }
+#tickets-table tbody tr.row-status-open td:nth-child(3) .sap-badge { background: var(--sap-open-bg); color: var(--sap-open); }
+#tickets-table tbody tr.row-status-closed td:nth-child(3) .sap-badge { background: var(--sap-closed-bg); color: var(--sap-closed); }
+#tickets-table tbody tr.row-status-resolved td:nth-child(3) .sap-badge { background: var(--sap-resolved-bg); color: var(--sap-resolved); }
+#tickets-table tbody tr.row-status-rejected td:nth-child(3) .sap-badge { background: var(--sap-rejected-bg); color: var(--sap-rejected); }

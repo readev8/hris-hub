@@ -1,0 +1,396 @@
+/**
+ * Master Projects Detail Page Styles
+ *
+ * @package    App\Views\master-projects
+ * @file       detail.css
+ * @version    1.0.0
+ */
+
+/* ── Tab Pane ──────────────────────────────────── */
+.tab-pane-container { position: relative; }
+.tab-content { animation: fadeTabIn 250ms ease; }
+@keyframes fadeTabIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Kanban Board ──────────────────────────────── */
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    min-height: 400px;
+    align-items: flex-start;
+}
+
+.kanban-column {
+    background: var(--sap-background);
+    border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius-lg);
+    overflow: hidden;
+    transition: box-shadow var(--sap-transition);
+}
+
+.kanban-column.sortable-drag-over {
+    box-shadow: 0 0 0 2px var(--sap-brand), var(--sap-shadow-lg);
+}
+
+.kanban-column-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sap-text);
+    border-bottom: 1px solid var(--sap-border-light);
+    background: var(--sap-surface);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.kanban-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.kanban-status-dot.open { background: var(--sap-warning); }
+.kanban-status-dot.in_progress { background: var(--sap-info); }
+.kanban-status-dot.resolved { background: var(--sap-success); }
+.kanban-status-dot.closed { background: #94A3B8; }
+
+.kanban-count {
+    margin-left: auto;
+    background: var(--sap-border-light);
+    color: var(--sap-text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--sap-radius-pill);
+    min-width: 24px;
+    text-align: center;
+}
+
+.kanban-cards {
+    padding: 10px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ── Kanban Card ───────────────────────────────── */
+.kanban-card {
+    background: var(--sap-surface);
+    border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius);
+    padding: 12px 14px;
+    cursor: grab;
+    transition: box-shadow var(--sap-transition), transform var(--sap-transition), border-color var(--sap-transition);
+    position: relative;
+}
+.kanban-card:hover {
+    box-shadow: var(--sap-shadow);
+    border-color: var(--sap-brand);
+}
+.kanban-card:active {
+    cursor: grabbing;
+    box-shadow: var(--sap-shadow-lg);
+    transform: rotate(1.5deg) scale(1.02);
+}
+
+.kanban-card.sortable-ghost {
+    opacity: 0.4;
+    border: 2px dashed var(--sap-brand);
+}
+
+.kanban-card.sortable-chosen {
+    box-shadow: var(--sap-shadow-xl);
+    z-index: 10;
+}
+
+.kanban-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.kanban-priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.kanban-priority-dot.critical { background: var(--sap-critical); box-shadow: 0 0 0 2px rgba(220,38,38,0.2); }
+.kanban-priority-dot.high { background: var(--sap-high); }
+.kanban-priority-dot.medium { background: var(--sap-medium); }
+.kanban-priority-dot.low { background: var(--sap-low); }
+
+.kanban-type-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: var(--sap-radius-pill);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.kanban-type-badge.bug { background: var(--sap-error-bg); color: var(--sap-error); }
+.kanban-type-badge.issue { background: var(--sap-warning-bg); color: var(--sap-warning); }
+.kanban-type-badge.task { background: var(--sap-info-bg); color: var(--sap-info); }
+.kanban-type-badge.change-request { background: var(--sap-success-bg); color: var(--sap-success); }
+
+.kanban-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.kanban-card-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color var(--sap-transition);
+}
+.kanban-card-title a:hover { color: var(--sap-brand); }
+
+.kanban-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--sap-text-muted);
+    flex-wrap: wrap;
+}
+
+.kanban-card-meta i { font-size: 10px; }
+
+.kanban-card-assignee {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kanban-card-page {
+    font-size: 11px;
+    color: var(--sap-text-muted);
+    background: var(--sap-background);
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.kanban-empty {
+    text-align: center;
+    padding: 24px 12px;
+    color: var(--sap-text-muted);
+    font-size: 13px;
+}
+.kanban-empty i {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 8px;
+    opacity: 0.4;
+}
+
+@media (max-width: 1024px) {
+    .kanban-board { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+    .kanban-board { grid-template-columns: 1fr; }
+}
+
+/* ── Compact Button ────────────────────────────── */
+.sap-btn-xs { padding: 4px 10px; font-size: 12px; }
+
+/* ── Enhanced Tables ───────────────────────────── */
+.sap-table-compact td { padding: 10px 14px; font-size: 13px; }
+.sap-table-compact thead th { padding: 10px 14px; }
+
+.page-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--sap-radius);
+    background: var(--sap-brand-light);
+    color: var(--sap-brand);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.table-code {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--sap-background);
+    border: 1px solid var(--sap-border-light);
+    color: var(--sap-text-secondary);
+}
+
+/* ── Button Groups ─────────────────────────────── */
+.sap-btn-group {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.sap-btn-ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--sap-text-secondary);
+    transition: all 150ms ease;
+}
+.sap-btn-ghost:hover {
+    background: var(--sap-brand-hover);
+    border-color: var(--sap-border);
+    color: var(--sap-brand);
+}
+
+.sap-btn-danger-ghost:hover {
+    background: rgba(170,8,8,0.08);
+    border-color: rgba(170,8,8,0.2);
+    color: #AA0808;
+}
+
+/* ── Module Card Footer ────────────────────────── */
+.module-footer {
+    padding: 8px 14px;
+    border-top: 1px solid var(--sap-border-light);
+    background: var(--sap-background);
+    display: flex;
+    gap: 4px;
+}
+
+/* ── Table Row Hover ───────────────────────────── */
+.sap-table tbody tr:hover td {
+    color: var(--sap-text);
+}
+
+/* ── Dark Mode Overrides ───────────────────────── */
+.dark-mode .page-icon-wrapper {
+    background: rgba(13,148,136,0.15);
+    color: #5EEAD4;
+}
+.dark-mode .table-code {
+    background: var(--sap-dark-surface);
+    border-color: #475569;
+    color: #CBD5E1;
+}
+.dark-mode .sap-btn-ghost:hover {
+    background: rgba(13,148,136,0.15);
+    color: #5EEAD4;
+}
+.dark-mode .sap-btn-danger-ghost:hover {
+    background: rgba(220,38,38,0.12);
+    color: #FCA5A5;
+}
+.dark-mode .module-card-footer {
+    background: var(--sap-dark-surface);
+    border-color: #475569;
+}
+.dark-mode .module-card-link:hover {
+    color: #5EEAD4;
+}
+
+/* ── Accordion Enhancements ────────────────────── */
+.accordion-collapse {
+    transition: max-height 300ms ease;
+}
+.accordion-body-page-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--sap-text-muted);
+    background: var(--sap-background);
+    padding: 2px 8px;
+    border-radius: var(--sap-radius-pill);
+}
+
+/* ── Module Card Grid ──────────────────────────── */
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.module-card {
+    background: var(--sap-surface);
+    border: 1px solid var(--sap-border-light);
+    border-radius: var(--sap-radius-lg);
+    transition: border-color var(--sap-transition), box-shadow var(--sap-transition);
+}
+.module-card:hover {
+    border-color: var(--sap-border);
+}
+
+.module-card-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--sap-border-light);
+    background: var(--sap-background);
+    border-radius: 0 0 var(--sap-radius-lg) var(--sap-radius-lg);
+}
+
+.module-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-brand);
+    text-decoration: none;
+    transition: color 150ms ease, gap 150ms ease;
+}
+.module-card-link:hover {
+    color: var(--sap-brand-hover);
+    gap: 10px;
+    text-decoration: none;
+}
+.module-card-link i {
+    font-size: 11px;
+    transition: transform 150ms ease;
+}
+.module-card-link:hover i {
+    transform: translateX(2px);
+}
+
+.module-card-body {
+    padding: 20px;
+}
+
+.module-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--sap-radius);
+    background: var(--sap-brand-light);
+    color: var(--sap-brand);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.module-card-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--sap-text-secondary);
+    font-weight: 500;
+}
+.module-card-stat i { font-size: 11px; }
+.module-card-stat--open {
+    color: var(--sap-error);
+}
+
+@media (max-width: 640px) {
+    .module-grid { grid-template-columns: 1fr; }
+}

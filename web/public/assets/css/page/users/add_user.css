@@ -1,0 +1,216 @@
+/**
+ * Users Add User Styles
+ * HRIS search dropdown and selected card styles
+ */
+
+/* Form elements */
+.form-control, .form-select {
+    border-radius: var(--sap-radius);
+    border: 1.5px solid var(--sap-border-input);
+    font-size: 14px;
+    padding: 8px 12px;
+    height: 42px;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--sap-brand);
+    box-shadow: 0 0 0 3px rgba(0,112,242,0.12);
+    outline: none;
+}
+.form-control[readonly] {
+    background: var(--sap-surface) !important;
+    opacity: 0.7;
+}
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text);
+    margin-bottom: 6px;
+}
+
+/* HRIS Search */
+.hris-search-wrapper {
+    position: relative;
+}
+.hris-search-input-wrap {
+    position: relative;
+}
+.hris-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sap-text-muted);
+    font-size: 14px;
+    z-index: 2;
+}
+.hris-search-input {
+    padding-left: 40px !important;
+    padding-right: 40px !important;
+    height: 46px !important;
+    font-size: 15px !important;
+    border-radius: 12px !important;
+    background: var(--sap-bg);
+    border: 1.5px solid var(--sap-border-input) !important;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.hris-search-input:focus {
+    border-color: var(--sap-brand) !important;
+    box-shadow: 0 0 0 3px rgba(0,112,242,0.12) !important;
+}
+.hris-search-spinner {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sap-brand);
+    font-size: 14px;
+}
+.hris-search-hint {
+    font-size: 12px;
+    color: var(--sap-text-muted);
+    margin-top: 6px;
+    padding-left: 2px;
+}
+
+/* Dropdown */
+.hris-search-dropdown {
+    position: absolute;
+    top: calc(100% - 8px);
+    left: 0;
+    right: 0;
+    background: var(--sap-card-bg);
+    border: 1px solid var(--sap-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    max-height: 360px;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 6px;
+}
+.hris-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 150ms ease;
+}
+.hris-dropdown-item:hover,
+.hris-dropdown-item.active {
+    background: var(--sap-surface);
+}
+.hris-dropdown-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--sap-brand);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.hris-dropdown-info {
+    flex: 1;
+    min-width: 0;
+}
+.hris-dropdown-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--sap-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hris-dropdown-meta {
+    font-size: 12px;
+    color: var(--sap-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
+.hris-dropdown-id {
+    font-size: 11px;
+    color: var(--sap-text-muted);
+    background: var(--sap-surface);
+    padding: 2px 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    font-family: monospace;
+}
+.hris-dropdown-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--sap-text-muted);
+    font-size: 13px;
+}
+.hris-dropdown-empty i {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.4;
+}
+
+/* Selected card */
+.hris-selected-card {
+    margin-top: 16px;
+    background: linear-gradient(135deg, rgba(0,112,242,0.04), rgba(0,112,242,0.08));
+    border: 1px solid rgba(0,112,242,0.2);
+    border-radius: 12px;
+    padding: 16px;
+}
+.hris-selected-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.hris-selected-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--sap-brand);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.hris-selected-info {
+    flex: 1;
+    min-width: 0;
+}
+.hris-selected-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--sap-text);
+}
+.hris-selected-meta {
+    font-size: 13px;
+    color: var(--sap-text-muted);
+    margin-top: 2px;
+}
+.hris-selected-remove {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--sap-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 150ms ease;
+    flex-shrink: 0;
+}
+.hris-selected-remove:hover {
+    background: #fef1f1;
+    color: #ee5448;
+}

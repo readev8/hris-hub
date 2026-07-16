@@ -1,0 +1,15 @@
+/**
+ * Improvements Main Page Styles
+ * DataTable row hover + column search
+ */
+
+@import url('../_shared/column-search.css');
+
+#improvements-table tbody tr {
+    cursor: pointer;
+    transition: background var(--sap-transition);
+}
+
+#improvements-table tbody tr:hover {
+    background: var(--sap-brand-hover);
+}

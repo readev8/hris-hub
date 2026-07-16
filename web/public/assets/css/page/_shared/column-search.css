@@ -1,0 +1,23 @@
+/**
+ * Shared: Column Search Styles for DataTables
+ * Used in: approvals/main_page, improvements/main_page, blueprints/main_page, tickets/main_page, users/main_page
+ */
+
+/* Hide default DataTables filter */
+[class*="-table"]_filter { display: none; }
+
+.column-search {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius);
+    font-size: 12px;
+    background: var(--sap-bg);
+    color: var(--sap-text);
+    box-sizing: border-box;
+}
+
+.column-search:focus {
+    outline: none;
+    border-color: var(--sap-brand);
+}

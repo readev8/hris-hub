@@ -1,0 +1,13 @@
+/**
+ * Tickets Create Styles
+ * Priority segmented control color overrides
+ */
+
+@import url('../_shared/segmented-control.css');
+
+.segmented-control .seg-option[data-value="0"]:hover { background: var(--sap-success-bg); color: var(--sap-success); }
+.segmented-control .seg-option[data-value="0"].active { background: var(--sap-success); color: #fff; border-color: var(--sap-success); }
+.segmented-control .seg-option[data-value="2"]:hover { background: var(--sap-warning-bg); color: var(--sap-warning); }
+.segmented-control .seg-option[data-value="2"].active { background: var(--sap-warning); color: #fff; border-color: var(--sap-warning); }
+.segmented-control .seg-option[data-value="3"]:hover { background: var(--sap-error-bg); color: var(--sap-error); }
+.segmented-control .seg-option[data-value="3"].active { background: var(--sap-error); color: #fff; border-color: var(--sap-error); }

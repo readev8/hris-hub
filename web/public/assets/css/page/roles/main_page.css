@@ -1,0 +1,15 @@
+/**
+ * Roles Main Page Styles
+ * DataTable row hover + column search
+ */
+
+@import url('../_shared/column-search.css');
+
+#roles-table tbody tr {
+    cursor: pointer;
+    transition: background var(--sap-transition);
+}
+
+#roles-table tbody tr:hover {
+    background: var(--sap-brand-hover);
+}

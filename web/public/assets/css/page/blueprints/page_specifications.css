@@ -1,0 +1,14 @@
+/**
+ * Blueprints Page Specifications Styles
+ */
+
+.spec-table { font-size: 12px; }
+.spec-table th { background: var(--sap-background); font-weight: 600; white-space: nowrap; }
+.spec-table td { vertical-align: middle; }
+.spec-table input, .spec-table select, .spec-table textarea {
+    width: 100%; padding: 4px 8px; border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius); font-size: 12px; background: var(--sap-bg); color: var(--sap-text);
+}
+.spec-table input:focus, .spec-table select:focus, .spec-table textarea:focus {
+    outline: none; border-color: var(--sap-brand);
+}

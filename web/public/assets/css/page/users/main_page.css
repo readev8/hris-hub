@@ -1,0 +1,15 @@
+/**
+ * Users Main Page Styles
+ */
+
+@import url('../_shared/column-search.css');
+
+.action-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--sap-border); background: var(--sap-bg); color: var(--sap-text); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: all 150ms ease; }
+.action-btn:hover { background: var(--sap-brand-hover); border-color: var(--sap-brand); color: var(--sap-brand); }
+.action-btn.danger:hover { background: #fef1f1; border-color: #ee5448; color: #ee5448; }
+.action-btn.success:hover { background: #f1fdf6; border-color: #36b37e; color: #36b37e; }
+.action-btn.view:hover { background: #f0f5ff; border-color: #0070f2; color: #0070f2; }
+.form-control, .form-select { border-radius: var(--sap-radius); border: 1.5px solid var(--sap-border-input); font-size: 14px; padding: 8px 12px; height: 42px; transition: border-color 200ms ease, box-shadow 200ms ease; }
+.form-control:focus, .form-select:focus { border-color: var(--sap-brand); box-shadow: 0 0 0 3px rgba(0,112,242,0.12); outline: none; }
+.form-control[readonly] { background: var(--sap-surface) !important; opacity: 0.7; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--sap-text); margin-bottom: 4px; }

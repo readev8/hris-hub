@@ -1,17 +1,6 @@
 <?= $this->extend('template/index') ?>
 <?= $this->section('styles') ?>
-<style>
-.spec-table { font-size: 12px; }
-.spec-table th { background: var(--sap-background); font-weight: 600; white-space: nowrap; }
-.spec-table td { vertical-align: middle; }
-.spec-table input, .spec-table select, .spec-table textarea {
-    width: 100%; padding: 4px 8px; border: 1px solid var(--sap-border);
-    border-radius: var(--sap-radius); font-size: 12px; background: var(--sap-bg); color: var(--sap-text);
-}
-.spec-table input:focus, .spec-table select:focus, .spec-table textarea:focus {
-    outline: none; border-color: var(--sap-brand);
-}
-</style>
+<link rel="stylesheet" href="<?= base_url('public/assets/css/page/blueprints/page_specifications.css?v=' . config('App')->assetVersion) ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -217,91 +206,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
-var designPageToken = '<?= esc($token) ?>';
-var designPageData = <?= json_encode($designPage) ?>;
-var designPageSpecs = <?= json_encode($designPage['page_specifications'] ?? []) ?>;
-
-function escHtml(str) {
-    return $('<div>').text(str || '').html();
-}
-
-function updateSpecField(el) {
-    var row = $(el).closest('tr');
-    var specId = row.data('spec-id');
-    var field = $(el).data('field');
-    var value = $(el).val();
-    var data = {};
-    data[field] = value;
-    $.ajax({
-        url: site_url + '/blueprints/page-specifications/' + specId + '/update',
-        type: 'POST',
-        data: data,
-        success: function(res) {
-            if (res.status) {
-                toastr.success('Updated');
-            } else {
-                toastr.error(res.message || 'Failed to update');
-            }
-        },
-        error: function() { toastr.error('Update failed'); }
-    });
-}
-
-function deleteSpec(el) {
-    var row = $(el).closest('tr');
-    var specId = row.data('spec-id');
-    Swal.fire({
-        title: 'Delete Specification?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Delete',
-        confirmButtonColor: '#AA0808',
-        cancelButtonColor: '#758CA4',
-    }).then(function(result) {
-        if (result.isConfirmed) {
-            $.post(site_url + '/blueprints/page-specifications/' + specId + '/delete', {}, function(res) {
-                if (res.status) {
-                    toastr.success('Specification deleted');
-                    row.fadeOut(300, function() { $(this).remove(); updateSpecCount(); });
-                } else {
-                    toastr.error(res.message || 'Failed');
-                }
-            });
-        }
-    });
-}
-
-function updateSpecCount() {
-    var count = $('#specsContainer tbody tr').length;
-    $('#specCountBadge').text(count + ' field' + (count !== 1 ? 's' : ''));
-    if (count === 0) {
-        $('#specsContainer').html('<div class="sap-empty" style="padding:40px"><i class="fas fa-list-alt" style="font-size:36px"></i><h4>No specifications</h4><p>Add page specifications for this design page.</p></div>');
-    }
-}
-
-function showAddSpec() {
-    $('#specForm')[0].reset();
-    $('#specModal').modal('show');
-}
-
-$('#specForm').on('submit', function(e) {
-    e.preventDefault();
-    $.ajax({
-        url: site_url + '/blueprints/design-pages/' + designPageToken + '/page-specifications',
-        type: 'POST',
-        data: $(this).serialize(),
-        success: function(res) {
-            if (res.status) {
-                toastr.success('Specification added');
-                $('#specModal').modal('hide');
-                location.reload();
-            } else {
-                toastr.error(res.message || 'Failed');
-            }
-        },
-        error: function() { toastr.error('Request failed'); }
-    });
-});
-</script>
+<script>window.PageData = <?= json_encode(['token' => $token, 'designPage' => $designPage]) ?>;</script>
+<script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
+<script src="<?= base_url('public/assets/js/page/blueprints/page_specifications.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

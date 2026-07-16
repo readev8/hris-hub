@@ -1,0 +1,153 @@
+/**
+ * Tickets Detail Page Styles
+ * Approval stepper, ticket sidebar, comments, attachments
+ */
+
+/* Approval Stepper */
+.approval-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--sap-card-bg, #fff);
+    border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius-lg, 12px);
+}
+
+.approval-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--sap-text-muted);
+    white-space: nowrap;
+}
+
+.approval-step .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--sap-surface, #f9fafb);
+    border: 2px solid var(--sap-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.approval-step.active .step-dot {
+    background: var(--sap-brand);
+    border-color: var(--sap-brand);
+    color: #fff;
+}
+
+.approval-step.completed .step-dot {
+    background: var(--sap-success);
+    border-color: var(--sap-success);
+    color: #fff;
+}
+
+.approval-step-connector {
+    flex: 1;
+    height: 2px;
+    background: var(--sap-border);
+    margin: 0 8px;
+}
+
+.approval-step-connector.completed {
+    background: var(--sap-success);
+}
+
+/* Comment System */
+.comment-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--sap-border-light);
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--sap-brand-light);
+    color: var(--sap-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-meta {
+    font-size: 12px;
+    color: var(--sap-text-muted);
+    margin-bottom: 4px;
+}
+
+.comment-text {
+    font-size: 13px;
+    color: var(--sap-text);
+    line-height: 1.5;
+}
+
+/* Attachment Upload */
+.attachment-upload-zone {
+    border: 2px dashed var(--sap-border);
+    border-radius: var(--sap-radius);
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.attachment-upload-zone:hover,
+.attachment-upload-zone.dragover {
+    border-color: var(--sap-brand);
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--sap-surface);
+    border-radius: 6px;
+    border: 1px solid var(--sap-border);
+    font-size: 12px;
+}
+
+/* Detail Sidebar */
+.ticket-sidebar {
+    background: var(--sap-card-bg, #fff);
+    border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius-lg, 12px);
+    padding: 20px;
+}
+
+.ticket-sidebar dt {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+}
+
+.ticket-sidebar dd {
+    font-size: 13px;
+    color: var(--sap-text);
+    margin-bottom: 16px;
+}

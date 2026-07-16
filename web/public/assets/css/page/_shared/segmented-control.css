@@ -1,0 +1,38 @@
+/**
+ * Shared: Segmented Control Styles (Priority selector)
+ * Used in: tickets/create, tickets/edit
+ */
+.segmented-control {
+    display: flex;
+    border: 1.5px solid var(--sap-border-input, #d1d5db);
+    border-radius: var(--sap-radius, 8px);
+    overflow: hidden;
+}
+
+.segmented-control .segment {
+    flex: 1;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sap-text-secondary, #6b7280);
+    background: var(--sap-surface, #f9fafb);
+    cursor: pointer;
+    transition: all 200ms ease;
+    border-right: 1px solid var(--sap-border-input, #d1d5db);
+}
+
+.segmented-control .segment:last-child {
+    border-right: none;
+}
+
+.segmented-control .segment:hover {
+    background: var(--sap-brand-hover, rgba(0, 112, 242, 0.06));
+    color: var(--sap-text, #1a1a1a);
+}
+
+.segmented-control .segment.active {
+    background: var(--sap-brand, #0070F2);
+    color: #fff;
+    font-weight: 600;
+}

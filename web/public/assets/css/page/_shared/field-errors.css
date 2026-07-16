@@ -1,0 +1,14 @@
+/**
+ * Shared: Field Error Styles
+ * Used in: improvements/create, improvements/edit, blueprints/create, blueprints/edit, tickets/create, tickets/edit
+ */
+.field-error {
+    font-size: 12px;
+    color: var(--sap-error, #dc2626);
+    margin-top: 4px;
+    display: none;
+}
+
+.field-error.visible {
+    display: block;
+}

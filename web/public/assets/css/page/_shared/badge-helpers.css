@@ -1,0 +1,56 @@
+/**
+ * Shared: Badge Helpers Styles
+ * Used in: dashboard, improvements, blueprints, tickets, master-projects, approvals, roles, users
+ * Provides: sap-badge, sap-dot (priority), avatar-initials, table row hover
+ */
+
+/* Status Badges */
+.sap-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--sap-radius-pill, 999px);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sap-badge .sap-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Priority Dots */
+.sap-dot.critical { background: var(--sap-critical, #AA0808); }
+.sap-dot.high     { background: var(--sap-high, #E76500); }
+.sap-dot.medium   { background: var(--sap-medium, #0070F2); }
+.sap-dot.low      { background: var(--sap-low, #256F3A); }
+
+/* Avatar Initials */
+.avatar-initials {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--sap-brand-light, rgba(0,112,242,0.1));
+    color: var(--sap-brand, #0070F2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* Table Row Hover (shared) */
+.table-row-hover tbody tr {
+    cursor: pointer;
+    transition: background var(--sap-transition, 200ms ease);
+}
+
+.table-row-hover tbody tr:hover {
+    background: var(--sap-brand-hover, rgba(0,112,242,0.04));
+}

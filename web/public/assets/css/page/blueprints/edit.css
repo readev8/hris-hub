@@ -1,0 +1,6 @@
+/**
+ * Blueprints Edit Styles
+ * Reuses field-errors from _shared
+ */
+
+@import url('../_shared/field-errors.css');

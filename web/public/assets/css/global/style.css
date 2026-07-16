@@ -617,7 +617,7 @@ code, .mono { font-family: var(--sap-mono); font-size: 0.8125rem; }
   align-items: center;
   gap: 10px;
 }
-.sap-card-body { padding: 24px; }
+.sap-card-body { padding: 24px; overflow-x: auto; }
 .sap-card-footer {
   padding: 14px 24px;
   border-top: 1px solid var(--sap-border-light);
@@ -801,6 +801,7 @@ code, .mono { font-family: var(--sap-mono); font-size: 0.8125rem; }
 .dark-mode .sap-table tbody tr.selected { background: rgba(13,148,136,0.2); }
 
 /* DataTables overrides */
+.dataTables_wrapper { min-width: 0; }
 .dataTables_wrapper .dt-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .dataTables_wrapper .dt-buttons .btn-sm {
   background: var(--sap-secondary-bg);

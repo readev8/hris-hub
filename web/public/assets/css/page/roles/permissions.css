@@ -1,0 +1,48 @@
+/**
+ * Roles Permissions Page Styles
+ * Permissions table with toggle-all checkboxes
+ */
+
+.permissions-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.permissions-table thead th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--sap-border);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.permissions-table thead th:first-child {
+    text-align: left;
+}
+
+.permissions-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--sap-border-light);
+    text-align: center;
+    font-size: 13px;
+}
+
+.permissions-table tbody td:first-child {
+    text-align: left;
+    font-weight: 500;
+    color: var(--sap-text);
+}
+
+.permissions-table tbody tr:hover {
+    background: var(--sap-brand-hover);
+}
+
+.toggle-all-checkbox {
+    cursor: pointer;
+    accent-color: var(--sap-brand);
+}

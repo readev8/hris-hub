@@ -358,7 +358,6 @@ $(document).ready(function () {
   if (typeof console !== "undefined" && console.log) {
     // Debug logging removed for production
   }
-  }
 });
 
 // Freeze constants untuk mencegah modifikasi

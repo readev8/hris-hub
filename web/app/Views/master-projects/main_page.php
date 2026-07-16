@@ -30,12 +30,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<style>
-#projects-table_filter { display: none; }
-.column-search { width: 100%; padding: 4px 6px; border: 1px solid var(--sap-border); border-radius: var(--sap-radius); font-size: 12px; background: var(--sap-bg); color: var(--sap-text); }
-.column-search:focus { outline: none; border-color: var(--sap-brand); }
-
-</style>
+<link rel="stylesheet" href="<?= base_url('public/assets/css/page/_shared/column-search.css?v=' . config('App')->assetVersion) ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

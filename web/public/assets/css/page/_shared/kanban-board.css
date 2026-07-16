@@ -1,0 +1,107 @@
+/**
+ * Shared: Kanban Board Styles
+ * Used in: master-projects/detail, master-projects/module_detail
+ */
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    min-height: 300px;
+}
+
+.kanban-column {
+    background: var(--sap-bg, #f5f6f7);
+    border-radius: var(--sap-radius, 8px);
+    padding: 12px;
+    min-height: 200px;
+}
+
+.kanban-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--sap-border, #e5e7eb);
+}
+
+.kanban-column-header h6 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sap-text-secondary, #6b7280);
+}
+
+.kanban-column-count {
+    background: var(--sap-surface, #f9fafb);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sap-text-muted, #9ca3af);
+}
+
+.kanban-card {
+    background: #fff;
+    border: 1px solid var(--sap-border, #e5e7eb);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    cursor: grab;
+    transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.kanban-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.kanban-card:active {
+    cursor: grabbing;
+}
+
+.kanban-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sap-text, #1a1a1a);
+    margin-bottom: 4px;
+}
+
+.kanban-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--sap-text-muted, #9ca3af);
+}
+
+.kanban-card-priority {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.kanban-card-priority.critical { background: #AA0808; }
+.kanban-card-priority.high { background: #E76500; }
+.kanban-card-priority.medium { background: #0070F2; }
+.kanban-card-priority.low { background: #256F3A; }
+
+.kanban-empty {
+    text-align: center;
+    padding: 24px 12px;
+    color: var(--sap-text-muted, #9ca3af);
+    font-size: 12px;
+}
+
+.kanban-card.sortable-ghost {
+    opacity: 0.4;
+    background: var(--sap-brand-hover, rgba(0, 112, 242, 0.06));
+}
+
+.kanban-card.sortable-drag {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: rotate(2deg);
+}
