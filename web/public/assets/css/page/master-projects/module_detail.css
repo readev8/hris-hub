@@ -258,58 +258,13 @@
     flex-shrink: 0;
 }
 
-/* ── Page Specs Panel ───────────────────────────── */
-.page-specs-row > td {
-    padding: 0 !important;
-    border-top: none !important;
-    background: var(--sap-background);
+/* ── Clickable Page Row ─────────────────────────── */
+.page-clickable-row {
+    cursor: pointer;
+    transition: background var(--sap-transition);
 }
-
-.page-specs-panel {
-    margin: 0 12px 12px 12px;
-    border: 1px solid var(--sap-border);
-    border-radius: var(--sap-radius-lg);
-    overflow: hidden;
-}
-
-.page-specs-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
-    background: var(--sap-surface);
-    border-bottom: 1px solid var(--sap-border-light);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--sap-text);
-}
-
-.page-specs-panel-header i {
-    color: var(--sap-brand);
-}
-
-.page-specs-panel-subtitle {
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--sap-text-secondary);
-}
-
-.page-specs-table {
-    font-size: 12px;
-}
-
-.page-specs-table th {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--sap-text-secondary);
-    white-space: nowrap;
-}
-
-.page-specs-table td {
-    vertical-align: top;
-    line-height: 1.5;
+.page-clickable-row:hover {
+    background: var(--sap-brand-hover);
 }
 
 /* ── Design Page Modal ──────────────────────────── */
@@ -400,6 +355,556 @@
     color: #fff;
 }
 
+/* ── Kanban Filter Bar ─────────────────────────── */
+.kanban-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: var(--sap-surface);
+    border: 1px solid var(--sap-border-light);
+    border-radius: var(--sap-radius);
+    flex-wrap: wrap;
+}
+
+.kanban-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kanban-filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.kanban-filter-label i {
+    font-size: 11px;
+    color: var(--sap-brand);
+}
+
+.kanban-filter-select {
+    padding: 4px 28px 4px 8px !important;
+    font-size: 12px !important;
+    min-width: 140px;
+    border-radius: var(--sap-radius-sm) !important;
+}
+
+.kanban-filter-type-group {
+    display: flex;
+    gap: 2px;
+    background: var(--sap-background);
+    border: 1px solid var(--sap-border-light);
+    border-radius: var(--sap-radius-sm);
+    padding: 2px;
+}
+
+.kanban-filter-type-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sap-text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--sap-transition);
+    white-space: nowrap;
+}
+.kanban-filter-type-btn:hover {
+    background: var(--sap-brand-hover);
+    color: var(--sap-brand);
+}
+.kanban-filter-type-btn.active {
+    background: var(--sap-brand);
+    color: #fff;
+}
+
+.kanban-filter-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.kanban-filter-dot.bug { background: #DC2626; }
+.kanban-filter-dot.issue { background: #F97316; }
+.kanban-filter-dot.task { background: #3730A3; }
+.kanban-filter-dot.change-request { background: #1E40AF; }
+
+.kanban-filter-reset-wrap {
+    margin-left: auto;
+}
+
+@media (max-width: 768px) {
+    .kanban-filter-bar { gap: 10px; }
+    .kanban-filter-type-group { flex-wrap: wrap; }
+}
+
+/* ── Ticket Detail Drawer ──────────────────────── */
+.ticket-drawer-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1055;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--sap-transition), visibility var(--sap-transition);
+}
+.ticket-drawer-scrim.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ticket-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 90vw;
+    background: var(--sap-surface);
+    border-left: 1px solid var(--sap-border);
+    box-shadow: var(--sap-shadow-xl);
+    z-index: 1056;
+    transform: translateX(100%);
+    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+.ticket-drawer.open {
+    transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ticket-drawer, .ticket-drawer-scrim { transition: none !important; }
+}
+
+.ticket-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--sap-border-light);
+    background: var(--sap-surface);
+    flex-shrink: 0;
+}
+
+.ticket-drawer-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.ticket-drawer-id {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sap-text-muted);
+    background: var(--sap-background);
+    border: 1px solid var(--sap-border-light);
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.ticket-drawer-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sap-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ticket-drawer-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--sap-text-secondary);
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all var(--sap-transition);
+}
+.ticket-drawer-close:hover {
+    background: var(--sap-brand-hover);
+    color: var(--sap-brand);
+}
+
+.ticket-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    scroll-behavior: smooth;
+}
+
+.ticket-drawer-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--sap-border-light);
+    background: var(--sap-surface);
+    flex-shrink: 0;
+}
+
+/* Drawer skeleton */
+.ticket-drawer-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0;
+}
+.skeleton-line {
+    height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--sap-border-light) 25%, var(--sap-background) 50%, var(--sap-border-light) 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s infinite;
+}
+.skeleton-lg { width: 80%; }
+.skeleton-md { width: 60%; }
+.skeleton-sm { width: 40%; }
+@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Drawer detail sections */
+.drawer-detail-section {
+    margin-bottom: 20px;
+}
+.drawer-detail-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.drawer-priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.drawer-priority-dot.critical { background: #DC2626; }
+.drawer-priority-dot.high { background: #F97316; }
+.drawer-priority-dot.medium { background: #EAB308; }
+.drawer-priority-dot.low { background: #22C55E; }
+
+.drawer-detail-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.drawer-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.drawer-meta-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sap-text-muted);
+}
+.drawer-meta-value {
+    font-size: 13px;
+    color: var(--sap-text);
+    font-weight: 500;
+}
+
+.drawer-detail-desc-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sap-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.drawer-detail-desc-header i {
+    color: var(--sap-brand);
+}
+
+.drawer-detail-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--sap-text);
+}
+
+.drawer-comment {
+    padding: 10px 12px;
+    background: var(--sap-background);
+    border: 1px solid var(--sap-border-light);
+    border-radius: var(--sap-radius-sm);
+    margin-bottom: 8px;
+}
+.drawer-comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+.drawer-comment-author {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text);
+}
+.drawer-comment-date {
+    font-size: 11px;
+    color: var(--sap-text-muted);
+}
+.drawer-comment-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--sap-text);
+}
+
+.drawer-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.drawer-attachment-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--sap-brand);
+    background: var(--sap-brand-hover);
+    border-radius: var(--sap-radius-sm);
+    text-decoration: none;
+    transition: background var(--sap-transition);
+}
+.drawer-attachment-item:hover {
+    background: var(--sap-brand-light);
+}
+
+/* ── Specifications Tab ─────────────────────────── */
+.specs-coverage-banner {
+    background: linear-gradient(135deg, var(--sap-brand-light) 0%, rgba(13, 148, 136, 0.05) 100%);
+    border: 1px solid var(--sap-brand-border, rgba(13, 148, 136, 0.2));
+    border-radius: var(--sap-radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.specs-coverage-stats {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.specs-coverage-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.specs-coverage-number {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--sap-brand);
+    line-height: 1;
+}
+
+.specs-coverage-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sap-text-secondary);
+}
+
+.specs-coverage-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--sap-brand-border, rgba(13, 148, 136, 0.2));
+}
+
+.specs-page-card {
+    background: var(--sap-surface);
+    border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius-lg);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.specs-page-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--sap-border-light);
+    background: var(--sap-surface);
+}
+
+.specs-page-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.specs-page-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--sap-radius);
+    background: var(--sap-brand-light);
+    color: var(--sap-brand);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.specs-page-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sap-text);
+}
+
+.specs-page-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--sap-radius-sm);
+    white-space: nowrap;
+}
+.specs-page-badge.linked {
+    background: var(--sap-brand-light);
+    color: var(--sap-brand);
+    border: 1px solid var(--sap-brand-border, rgba(13, 148, 136, 0.2));
+}
+.specs-page-badge.unlinked {
+    background: var(--sap-background);
+    color: var(--sap-text-muted);
+    border: 1px solid var(--sap-border-light);
+}
+
+.specs-page-card-body {
+    padding: 16px;
+}
+
+.specs-page-card-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary);
+    margin-bottom: 12px;
+}
+
+.specs-page-card-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    font-size: 13px;
+    color: var(--sap-text-muted);
+    background: var(--sap-background);
+    border-top: 1px solid var(--sap-border-light);
+}
+.specs-page-card-empty i {
+    color: var(--sap-text-muted);
+    opacity: 0.5;
+}
+
+.spec-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.spec-card {
+    background: var(--sap-background);
+    border: 1px solid var(--sap-border-light);
+    border-radius: var(--sap-radius);
+    overflow: hidden;
+    transition: border-color var(--sap-transition);
+}
+.spec-card:hover {
+    border-color: var(--sap-brand);
+}
+
+.spec-card-header {
+    padding: 10px 12px;
+    background: var(--sap-surface);
+    border-bottom: 1px solid var(--sap-border-light);
+}
+
+.spec-card-field-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sap-brand);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.spec-card-field-name i {
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.spec-card-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.spec-card-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.spec-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--sap-text-muted);
+    min-width: 72px;
+    flex-shrink: 0;
+    padding-top: 1px;
+}
+
+.spec-card-value {
+    font-size: 12px;
+    color: var(--sap-text);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .spec-card-grid { grid-template-columns: 1fr; }
+    .specs-coverage-stats { gap: 16px; }
+    .specs-coverage-divider { display: none; }
+}
+@media (max-width: 575px) {
+    .specs-page-card-header { flex-direction: column; align-items: flex-start; }
+}
+
 /* ── Dark Mode: Page Blueprint & Specs ──────────── */
 .dark-mode .page-blueprint-badge {
     background: rgba(13, 148, 136, 0.1);
@@ -412,15 +917,8 @@
     color: #5EEAD4;
     background: rgba(13, 148, 136, 0.15);
 }
-.dark-mode .page-specs-row > td {
-    background: var(--sap-dark-surface);
-}
-.dark-mode .page-specs-panel {
-    border-color: var(--sap-dark-border);
-}
-.dark-mode .page-specs-panel-header {
-    background: var(--sap-dark-elevated);
-    border-bottom-color: var(--sap-dark-border);
+.dark-mode .page-clickable-row:hover {
+    background: rgba(13, 148, 136, 0.1);
 }
 .dark-mode .design-page-group-header {
     background: var(--sap-dark-surface);
@@ -435,3 +933,59 @@
     color: #5EEAD4;
     background: rgba(13, 148, 136, 0.15);
 }
+
+/* ── Dark Mode: Filter Bar ─────────────────────── */
+.dark-mode .kanban-filter-bar {
+    background: var(--sap-dark-elevated);
+    border-color: var(--sap-dark-border);
+}
+.dark-mode .kanban-filter-select {
+    background-color: var(--sap-dark-surface);
+    border-color: var(--sap-dark-border) !important;
+    color: #E2E8F0 !important;
+}
+.dark-mode .kanban-filter-type-group {
+    background: var(--sap-dark-surface);
+    border-color: var(--sap-dark-border);
+}
+.dark-mode .kanban-filter-type-btn { color: #94A3B8; }
+.dark-mode .kanban-filter-type-btn:hover { background: rgba(13, 148, 136, 0.1); color: #5EEAD4; }
+.dark-mode .kanban-filter-type-btn.active { background: var(--sap-brand); color: #fff; }
+
+/* ── Dark Mode: Drawer ─────────────────────────── */
+.dark-mode .ticket-drawer {
+    background: var(--sap-dark-elevated);
+    border-left-color: var(--sap-dark-border);
+}
+.dark-mode .ticket-drawer-header { background: var(--sap-dark-elevated); border-bottom-color: var(--sap-dark-border); }
+.dark-mode .ticket-drawer-footer { background: var(--sap-dark-elevated); border-top-color: var(--sap-dark-border); }
+.dark-mode .ticket-drawer-id { background: var(--sap-dark-surface); border-color: var(--sap-dark-border); color: #94A3B8; }
+.dark-mode .ticket-drawer-close:hover { background: rgba(13, 148, 136, 0.1); color: #5EEAD4; }
+.dark-mode .skeleton-line { background: linear-gradient(90deg, var(--sap-dark-border) 25%, var(--sap-dark-surface) 50%, var(--sap-dark-border) 75%); background-size: 200% 100%; }
+.dark-mode .drawer-meta-label { color: #64748B; }
+.dark-mode .drawer-meta-value { color: #E2E8F0; }
+.dark-mode .drawer-comment { background: var(--sap-dark-surface); border-color: var(--sap-dark-border); }
+.dark-mode .drawer-comment-author { color: #E2E8F0; }
+.dark-mode .drawer-comment-body { color: #CBD5E1; }
+.dark-mode .drawer-attachment-item { background: rgba(13, 148, 136, 0.1); color: #5EEAD4; }
+.dark-mode .drawer-attachment-item:hover { background: rgba(13, 148, 136, 0.2); }
+
+/* ── Dark Mode: Specs Tab ───────────────────────── */
+.dark-mode .specs-coverage-banner {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, rgba(13, 148, 136, 0.02) 100%);
+    border-color: rgba(13, 148, 136, 0.2);
+}
+.dark-mode .specs-coverage-number { color: #5EEAD4; }
+.dark-mode .specs-coverage-divider { background: rgba(13, 148, 136, 0.2); }
+.dark-mode .specs-page-card { background: var(--sap-dark-elevated); border-color: var(--sap-dark-border); }
+.dark-mode .specs-page-card-header { background: var(--sap-dark-elevated); border-bottom-color: var(--sap-dark-border); }
+.dark-mode .specs-page-name { color: #E2E8F0; }
+.dark-mode .specs-page-badge.linked { background: rgba(13, 148, 136, 0.1); color: #5EEAD4; border-color: rgba(13, 148, 136, 0.25); }
+.dark-mode .specs-page-badge.unlinked { background: var(--sap-dark-surface); color: #64748B; border-color: var(--sap-dark-border); }
+.dark-mode .specs-page-card-empty { background: var(--sap-dark-surface); color: #64748B; border-top-color: var(--sap-dark-border); }
+.dark-mode .spec-card { background: var(--sap-dark-surface); border-color: var(--sap-dark-border); }
+.dark-mode .spec-card:hover { border-color: rgba(13, 148, 136, 0.5); }
+.dark-mode .spec-card-header { background: var(--sap-dark-elevated); border-bottom-color: var(--sap-dark-border); }
+.dark-mode .spec-card-field-name { color: #5EEAD4; }
+.dark-mode .spec-card-label { color: #64748B; }
+.dark-mode .spec-card-value { color: #E2E8F0; }

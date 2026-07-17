@@ -225,6 +225,21 @@ class Tickets extends BaseController
         return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
     }
 
+    public function getDetailJson(string $encryptedId)
+    {
+        if (!$this->guard()) {
+            return $this->response->setJSON(null);
+        }
+        $result = $this->api->get_data('tickets/' . $encryptedId);
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets getDetailJson API failed for ' . $encryptedId . ': ' . json_encode($result));
+            return $this->response->setJSON(null);
+        }
+
+        return $this->response->setJSON($result['data']['result'] ?? null);
+    }
+
     public function detail(string $encryptedId): string
     {
         if (!$this->guard()) {

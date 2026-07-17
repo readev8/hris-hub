@@ -109,6 +109,14 @@
   --sap-transition:     200ms cubic-bezier(0.4, 0, 0.2, 1);
   --sap-transition-slow:350ms cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* ── Z-Index Scale ──────────────────────────────────────── */
+  --sap-z-dropdown:     1000;
+  --sap-z-sticky:       1020;
+  --sap-z-modal:        1050;
+  --sap-z-drawer-scrim: 1055;
+  --sap-z-drawer:       1056;
+  --sap-z-toast:        1080;
+
   /* ── Layout ──────────────────────────────────────────────── */
   --sap-shell-height:   56px;
   --sap-sidebar-width:  260px;

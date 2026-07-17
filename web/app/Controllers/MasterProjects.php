@@ -109,6 +109,41 @@ class MasterProjects extends BaseController
         ]);
     }
 
+    public function pageDetail(string $encryptedProjectId, string $encryptedModuleId, string $encryptedPageId)
+    {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
+
+        $projectResult = $this->api->get_data('master-projects/' . $encryptedProjectId);
+        $project = $projectResult['data']['result'] ?? null;
+
+        if (!$project) {
+            return redirect()->to('/master-projects');
+        }
+
+        $moduleResult = $this->api->get_data('modules/' . $encryptedModuleId);
+        $module = $moduleResult['data']['result'] ?? null;
+
+        if (!$module) {
+            return redirect()->to('/master-projects/' . $encryptedProjectId);
+        }
+
+        $pageResult = $this->api->get_data('pages/' . $encryptedPageId);
+        $page = $pageResult['data']['result'] ?? null;
+
+        if (!$page) {
+            return redirect()->to('/master-projects/' . $encryptedProjectId . '/modules/' . $encryptedModuleId);
+        }
+
+        return $this->view('master-projects/page_specs', [
+            'title'   => esc($page['name']),
+            'project' => $project,
+            'module'  => $module,
+            'page'    => $page,
+        ]);
+    }
+
     public function update(string $encryptedId)
     {
         if (!$this->guard('can_update')) {

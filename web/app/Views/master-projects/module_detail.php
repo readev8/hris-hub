@@ -38,6 +38,20 @@
         <button class="sap-tab" data-tab="kanban" onclick="ModuleDetail.switchDetailTab('kanban')">
             <i class="fas fa-columns"></i> Kanban Board
         </button>
+        <button class="sap-tab" data-tab="specs" onclick="ModuleDetail.switchDetailTab('specs')">
+            <i class="fas fa-list-alt"></i> Specifications
+            <?php
+            $linkedCount = 0;
+            $totalSpecs = 0;
+            foreach ($module['pages'] as $pg) {
+                if (!empty($pg['blueprint_design_page_id'])) {
+                    $linkedCount++;
+                    $totalSpecs += count($pg['blueprint_page_specs'] ?? []);
+                }
+            }
+            ?>
+            <span class="sap-badge closed" style="margin-left:6px" id="specsTabCount"><?= $totalSpecs ?></span>
+        </button>
     </div>
 
     <div class="tab-pane-container">
@@ -68,7 +82,7 @@
                     </thead>
                     <tbody>
                         <?php foreach ($module['pages'] as $pg): ?>
-                        <tr>
+                        <tr class="page-clickable-row" data-page-id="<?= $pg['id'] ?>" onclick="ModuleDetail.navigateToPage('<?= $pg['id'] ?>')" style="cursor:pointer">
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="page-icon-wrapper"><i class="fas fa-file-alt"></i></span>
@@ -108,54 +122,15 @@
                             <td class="text-end">
                                 <div class="sap-btn-group">
                                     <?php if (!empty($pg['blueprint_design_page_id'])): ?>
-                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="ModuleDetail.toggleSpecs('<?= $pg['id'] ?>')" title="Toggle specifications"><i class="fas fa-list"></i></button>
-                                    <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="ModuleDetail.unassignBlueprintDesignPage('<?= $pg['id'] ?>')" title="Unlink design page"><i class="fas fa-unlink"></i></button>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="event.stopPropagation();ModuleDetail.unassignBlueprintDesignPage('<?= $pg['id'] ?>')" title="Unlink design page"><i class="fas fa-unlink"></i></button>
                                     <?php else: ?>
-                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="ModuleDetail.openAssignDesignPageModal('<?= $pg['id'] ?>')" title="Assign design page"><i class="fas fa-link"></i></button>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="event.stopPropagation();ModuleDetail.openAssignDesignPageModal('<?= $pg['id'] ?>')" title="Assign design page"><i class="fas fa-link"></i></button>
                                     <?php endif; ?>
-                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="ModuleDetail.editPage('<?= $pg['id'] ?>','<?= $module['id'] ?>','<?= esc($pg['name']) ?>','<?= esc($pg['url_path'] ?? '') ?>','<?= esc($pg['description'] ?? '') ?>')" title="Edit page"><i class="fas fa-pencil-alt"></i></button>
-                                    <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="ModuleDetail.deletePage('<?= $pg['id'] ?>')" title="Delete page"><i class="fas fa-trash-alt"></i></button>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="event.stopPropagation();ModuleDetail.editPage('<?= $pg['id'] ?>','<?= $module['id'] ?>','<?= esc($pg['name']) ?>','<?= esc($pg['url_path'] ?? '') ?>','<?= esc($pg['description'] ?? '') ?>')" title="Edit page"><i class="fas fa-pencil-alt"></i></button>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="event.stopPropagation();ModuleDetail.deletePage('<?= $pg['id'] ?>')" title="Delete page"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                             </td>
                         </tr>
-                        <?php if (!empty($pg['blueprint_page_specs'])): ?>
-                        <tr class="page-specs-row" id="specs-row-<?= $pg['id'] ?>" style="display:none">
-                            <td colspan="5">
-                                <div class="page-specs-panel">
-                                    <div class="page-specs-panel-header">
-                                        <span><i class="fas fa-list-ul me-1"></i>Page Specifications</span>
-                                        <span class="page-specs-panel-subtitle"><?= esc($pg['blueprint_design_page_title']) ?> &middot; <?= count($pg['blueprint_page_specs']) ?> fields</span>
-                                    </div>
-                                    <div class="sap-card-body" style="overflow-x:auto;padding:0">
-                                        <table class="sap-table sap-table-compact page-specs-table mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th style="min-width:160px">Field Name</th>
-                                                    <th style="min-width:100px">Datatype</th>
-                                                    <th style="min-width:120px">Control Type</th>
-                                                    <th style="min-width:140px">Validation</th>
-                                                    <th style="min-width:140px">Initial Data</th>
-                                                    <th style="min-width:160px">UX</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($pg['blueprint_page_specs'] as $spec): ?>
-                                                <tr>
-                                                    <td class="fw-medium"><?= esc($spec['field_name'] ?? '-') ?></td>
-                                                    <td><?= esc($spec['datatype'] ?? '-') ?></td>
-                                                    <td><?= esc($spec['control_type'] ?? '-') ?></td>
-                                                    <td><?= esc($spec['validation'] ?? '-') ?></td>
-                                                    <td><?= esc($spec['initial_data'] ?? '-') ?></td>
-                                                    <td><?= esc($spec['ux'] ?? '-') ?></td>
-                                                </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -164,6 +139,29 @@
         </div>
 
         <div id="tab-kanban" class="tab-content" style="display:none">
+            <div class="kanban-filter-bar">
+                <div class="kanban-filter-group">
+                    <label class="kanban-filter-label"><i class="fas fa-file-alt"></i> Page:</label>
+                    <select id="kanbanPageFilter" class="sap-input kanban-filter-select">
+                        <option value="">All Pages</option>
+                    </select>
+                </div>
+                <div class="kanban-filter-group">
+                    <label class="kanban-filter-label"><i class="fas fa-tag"></i> Type:</label>
+                    <div class="kanban-filter-type-group" id="kanbanTypeFilter">
+                        <button class="kanban-filter-type-btn active" data-type="">All</button>
+                        <button class="kanban-filter-type-btn" data-type="0"><span class="kanban-filter-dot bug"></span>Bug</button>
+                        <button class="kanban-filter-type-btn" data-type="1"><span class="kanban-filter-dot issue"></span>Issue</button>
+                        <button class="kanban-filter-type-btn" data-type="2"><span class="kanban-filter-dot task"></span>Task</button>
+                        <button class="kanban-filter-type-btn" data-type="3"><span class="kanban-filter-dot change-request"></span>CR</button>
+                    </div>
+                </div>
+                <div class="kanban-filter-group kanban-filter-reset-wrap" id="kanbanFilterResetWrap" style="display:none">
+                    <button class="sap-btn sap-btn-ghost sap-btn-xs" id="kanbanFilterReset" onclick="ModuleDetail.resetKanbanFilters()">
+                        <i class="fas fa-times-circle"></i> Reset Filters
+                    </button>
+                </div>
+            </div>
             <div class="kanban-board" id="kanbanBoard">
                 <div class="kanban-column" data-status="open">
                     <div class="kanban-column-header">
@@ -196,11 +194,147 @@
                         <span class="kanban-count" id="kanban-count-closed">0</span>
                     </div>
                     <div class="kanban-cards" id="kanban-col-closed"></div>
+        </div>
+
+        <div id="tab-specs" class="tab-content" style="display:none">
+            <div class="specs-coverage-banner">
+                <div class="specs-coverage-stats">
+                    <div class="specs-coverage-stat">
+                        <span class="specs-coverage-number"><?= $linkedCount ?></span>
+                        <span class="specs-coverage-label">Pages Linked</span>
+                    </div>
+                    <div class="specs-coverage-divider"></div>
+                    <div class="specs-coverage-stat">
+                        <span class="specs-coverage-number"><?= count($module['pages']) ?></span>
+                        <span class="specs-coverage-label">Total Pages</span>
+                    </div>
+                    <div class="specs-coverage-divider"></div>
+                    <div class="specs-coverage-stat">
+                        <span class="specs-coverage-number"><?= $totalSpecs ?></span>
+                        <span class="specs-coverage-label">Spec Fields</span>
+                    </div>
+                    <div class="specs-coverage-divider"></div>
+                    <div class="specs-coverage-stat">
+                        <span class="specs-coverage-number"><?= count($module['pages']) - $linkedCount ?></span>
+                        <span class="specs-coverage-label">Unlinked Pages</span>
+                    </div>
                 </div>
+            </div>
+
+            <div id="specsCardsGrid">
+                <?php if (empty($module['pages'])): ?>
+                <div class="sap-empty" style="padding:32px 20px">
+                    <i class="fas fa-list-alt"></i>
+                    <h4>No pages yet</h4>
+                    <p>Add pages to this module to view specifications.</p>
+                </div>
+                <?php else: ?>
+                <?php foreach ($module['pages'] as $pg): ?>
+                <div class="specs-page-card">
+                    <div class="specs-page-card-header">
+                        <div class="specs-page-card-title">
+                            <span class="specs-page-icon"><i class="fas fa-file-alt"></i></span>
+                            <span class="specs-page-name"><?= esc($pg['name']) ?></span>
+                        </div>
+                        <?php if (!empty($pg['blueprint_design_page_id'])): ?>
+                        <span class="specs-page-badge linked"><i class="fas fa-link"></i> <?= esc($pg['blueprint_design_page_title']) ?></span>
+                        <?php else: ?>
+                        <span class="specs-page-badge unlinked"><i class="fas fa-unlink"></i> Not linked</span>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($pg['blueprint_page_specs'])): ?>
+                    <div class="specs-page-card-body">
+                        <div class="specs-page-card-subtitle"><?= count($pg['blueprint_page_specs']) ?> spec fields</div>
+                        <div class="spec-card-grid">
+                            <?php foreach ($pg['blueprint_page_specs'] as $spec): ?>
+                            <div class="spec-card">
+                                <div class="spec-card-header">
+                                    <span class="spec-card-field-name"><i class="fas fa-database"></i> <?= esc($spec['field_name'] ?? '-') ?></span>
+                                </div>
+                                <div class="spec-card-body">
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Datatype</span>
+                                        <span class="spec-card-value"><?= esc($spec['datatype'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Control</span>
+                                        <span class="spec-card-value"><?= esc($spec['control_type'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Validation</span>
+                                        <span class="spec-card-value"><?= esc($spec['validation'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Initial Data</span>
+                                        <span class="spec-card-value"><?= esc($spec['initial_data'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Input Display</span>
+                                        <span class="spec-card-value"><?= esc($spec['input_display'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Objective</span>
+                                        <span class="spec-card-value"><?= esc($spec['objective'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Data</span>
+                                        <span class="spec-card-value"><?= esc($spec['data'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">Condition</span>
+                                        <span class="spec-card-value"><?= esc($spec['condition'] ?? '-') ?></span>
+                                    </div>
+                                    <div class="spec-card-row">
+                                        <span class="spec-card-label">UX</span>
+                                        <span class="spec-card-value"><?= esc($spec['ux'] ?? '-') ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <div class="specs-page-card-empty">
+                        <i class="fas fa-info-circle"></i>
+                        No specification fields defined for this design page.
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Ticket Detail Drawer -->
+<div class="ticket-drawer-scrim" id="ticketDrawerScrim"></div>
+<aside class="ticket-drawer" id="ticketDrawer">
+    <div class="ticket-drawer-header">
+        <div class="ticket-drawer-header-left">
+            <span class="ticket-drawer-id" id="drawerTicketId"></span>
+            <span class="ticket-drawer-title" id="drawerTicketTitle"></span>
+        </div>
+        <button class="ticket-drawer-close" id="ticketDrawerClose" title="Close (Esc)">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="ticket-drawer-body" id="ticketDrawerBody">
+        <div class="ticket-drawer-skeleton">
+            <div class="skeleton-line skeleton-lg"></div>
+            <div class="skeleton-line skeleton-sm"></div>
+            <div class="skeleton-line skeleton-md"></div>
+            <div class="skeleton-line skeleton-sm"></div>
+            <div class="skeleton-line skeleton-lg"></div>
+            <div class="skeleton-line skeleton-md"></div>
+        </div>
+    </div>
+    <div class="ticket-drawer-footer">
+        <a href="#" class="sap-btn sap-btn-secondary sap-btn-sm" id="drawerOpenFullPage" target="_blank">
+            <i class="fas fa-external-link-alt"></i> Open Full Page
+        </a>
+    </div>
+</aside>
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
@@ -316,6 +450,7 @@
     'projectId' => $project['id'] ?? '',
     'moduleId'  => $module['id'] ?? '',
     'pageIds'   => array_column($module['pages'] ?? [], 'id'),
+    'pages'     => $module['pages'] ?? [],
 ]) ?>;</script>
 <script src="<?= base_url('public/assets/js/page/master-projects/module_detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

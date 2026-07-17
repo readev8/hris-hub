@@ -80,6 +80,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('modules/(:any)/pages',               'MasterProjects\Report\MasterProjectList::get_pages/$1');
     $routes->get('modules/(:any)',                     'MasterProjects\Data\ModuleDetail::get_detail/$1');
     $routes->get('pages/(:any)/bugs',                  'MasterProjects\Report\MasterProjectList::get_bugs/$1');
+    $routes->get('pages/(:any)',                       'MasterProjects\Data\PageDetail::get_detail/$1');
     $routes->post('tickets/(:any)/move',               'Tickets\Action\Tickets::move_ticket/$1');
     $routes->post('master-projects/create',            'MasterProjects\Action\Projects::create_project');
     $routes->post('master-projects/(:any)/update',     'MasterProjects\Action\Projects::update_project/$1');

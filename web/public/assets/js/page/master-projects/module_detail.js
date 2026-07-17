@@ -30,12 +30,21 @@ var ModuleDetail = (function () {
     var bugListModalInstance   = null;
     var designPageModalInstance = null;
 
+    // ── Drawer State ───────────────────────────────────────────
+    var drawerTicketId = null;
+
+    // ── Filter State ───────────────────────────────────────────
+    var filterPage = '';
+    var filterType = '';
+
     // ── DOM Ready ──────────────────────────────────────────────
     $(function () {
         bindPageForm();
         bindModuleForm();
         bindModalDismiss();
-        bindKanbanDoubleClick();
+        bindKanbanCardClick();
+        bindDrawerEvents();
+        bindFilterEvents();
     });
 
     // ── Helpers ────────────────────────────────────────────────
@@ -338,8 +347,9 @@ var ModuleDetail = (function () {
         });
     }
 
-    function toggleSpecs(pageId) {
-        $('#specs-row-' + pageId).toggle();
+    // ── Page Row Navigation ─────────────────────────────────────
+    function navigateToPage(pageId) {
+        window.location.href = site_url + '/master-projects/' + projectId + '/modules/' + moduleId + '/pages/' + pageId;
     }
 
     // ── Kanban Board ───────────────────────────────────────────
@@ -352,6 +362,7 @@ var ModuleDetail = (function () {
         })
         .done(function (res) {
             kanbanData = res || { open: [], in_progress: [], resolved: [], closed: [] };
+            populatePageFilter();
             renderKanban();
             initKanbanSortables();
         })
@@ -494,25 +505,218 @@ var ModuleDetail = (function () {
         });
     }
 
-    function bindKanbanDoubleClick() {
-        $(document).on('dblclick', '.kanban-card', function () {
+    // ── Kanban Card Click → Drawer ───────────────────────────
+    function bindKanbanCardClick() {
+        $(document).on('click', '.kanban-card', function (e) {
+            if ($(e.target).closest('a').length) return;
             var cardId = $(this).data('id');
-            var cardTitle = $(this).find('.kanban-card-title a').text();
-            var cardUrl = site_url + '/tickets/' + cardId;
+            openTicketDrawer(cardId);
+        });
+    }
 
-            Swal.fire({
-                title: 'Open Ticket?',
-                html: '<strong>' + escHtml(cardTitle) + '</strong>',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#0070F2',
-                confirmButtonText: 'Open in New Tab',
-                cancelButtonText: 'Cancel'
-            }).then(function (result) {
-                if (result.isConfirmed) {
-                    window.open(cardUrl, '_blank');
-                }
-            });
+    // ── Ticket Detail Drawer ───────────────────────────────────
+    function openTicketDrawer(ticketId) {
+        drawerTicketId = ticketId;
+        var $scrim = $('#ticketDrawerScrim');
+        var $drawer = $('#ticketDrawer');
+        var $body = $('#ticketDrawerBody');
+
+        $body.html(
+            '<div class="ticket-drawer-skeleton">' +
+            '<div class="skeleton-line skeleton-lg"></div>' +
+            '<div class="skeleton-line skeleton-sm"></div>' +
+            '<div class="skeleton-line skeleton-md"></div>' +
+            '<div class="skeleton-line skeleton-sm"></div>' +
+            '<div class="skeleton-line skeleton-lg"></div>' +
+            '<div class="skeleton-line skeleton-md"></div>' +
+            '</div>'
+        );
+
+        $scrim.addClass('open');
+        $drawer.addClass('open');
+        $('body').css('overflow', 'hidden');
+
+        $.ajax({
+            url: site_url + '/tickets/' + ticketId + '/detail-json',
+            method: 'GET',
+            timeout: 15000,
+        })
+        .done(function (ticket) {
+            if (!ticket) {
+                $body.html('<div class="sap-empty" style="padding:32px 20px"><i class="fas fa-exclamation-triangle"></i><h4>Ticket not found</h4></div>');
+                return;
+            }
+            renderTicketDetail(ticket);
+        })
+        .fail(function (xhr) {
+            $body.html('<div class="sap-empty" style="padding:32px 20px"><i class="fas fa-exclamation-triangle"></i><h4>Failed to load ticket</h4><p>HTTP ' + xhr.status + '</p></div>');
+        });
+    }
+
+    function closeDrawer() {
+        $('#ticketDrawerScrim').removeClass('open');
+        $('#ticketDrawer').removeClass('open');
+        $('body').css('overflow', '');
+        drawerTicketId = null;
+    }
+
+    function renderTicketDetail(t) {
+        var statusCls = 'sap-badge open';
+        if (t.status_name === 'In Progress') statusCls = 'sap-badge in-progress';
+        else if (t.status_name === 'Resolved') statusCls = 'sap-badge resolved';
+        else if (t.status_name === 'Closed') statusCls = 'sap-badge closed';
+
+        var prioCls = t.priority_name ? t.priority_name.toLowerCase() : 'medium';
+        var typeCls = t.type === 0 ? 'bug' : t.type === 1 ? 'issue' : t.type === 3 ? 'change-request' : 'task';
+
+        var html = '';
+        html += '<div class="drawer-detail-section">';
+        html += '<div class="drawer-detail-badges">';
+        html += '<span class="' + statusCls + '"><span class="badge-dot"></span>' + escHtml(t.status_name) + '</span>';
+        html += '<span class="drawer-priority-dot ' + prioCls + '"></span>';
+        html += '<span class="kanban-type-badge ' + typeCls + '">' + escHtml(t.type_name) + '</span>';
+        html += '</div>';
+        html += '</div>';
+
+        html += '<div class="drawer-detail-section">';
+        html += '<div class="drawer-detail-meta">';
+        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Assignee</span><span class="drawer-meta-value">' + escHtml(t.assignee_name || '-') + '</span></div>';
+        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Creator</span><span class="drawer-meta-value">' + escHtml(t.creator_name || '-') + '</span></div>';
+        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Page</span><span class="drawer-meta-value">' + escHtml(t.page_name || '-') + '</span></div>';
+        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Module</span><span class="drawer-meta-value">' + escHtml(t.module_name || '-') + '</span></div>';
+        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Project</span><span class="drawer-meta-value">' + escHtml(t.project_name || '-') + '</span></div>';
+        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Created</span><span class="drawer-meta-value">' + escHtml(t.created_at || '-') + '</span></div>';
+        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Updated</span><span class="drawer-meta-value">' + escHtml(t.updated_at || '-') + '</span></div>';
+        html += '</div>';
+        html += '</div>';
+
+        if (t.description) {
+            html += '<div class="drawer-detail-section">';
+            html += '<div class="drawer-detail-desc-header">Description</div>';
+            html += '<div class="drawer-detail-desc">' + (typeof GlobalSanitize !== 'undefined' ? GlobalSanitize.sanitizeHtml(t.description) : escHtml(t.description)) + '</div>';
+            html += '</div>';
+        }
+
+        if (t.comments && t.comments.length) {
+            html += '<div class="drawer-detail-section">';
+            html += '<div class="drawer-detail-desc-header"><i class="fas fa-comments"></i> Comments (' + t.comments.length + ')</div>';
+            for (var i = 0; i < t.comments.length; i++) {
+                var c = t.comments[i];
+                html += '<div class="drawer-comment">';
+                html += '<div class="drawer-comment-header"><span class="drawer-comment-author">' + escHtml(c.author_name || 'Unknown') + '</span><span class="drawer-comment-date">' + escHtml(c.created_at || '') + '</span></div>';
+                html += '<div class="drawer-comment-body">' + (typeof GlobalSanitize !== 'undefined' ? GlobalSanitize.sanitizeHtml(c.content) : escHtml(c.content)) + '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+
+        if (t.attachments && t.attachments.length) {
+            html += '<div class="drawer-detail-section">';
+            html += '<div class="drawer-detail-desc-header"><i class="fas fa-paperclip"></i> Attachments (' + t.attachments.length + ')</div>';
+            html += '<div class="drawer-attachments">';
+            for (var j = 0; j < t.attachments.length; j++) {
+                var att = t.attachments[j];
+                html += '<a href="' + site_url + '/uploads/tickets/' + att.stored_name + '" target="_blank" class="drawer-attachment-item">';
+                html += '<i class="fas fa-file"></i> ' + escHtml(att.filename || att.stored_name);
+                html += '</a>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+
+        $('#ticketDrawerBody').html(html);
+        $('#drawerOpenFullPage').attr('href', site_url + '/tickets/' + drawerTicketId);
+    }
+
+    function bindDrawerEvents() {
+        $('#ticketDrawerClose').on('click', closeDrawer);
+        $('#ticketDrawerScrim').on('click', closeDrawer);
+        $(document).on('keydown', function (e) {
+            if (e.key === 'Escape' && drawerTicketId) {
+                closeDrawer();
+            }
+        });
+    }
+
+    // ── Kanban Filters ─────────────────────────────────────────
+    function populatePageFilter() {
+        var pages = pageData.pages || [];
+        var $sel = $('#kanbanPageFilter');
+        $sel.find('option:gt(0)').remove();
+        var seen = {};
+        for (var i = 0; i < pages.length; i++) {
+            var pg = pages[i];
+            if (pg.name && !seen[pg.id]) {
+                seen[pg.id] = true;
+                $sel.append('<option value="' + pg.id + '">' + escHtml(pg.name) + '</option>');
+            }
+        }
+    }
+
+    function applyKanbanFilters() {
+        filterPage = $('#kanbanPageFilter').val() || '';
+        filterType = $('#kanbanTypeFilter .kanban-filter-type-btn.active').data('type') || '';
+
+        var hasFilter = filterPage || filterType;
+        $('#kanbanFilterResetWrap').toggle(hasFilter);
+
+        var columns = ['open', 'in_progress', 'resolved', 'closed'];
+        for (var c = 0; c < columns.length; c++) {
+            var key = columns[c];
+            var tickets = kanbanData[key] || [];
+            var filtered = [];
+            for (var i = 0; i < tickets.length; i++) {
+                var t = tickets[i];
+                if (filterPage && t.page_id != filterPage) continue;
+                if (filterType && String(t.type) !== String(filterType)) continue;
+                filtered.push(t);
+            }
+            renderFilteredColumn(key, filtered);
+        }
+
+        for (var j = 0; j < columns.length; j++) {
+            var key2 = columns[j];
+            var allTickets = kanbanData[key2] || [];
+            var filtered2 = [];
+            for (var k = 0; k < allTickets.length; k++) {
+                var t2 = allTickets[k];
+                if (filterPage && t2.page_id != filterPage) continue;
+                if (filterType && String(t2.type) !== String(filterType)) continue;
+                filtered2.push(t2);
+            }
+            $('#kanban-count-' + key2).text(filtered2.length);
+        }
+    }
+
+    function renderFilteredColumn(key, tickets) {
+        var $col = $('#kanban-col-' + key);
+        if (!tickets.length) {
+            $col.html('<div class="kanban-empty"><i class="fas fa-inbox"></i>No tickets</div>');
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < tickets.length; i++) {
+            html += buildKanbanCard(tickets[i]);
+        }
+        $col.html(html);
+    }
+
+    function resetKanbanFilters() {
+        $('#kanbanPageFilter').val('');
+        $('#kanbanTypeFilter .kanban-filter-type-btn').removeClass('active');
+        $('#kanbanTypeFilter .kanban-filter-type-btn[data-type=""]').addClass('active');
+        filterPage = '';
+        filterType = '';
+        $('#kanbanFilterResetWrap').hide();
+        renderKanban();
+    }
+
+    function bindFilterEvents() {
+        $('#kanbanPageFilter').on('change', applyKanbanFilters);
+        $('#kanbanTypeFilter').on('click', '.kanban-filter-type-btn', function () {
+            $('#kanbanTypeFilter .kanban-filter-type-btn').removeClass('active');
+            $(this).addClass('active');
+            applyKanbanFilters();
         });
     }
 
@@ -528,6 +732,7 @@ var ModuleDetail = (function () {
         openAssignDesignPageModal:    openAssignDesignPageModal,
         assignBlueprintDesignPage:    assignBlueprintDesignPage,
         unassignBlueprintDesignPage:  unassignBlueprintDesignPage,
-        toggleSpecs:                  toggleSpecs
+        navigateToPage:               navigateToPage,
+        resetKanbanFilters:           resetKanbanFilters
     };
 })();

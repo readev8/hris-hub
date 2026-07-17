@@ -37,6 +37,7 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/tickets/(:any)/approve-dept', 'Tickets::approveDept/$1');
     $routes->post('/tickets/(:any)/reject-approval', 'Tickets::rejectApproval/$1');
     $routes->post('/tickets/(:any)/resubmit', 'Tickets::resubmit/$1');
+    $routes->get('/tickets/(:any)/detail-json', 'Tickets::getDetailJson/$1');
     $routes->get('/tickets/(:any)/edit', 'Tickets::edit/$1');
     $routes->post('/tickets/(:any)/update', 'Tickets::update/$1');
     $routes->post('/tickets/(:any)/delete', 'Tickets::delete/$1');
@@ -120,7 +121,8 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/master-projects/(:any)/modules','MasterProjects::createModule/$1');
     $routes->get('/master-projects/(:any)/edit',  'MasterProjects::edit/$1');
     $routes->post('/master-projects/(:any)/edit', 'MasterProjects::edit/$1');
-    $routes->get('/master-projects/(:any)/modules/(:any)', 'MasterProjects::moduleDetail/$1/$2');
+    $routes->get('/master-projects/(:segment)/modules/(:segment)/pages/(:segment)', 'MasterProjects::pageDetail/$1/$2/$3');
+    $routes->get('/master-projects/(:segment)/modules/(:segment)', 'MasterProjects::moduleDetail/$1/$2');
     $routes->get('/master-projects/(:any)',        'MasterProjects::detail/$1');
     $routes->post('/modules/(:any)/update',       'MasterProjects::updateModule/$1');
     $routes->post('/modules/(:any)/delete',       'MasterProjects::deleteModule/$1');
