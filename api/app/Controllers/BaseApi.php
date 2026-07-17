@@ -58,6 +58,22 @@ abstract class BaseApi extends ResourceController
         return $input;
     }
 
+    protected function sanitizeRichText(?string $html): string
+    {
+        if (empty($html)) return '';
+
+        $allowed = '<p><br><b><strong><i><em><u><s><strike><a><ul><ol><li>';
+        $html = strip_tags($html, $allowed);
+
+        $html = preg_replace('/\son\w+\s*=\s*"[^"]*"/i', '', $html);
+        $html = preg_replace("/\son\w+\s*=\s*'[^']*'/i", '', $html);
+
+        $html = preg_replace('/href\s*=\s*["\']?\s*javascript:/i', 'href="#"', $html);
+        $html = preg_replace('/href\s*=\s*["\']?\s*data:/i', 'href="#"', $html);
+
+        return trim($html);
+    }
+
     protected function get_parameter(array $field_map, array $post): array
     {
         $out = [];

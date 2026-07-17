@@ -10,7 +10,7 @@ GlobalSanitize.sanitize = function (str) {
 
 GlobalSanitize.sanitizeHtml = function (str) {
     if (str == null) return "";
-    var allowedTags = ["b", "i", "em", "strong", "a", "br", "p", "ul", "ol", "li"];
+    var allowedTags = ["b", "i", "em", "strong", "u", "s", "strike", "a", "br", "p", "ul", "ol", "li"];
     var div = document.createElement("div");
     div.innerHTML = str;
 

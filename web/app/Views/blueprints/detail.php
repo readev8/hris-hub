@@ -425,6 +425,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
+<link rel="stylesheet" href="<?= base_url('public/vendor/summernote/0.9.1/summernote-bs5.min.css') ?>?v=<?= config('App')->assetVersion ?>">
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/blueprints/detail.css') ?>?v=<?= config('App')->assetVersion ?>">
 <?= $this->endSection() ?>
 
@@ -436,4 +437,5 @@
     'modules'          => $blueprint['modules'] ?? [],
 ]) ?>;</script>
 <script src="<?= base_url('public/assets/js/page/blueprints/detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/vendor/summernote/0.9.1/summernote-bs5.min.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

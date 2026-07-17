@@ -43,7 +43,7 @@ class DesignPages extends BaseApi
         $this->db()->table('blueprint_design_pages')->insert([
             'module_id'   => $moduleId,
             'title'       => $title,
-            'description' => trim($input['description'] ?? ''),
+            'description' => $this->sanitizeRichText($this->req->getPost('description')),
             'sort_order'  => $maxSort,
             'created_at'  => date('Y-m-d H:i:s'),
             'updated_at'  => date('Y-m-d H:i:s'),
@@ -76,7 +76,7 @@ class DesignPages extends BaseApi
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $update = [];
         if (isset($input['title']))       $update['title'] = trim($input['title']);
-        if (isset($input['description'])) $update['description'] = trim($input['description']);
+        if (isset($input['description'])) $update['description'] = $this->sanitizeRichText($this->req->getPost('description'));
         $update['updated_at'] = date('Y-m-d H:i:s');
 
         $this->db()->transStart();

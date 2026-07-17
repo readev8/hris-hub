@@ -41,6 +41,7 @@ var BlueprintDetail = (function () {
         bindDesignPageDropzone();
         bindAttachmentInput();
         initLightbox();
+        bindModalDismiss();
     });
 
     // ── Helpers ────────────────────────────────────────────────
@@ -51,6 +52,46 @@ var BlueprintDetail = (function () {
     function getEncryptedModuleId(rawId) {
         var mod = blueprintModules.find(function (m) { return m.id == rawId; });
         return mod ? (mod.id_encrypted || mod.id) : null;
+    }
+
+    // ── Summernote WYSIWYG ─────────────────────────────────────
+    var SUMMERNOTE_CONFIG = {
+        toolbar: [
+            ['style', ['bold', 'italic', 'underline', 'strike']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['links', ['link']],
+            ['misc', ['undo', 'redo', 'clear']]
+        ],
+        height: 150,
+        placeholder: 'Describe...',
+        disableDragAndDrop: true,
+        shortcuts: false,
+    };
+
+    function initSummernote(selector, content) {
+        if (typeof $.fn.summernote !== 'function') return;
+        try { $(selector).summernote('destroy'); } catch (e) { /* not initialised */ }
+        $(selector).summernote(SUMMERNOTE_CONFIG);
+        if (content) {
+            $(selector).summernote('code', content);
+        }
+    }
+
+    function destroySummernote(selector) {
+        if (typeof $.fn.summernote !== 'function') return;
+        try { $(selector).summernote('destroy'); } catch (e) { /* not initialised */ }
+    }
+
+    function syncSummernote(selector) {
+        if (typeof $.fn.summernote !== 'function') return;
+        $(selector).val($(selector).summernote('code'));
+    }
+
+    function bindModalDismiss() {
+        $('#scenarioModal, #designPageModal').on('hidden.bs.modal', function () {
+            destroySummernote('#scenarioDescInput');
+            destroySummernote('#designPageDescInput');
+        });
     }
 
     // ── Module Selection ───────────────────────────────────────
@@ -303,7 +344,7 @@ var BlueprintDetail = (function () {
             }
             html += '<div class="card-item">' +
                 '<div class="card-item-title">' + escHtml(s.title) + '</div>' +
-                '<div class="card-item-desc">' + escHtml(s.description || '') + '</div>' +
+                '<div class="card-item-desc">' + GlobalSanitize.sanitizeHtml(s.description || '') + '</div>' +
                 imagesHtml +
                 '<div class="card-item-actions">' +
                 (canUpdate ? '<button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="BlueprintDetail.editScenario(\'' + (s.id_encrypted || s.id) + '\')"><i class="fas fa-edit"></i></button>' : '') +
@@ -337,7 +378,7 @@ var BlueprintDetail = (function () {
             var specCount = (p.page_specifications || []).length;
             html += '<div class="card-item">' +
                 '<div class="card-item-title">' + escHtml(p.title) + '</div>' +
-                '<div class="card-item-desc">' + escHtml(p.description || '') + '</div>' +
+                '<div class="card-item-desc">' + GlobalSanitize.sanitizeHtml(p.description || '') + '</div>' +
                 imagesHtml +
                 '<div class="card-item-actions">' +
                 '<a href="' + site_url + '/blueprints/design-pages/' + (p.id_encrypted || p.id) + '/specifications" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-list-alt"></i> Manage Specs (' + specCount + ')</a>' +
@@ -416,7 +457,7 @@ var BlueprintDetail = (function () {
         if (!currentModuleId) { toastr.warning('Select a module first'); return; }
         $('#scenarioFormId').val('');
         $('#scenarioTitleInput').val('');
-        $('#scenarioDescInput').val('');
+        initSummernote('#scenarioDescInput', '');
         scenarioExistingAttachments = [];
         scenarioDeletedAttachments = [];
         scenarioFiles = [];
@@ -433,7 +474,7 @@ var BlueprintDetail = (function () {
         if (!s) return;
         $('#scenarioFormId').val(scenarioId);
         $('#scenarioTitleInput').val(s.title);
-        $('#scenarioDescInput').val(s.description);
+        initSummernote('#scenarioDescInput', s.description);
         scenarioExistingAttachments = (s.attachments || []).map(function (a) { return Object.assign({}, a); });
         scenarioDeletedAttachments = [];
         scenarioFiles = [];
@@ -537,6 +578,7 @@ var BlueprintDetail = (function () {
 
         $('#scenarioForm').on('submit', function (e) {
             e.preventDefault();
+            syncSummernote('#scenarioDescInput');
             var id = $('#scenarioFormId').val();
             var encModId = getEncryptedModuleId(currentModuleId);
             var url = id ? site_url + '/blueprints/business-scenarios/' + id + '/update' : site_url + '/blueprints/modules/' + encModId + '/business-scenarios';
@@ -571,7 +613,7 @@ var BlueprintDetail = (function () {
         if (!currentModuleId) { toastr.warning('Select a module first'); return; }
         $('#designPageFormId').val('');
         $('#designPageTitleInput').val('');
-        $('#designPageDescInput').val('');
+        initSummernote('#designPageDescInput', '');
         designPageExistingAttachments = [];
         designPageDeletedAttachments = [];
         designPageFiles = [];
@@ -588,7 +630,7 @@ var BlueprintDetail = (function () {
         if (!p) return;
         $('#designPageFormId').val(pageId);
         $('#designPageTitleInput').val(p.title);
-        $('#designPageDescInput').val(p.description);
+        initSummernote('#designPageDescInput', p.description);
         designPageExistingAttachments = (p.attachments || []).map(function (a) { return Object.assign({}, a); });
         designPageDeletedAttachments = [];
         designPageFiles = [];
@@ -692,6 +734,7 @@ var BlueprintDetail = (function () {
 
         $('#designPageForm').on('submit', function (e) {
             e.preventDefault();
+            syncSummernote('#designPageDescInput');
             var id = $('#designPageFormId').val();
             var encModId = getEncryptedModuleId(currentModuleId);
             var url = id ? site_url + '/blueprints/design-pages/' + id + '/update' : site_url + '/blueprints/modules/' + encModId + '/design-pages';
