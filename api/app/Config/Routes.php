@@ -93,6 +93,9 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('modules/(:any)/pages',              'MasterProjects\Action\Pages::create_page/$1');
     $routes->post('pages/(:any)/update',               'MasterProjects\Action\Pages::update_page/$1');
     $routes->post('pages/(:any)/delete',               'MasterProjects\Action\Pages::delete_page/$1');
+    $routes->post('pages/(:any)/assign-design-page',   'MasterProjects\Action\Pages::assign_blueprint_design_page/$1');
+    $routes->post('pages/(:any)/unassign-design-page', 'MasterProjects\Action\Pages::unassign_blueprint_design_page/$1');
+    $routes->get('design-pages/available',              'MasterProjects\Report\MasterProjectList::get_available_design_pages');
 
     // Blueprints
     $routes->get('blueprints',                                          'Blueprints\Report\BlueprintList::get_list');

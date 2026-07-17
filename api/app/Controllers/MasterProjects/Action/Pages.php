@@ -92,4 +92,58 @@ class Pages extends BaseApi
         $this->db()->table('pages')->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Halaman berhasil dihapus');
     }
+
+    public function assign_blueprint_design_page(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('master_projects', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah halaman', null, 403);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $designPageId = !empty($input['blueprint_design_page_id']) ? $this->resolveId($input['blueprint_design_page_id']) : null;
+
+        $page = $this->db()->table('pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        if (!$page) return $this->JSONResponse('Halaman tidak ditemukan', null, 404);
+
+        if ($designPageId) {
+            $designPage = $this->db()->table('blueprint_design_pages')->where('id', $designPageId)->where('active', 0)->get()->getRowArray();
+            if (!$designPage) return $this->JSONResponse('Blueprint design page tidak ditemukan', null, 404);
+        }
+
+        $this->db()->table('pages')->update([
+            'blueprint_design_page_id' => $designPageId,
+            'updated_at'               => date('Y-m-d H:i:s'),
+        ], ['id' => $id]);
+
+        return $this->JSONResponse('Blueprint design page berhasil diassign');
+    }
+
+    public function unassign_blueprint_design_page(string $encryptedId): ResponseInterface
+    {
+        $id = $this->resolveId($encryptedId);
+        if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('master_projects', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah halaman', null, 403);
+        }
+
+        $page = $this->db()->table('pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        if (!$page) return $this->JSONResponse('Halaman tidak ditemukan', null, 404);
+
+        $this->db()->table('pages')->update([
+            'blueprint_design_page_id' => null,
+            'updated_at'               => date('Y-m-d H:i:s'),
+        ], ['id' => $id]);
+
+        return $this->JSONResponse('Blueprint design page berhasil diunassign');
+    }
 }

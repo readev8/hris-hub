@@ -25,9 +25,10 @@ var ModuleDetail = (function () {
     var KANBAN_STATUS_LABELS = { 0: 'Open', 1: 'Approved', 2: 'In Progress', 3: 'Resolved', 4: 'Closed' };
 
     // ── Modal State ────────────────────────────────────────────
-    var pageModalInstance     = null;
-    var moduleModalInstance   = null;
-    var bugListModalInstance  = null;
+    var pageModalInstance      = null;
+    var moduleModalInstance    = null;
+    var bugListModalInstance   = null;
+    var designPageModalInstance = null;
 
     // ── DOM Ready ──────────────────────────────────────────────
     $(function () {
@@ -236,32 +237,121 @@ var ModuleDetail = (function () {
     }
 
     function bindModalDismiss() {
-        $('#pageModal, #bugListModal, #moduleModal').on('hidden.bs.modal', function () {
+        $('#pageModal, #bugListModal, #moduleModal, #designPageModal').on('hidden.bs.modal', function () {
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open').css('padding-right', '');
         });
+    }
+
+    // ── Blueprint Design Page Assignment ───────────────────────
+    function getDesignPageModal() {
+        if (!designPageModalInstance) {
+            designPageModalInstance = new bootstrap.Modal(document.getElementById('designPageModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+        }
+        return designPageModalInstance;
+    }
+
+    function openAssignDesignPageModal(pageId) {
+        $('#assignDesignPageTargetId').val(pageId);
+        $('#designPagesLoading').show();
+        $('#designPagesEmpty').hide();
+        $('#designPagesList').html('');
+        getDesignPageModal().show();
+
+        $.get(site_url + '/design-pages/available?module_id=' + moduleId, function (res) {
+            $('#designPagesLoading').hide();
+            if (!res || !res.length) {
+                $('#designPagesEmpty').show();
+                return;
+            }
+            var html = '';
+            for (var g = 0; g < res.length; g++) {
+                var group = res[g];
+                html += '<div class="design-page-group">';
+                html += '<div class="design-page-group-header"><i class="fas fa-drafting-compass"></i> ' + escHtml(group.blueprint_name) + ' → ' + escHtml(group.blueprint_module_name) + '</div>';
+                for (var k = 0; k < group.design_pages.length; k++) {
+                    var dp = group.design_pages[k];
+                    html += '<div class="design-page-row" data-id="' + dp.id + '">';
+                    html += '<div class="design-page-row-info">';
+                    html += '<span class="design-page-row-name">' + escHtml(dp.title) + '</span>';
+                    if (dp.description) {
+                        html += '<span class="design-page-row-meta">' + escHtml(dp.description) + '</span>';
+                    }
+                    html += '</div>';
+                    html += '<span class="design-page-spec-count">' + dp.spec_count + ' specs</span>';
+                    html += '<button type="button" class="design-page-row-action"><i class="fas fa-check"></i></button>';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            $('#designPagesList').html(html);
+            $('#designPagesList .design-page-row').on('click', function () {
+                var dpId = $(this).data('id');
+                assignBlueprintDesignPage(dpId);
+            });
+        }).fail(function () {
+            $('#designPagesLoading').hide();
+            toastr.error('Failed to load design pages');
+        });
+    }
+
+    function assignBlueprintDesignPage(designPageId) {
+        var pageId = $('#assignDesignPageTargetId').val();
+        $.post(site_url + '/pages/' + pageId + '/assign-design-page', { blueprint_design_page_id: designPageId }, function (res) {
+            if (res.status) {
+                toastr.success('Blueprint design page assigned');
+                bootstrap.Modal.getInstance(document.getElementById('designPageModal')).hide();
+                window.location.reload();
+            } else {
+                toastr.error(res.data && res.data.message ? res.data.message : 'Failed');
+            }
+        }).fail(function (xhr) {
+            toastr.error('Failed to assign design page (HTTP ' + xhr.status + ')');
+        });
+    }
+
+    function unassignBlueprintDesignPage(pageId) {
+        Swal.fire({
+            title: 'Remove design page assignment?',
+            text: 'This page will no longer be linked to a blueprint design page.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#AA0808',
+            cancelButtonColor: '#758CA4',
+            confirmButtonText: 'Remove',
+        }).then(function (r) {
+            if (r.isConfirmed) {
+                $.post(site_url + '/pages/' + pageId + '/unassign-design-page', function (res) {
+                    if (res.status) {
+                        toastr.success('Design page unassigned');
+                        window.location.reload();
+                    } else {
+                        toastr.error(res.data && res.data.message ? res.data.message : 'Failed');
+                    }
+                }).fail(function (xhr) {
+                    toastr.error('Failed to unassign design page (HTTP ' + xhr.status + ')');
+                });
+            }
+        });
+    }
+
+    function toggleSpecs(pageId) {
+        $('#specs-row-' + pageId).toggle();
     }
 
     // ── Kanban Board ───────────────────────────────────────────
     function loadKanban() {
         $('#kanbanBoard .kanban-cards').html('<div class="kanban-empty"><i class="fas fa-spinner fa-spin"></i>Loading...</div>');
         $.ajax({
-            url: site_url + '/master-projects/' + projectId + '/kanban',
+            url: site_url + '/master-projects/' + projectId + '/kanban?moduleId=' + moduleId,
             method: 'GET',
             timeout: 15000,
         })
         .done(function (res) {
-            kanbanData = { open: [], in_progress: [], resolved: [], closed: [] };
-            var all = res || {};
-            var keys = ['open', 'in_progress', 'resolved', 'closed'];
-            for (var k = 0; k < keys.length; k++) {
-                var col = all[keys[k]] || [];
-                for (var i = 0; i < col.length; i++) {
-                    if (pageIds.indexOf(col[i].page_id) !== -1) {
-                        kanbanData[keys[k]].push(col[i]);
-                    }
-                }
-            }
+            kanbanData = res || { open: [], in_progress: [], resolved: [], closed: [] };
             renderKanban();
             initKanbanSortables();
         })
@@ -428,12 +518,16 @@ var ModuleDetail = (function () {
 
     // ── Public API ─────────────────────────────────────────────
     return {
-        switchDetailTab: switchDetailTab,
-        openPageModal:   openPageModal,
-        editPage:        editPage,
-        deletePage:      deletePage,
-        editModule:      editModule,
-        deleteModule:    deleteModule,
-        showBugList:     showBugList
+        switchDetailTab:              switchDetailTab,
+        openPageModal:                openPageModal,
+        editPage:                     editPage,
+        deletePage:                   deletePage,
+        editModule:                   editModule,
+        deleteModule:                 deleteModule,
+        showBugList:                  showBugList,
+        openAssignDesignPageModal:    openAssignDesignPageModal,
+        assignBlueprintDesignPage:    assignBlueprintDesignPage,
+        unassignBlueprintDesignPage:  unassignBlueprintDesignPage,
+        toggleSpecs:                  toggleSpecs
     };
 })();

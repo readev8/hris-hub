@@ -45,7 +45,6 @@ function promptAction(action, label) {
     }).then(function(result) {
         if (result.isConfirmed && result.value) {
             var data = {};
-            if (action === 'resolve') data.resolution_note = result.value;
             if (action === 'reopen') data.rejection_note = result.value;
             if (action === 'reject') data.rejection_note = result.value;
             $.post(site_url + '/tickets/' + token + '/' + action, data, function(res) {
@@ -167,6 +166,61 @@ function promptRejectApproval() {
     });
 }
 
+function submitResolve() {
+    var note = $('#resolveNote').val();
+    if (!note || !note.trim()) {
+        toastr.warning('Resolution summary wajib diisi');
+        $('#resolveNote').focus();
+        return;
+    }
+
+    var fileInput = $('#resolveFileInput')[0];
+    var files = fileInput.files;
+    if (files.length > 5) {
+        toastr.warning('Maksimal 5 file');
+        return;
+    }
+    for (var i = 0; i < files.length; i++) {
+        if (files[i].size > 5 * 1024 * 1024) {
+            toastr.warning(files[i].name + ' melebihi batas 5MB');
+            return;
+        }
+    }
+
+    var btn = $('#resolveSubmitBtn');
+    btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Resolving...');
+
+    var formData = new FormData($('#resolveForm')[0]);
+    $.ajax({
+        url: site_url + '/tickets/' + token + '/resolve',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            if (res.status) {
+                $('#resolveModal').modal('hide');
+                toastr.success(res.data.message);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                toastr.error(res.data.message || 'Gagal meresolusi ticket');
+                btn.prop('disabled', false).html('<i class="fas fa-check-double"></i> Resolve Ticket');
+            }
+        },
+        error: function(xhr) {
+            var res = null;
+            try { res = JSON.parse(xhr.responseText); } catch(e) {}
+            if (res && res.redirect) {
+                window.location.href = res.redirect;
+                return;
+            }
+            var msg = res && res.message ? res.message : 'Request failed (HTTP ' + xhr.status + ')';
+            toastr.error(msg);
+            btn.prop('disabled', false).html('<i class="fas fa-check-double"></i> Resolve Ticket');
+        }
+    });
+}
+
 // ===========================
 // STATE
 // ===========================
@@ -233,6 +287,77 @@ $(function() {
                 btn.prop('disabled', false).html('Send');
             }
         });
+    });
+
+    // Resolve modal — file preview
+    $('#resolveFileInput').on('change', function() {
+        var preview = $('#resolvePreview');
+        preview.empty();
+        var files = this.files;
+        if (files.length > 5) {
+            toastr.warning('Maximum 5 files');
+            $(this).val('');
+            return;
+        }
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            if (file.size > 5 * 1024 * 1024) {
+                toastr.warning(file.name + ' exceeds 5MB limit');
+                continue;
+            }
+            if (file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = (function(f) {
+                    return function(e) {
+                        preview.append(
+                            '<div class="resolve-file-item" style="position:relative;display:inline-block">' +
+                            '<img src="' + e.target.result + '" style="max-width:100px;max-height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--sap-border)">' +
+                            '<div style="font-size:10px;color:var(--sap-text-secondary);text-align:center;margin-top:2px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + f.name + '</div>' +
+                            '</div>'
+                        );
+                    };
+                })(file);
+                reader.readAsDataURL(file);
+            } else {
+                var icon = 'fa-file';
+                if (file.type.includes('pdf')) icon = 'fa-file-pdf';
+                else if (file.type.includes('word') || file.type.includes('document')) icon = 'fa-file-word';
+                else if (file.type.includes('excel') || file.type.includes('spreadsheet')) icon = 'fa-file-excel';
+                else if (file.type.includes('powerpoint') || file.type.includes('presentation')) icon = 'fa-file-powerpoint';
+                preview.append(
+                    '<div class="resolve-file-item" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;border:1px solid var(--sap-border);background:var(--sap-surface);max-width:180px">' +
+                    '<i class="fas ' + icon + '" style="font-size:20px;color:var(--sap-text-secondary);flex-shrink:0"></i>' +
+                    '<div style="min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + file.name + '</div>' +
+                    '<div style="font-size:10px;color:var(--sap-text-muted)">' + (file.type || 'file') + '</div></div>' +
+                    '</div>'
+                );
+            }
+        }
+    });
+
+    // Resolve modal — drag & drop
+    $('#resolveDropzone').on('dragover', function(e) {
+        e.preventDefault();
+        $(this).css('border-color', 'var(--sap-success)').css('background', 'rgba(16,136,62,0.04)');
+    }).on('dragleave', function() {
+        $(this).css('border-color', 'var(--sap-border)').css('background', 'transparent');
+    }).on('drop', function(e) {
+        e.preventDefault();
+        $(this).css('border-color', 'var(--sap-border)').css('background', 'transparent');
+        var files = e.originalEvent.dataTransfer.files;
+        if (files.length) {
+            var input = $('#resolveFileInput')[0];
+            input.files = files;
+            $(input).trigger('change');
+        }
+    });
+
+    // Resolve modal — reset on close
+    $('#resolveModal').on('hidden.bs.modal', function() {
+        $('#resolveNote').val('');
+        $('#resolvePreview').empty();
+        $('#resolveFileInput').val('');
+        $('#resolveSubmitBtn').prop('disabled', false).html('<i class="fas fa-check-double"></i> Resolve Ticket');
     });
 
     // GLightbox initialization

@@ -257,6 +257,45 @@ class MasterProjects extends BaseController
         return $this->response->setJSON($result);
     }
 
+    public function assignBlueprintDesignPage(string $encryptedId)
+    {
+        if (!$this->guard('can_update')) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
+        }
+
+        $post = $this->request->getPost();
+        $result = $this->api->post_data('pages/' . $encryptedId . '/assign-design-page', $post);
+        return $this->response->setJSON($result);
+    }
+
+    public function unassignBlueprintDesignPage(string $encryptedId)
+    {
+        if (!$this->guard('can_update')) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
+        }
+
+        $result = $this->api->post_data('pages/' . $encryptedId . '/unassign-design-page');
+        return $this->response->setJSON($result);
+    }
+
+    public function getAvailableDesignPages()
+    {
+        if (!$this->guard()) {
+            return $this->response->setJSON([]);
+        }
+
+        $moduleId = $this->request->getGet('module_id');
+        $params = [];
+        if ($moduleId) {
+            $params['module_id'] = $moduleId;
+        }
+        $result = $this->api->get_data('design-pages/available', $params);
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON([]);
+        }
+        return $this->response->setJSON($result['data']['result'] ?? []);
+    }
+
     // Cascading dropdown data
     public function getDetail(string $encryptedId)
     {

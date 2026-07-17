@@ -25,9 +25,11 @@ class ModuleDetail extends BaseApi
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         $pages = $this->db()->table('pages')
-            ->where('module_id', $moduleId)
-            ->where('active', 0)
-            ->orderBy('sort_order', 'ASC')
+            ->select('pages.*, bdp.title as blueprint_design_page_title')
+            ->join('blueprint_design_pages as bdp', 'bdp.id = pages.blueprint_design_page_id AND bdp.active = 0', 'left')
+            ->where('pages.module_id', $moduleId)
+            ->where('pages.active', 0)
+            ->orderBy('pages.sort_order', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -53,6 +55,32 @@ class ModuleDetail extends BaseApi
                 ->where('active', 0)
                 ->countAllResults();
 
+            $pageSpecs = null;
+            if (!empty($p['blueprint_design_page_id'])) {
+                $specsRows = $this->db()->table('blueprint_page_specifications')
+                    ->where('design_page_id', $p['blueprint_design_page_id'])
+                    ->where('active', 0)
+                    ->orderBy('sort_order', 'ASC')
+                    ->get()
+                    ->getResultArray();
+
+                $pageSpecs = [];
+                foreach ($specsRows as $spec) {
+                    $pageSpecs[] = [
+                        'field_name'   => $spec['field_name'],
+                        'data'         => $spec['data'],
+                        'objective'    => $spec['objective'],
+                        'initial_data' => $spec['initial_data'],
+                        'condition'    => $spec['condition'],
+                        'validation'   => $spec['validation'],
+                        'input_display'=> $spec['input_display'],
+                        'datatype'     => $spec['datatype'],
+                        'control_type' => $spec['control_type'],
+                        'ux'           => $spec['ux'],
+                    ];
+                }
+            }
+
             $pageList[] = [
                 'id'            => $this->api->encryptId($p['id']),
                 'name'          => $p['name'],
@@ -62,6 +90,9 @@ class ModuleDetail extends BaseApi
                 'bug_total'     => $bugTotal,
                 'bug_open'      => $bugOpen,
                 'bug_resolved'  => $bugResolved,
+                'blueprint_design_page_id'    => $p['blueprint_design_page_id'] ? $this->api->encryptId($p['blueprint_design_page_id']) : null,
+                'blueprint_design_page_title' => $p['blueprint_design_page_title'] ?? null,
+                'blueprint_page_specs'        => $pageSpecs,
             ];
         }
 

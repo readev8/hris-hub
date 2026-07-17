@@ -213,3 +213,225 @@
 @media (max-width: 575px) {
     .kanban-board { grid-template-columns: 1fr; }
 }
+
+/* ── Page Blueprint Design Page Badge ───────────── */
+.page-blueprint-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    background: var(--sap-brand-light);
+    border: 1px solid var(--sap-brand-border);
+    border-radius: var(--sap-radius);
+    font-size: 12px;
+}
+
+.page-blueprint-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--sap-brand);
+    color: #fff;
+    font-size: 9px;
+    flex-shrink: 0;
+}
+
+.page-blueprint-label {
+    color: var(--sap-text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.page-blueprint-spec-count {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--sap-brand);
+    background: rgba(0, 112, 242, 0.1);
+    padding: 1px 6px;
+    border-radius: 99px;
+    flex-shrink: 0;
+}
+
+/* ── Page Specs Panel ───────────────────────────── */
+.page-specs-row > td {
+    padding: 0 !important;
+    border-top: none !important;
+    background: var(--sap-background);
+}
+
+.page-specs-panel {
+    margin: 0 12px 12px 12px;
+    border: 1px solid var(--sap-border);
+    border-radius: var(--sap-radius-lg);
+    overflow: hidden;
+}
+
+.page-specs-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--sap-surface);
+    border-bottom: 1px solid var(--sap-border-light);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sap-text);
+}
+
+.page-specs-panel-header i {
+    color: var(--sap-brand);
+}
+
+.page-specs-panel-subtitle {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--sap-text-secondary);
+}
+
+.page-specs-table {
+    font-size: 12px;
+}
+
+.page-specs-table th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--sap-text-secondary);
+    white-space: nowrap;
+}
+
+.page-specs-table td {
+    vertical-align: top;
+    line-height: 1.5;
+}
+
+/* ── Design Page Modal ──────────────────────────── */
+.design-page-group {
+    border-bottom: 1px solid var(--sap-border-light);
+}
+.design-page-group:last-child {
+    border-bottom: none;
+}
+
+.design-page-group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sap-text);
+    background: var(--sap-background);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.design-page-group-header i {
+    color: var(--sap-brand);
+    font-size: 12px;
+}
+
+.design-page-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 16px 10px 36px;
+    cursor: pointer;
+    transition: background 150ms ease;
+}
+.design-page-row:hover {
+    background: var(--sap-brand-light);
+}
+
+.design-page-row-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.design-page-row-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sap-text);
+}
+
+.design-page-row-meta {
+    font-size: 11px;
+    color: var(--sap-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.design-page-spec-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sap-brand);
+    background: rgba(0, 112, 242, 0.1);
+    padding: 2px 8px;
+    border-radius: 99px;
+    flex-shrink: 0;
+}
+
+.design-page-row-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: transparent;
+    color: transparent;
+    font-size: 11px;
+    flex-shrink: 0;
+    transition: all 150ms ease;
+}
+.design-page-row:hover .design-page-row-action {
+    background: var(--sap-brand);
+    color: #fff;
+}
+
+/* ── Dark Mode: Page Blueprint & Specs ──────────── */
+.dark-mode .page-blueprint-badge {
+    background: rgba(13, 148, 136, 0.1);
+    border-color: rgba(13, 148, 136, 0.25);
+}
+.dark-mode .page-blueprint-label {
+    color: #E2E8F0;
+}
+.dark-mode .page-blueprint-spec-count {
+    color: #5EEAD4;
+    background: rgba(13, 148, 136, 0.15);
+}
+.dark-mode .page-specs-row > td {
+    background: var(--sap-dark-surface);
+}
+.dark-mode .page-specs-panel {
+    border-color: var(--sap-dark-border);
+}
+.dark-mode .page-specs-panel-header {
+    background: var(--sap-dark-elevated);
+    border-bottom-color: var(--sap-dark-border);
+}
+.dark-mode .design-page-group-header {
+    background: var(--sap-dark-surface);
+}
+.dark-mode .design-page-row:hover {
+    background: rgba(13, 148, 136, 0.1);
+}
+.dark-mode .design-page-row-name {
+    color: #E2E8F0;
+}
+.dark-mode .design-page-spec-count {
+    color: #5EEAD4;
+    background: rgba(13, 148, 136, 0.15);
+}

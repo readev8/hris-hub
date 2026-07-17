@@ -131,6 +131,9 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/modules/(:any)/pages',         'MasterProjects::getPages/$1');
     $routes->post('/pages/(:any)/update',         'MasterProjects::updatePage/$1');
     $routes->post('/pages/(:any)/delete',         'MasterProjects::deletePage/$1');
+    $routes->post('/pages/(:any)/assign-design-page',   'MasterProjects::assignBlueprintDesignPage/$1');
+    $routes->post('/pages/(:any)/unassign-design-page', 'MasterProjects::unassignBlueprintDesignPage/$1');
+    $routes->get('/design-pages/available',             'MasterProjects::getAvailableDesignPages');
     $routes->get('/pages/(:any)/bugs',            'MasterProjects::getBugList/$1');
     $routes->post('/tickets/(:any)/move',         'Tickets::move/$1');
 

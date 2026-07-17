@@ -148,9 +148,9 @@ final class ModuleDetailTest extends BaseFunctionalTest
         $this->assertStringContainsString('initKanbanSortables', $this->jsContent);
     }
 
-    public function testJsKanbanFiltersByPageIds(): void
+    public function testJsKanbanFiltersByModuleId(): void
     {
-        $this->assertStringContainsString('pageIds.indexOf', $this->jsContent);
+        $this->assertStringContainsString('moduleId=', $this->jsContent);
     }
 
     public function testJsHasBugListModal(): void

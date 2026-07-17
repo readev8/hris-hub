@@ -60,9 +60,10 @@
                     <thead>
                         <tr>
                             <th style="width:35%">Page Name</th>
-                            <th style="width:25%">URL Path</th>
+                            <th style="width:20%">URL Path</th>
+                            <th style="width:20%">Blueprint Design Page</th>
                             <th>Bugs</th>
-                            <th style="width:130px;text-align:right">Action</th>
+                            <th style="width:150px;text-align:right">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,6 +76,17 @@
                                 </div>
                             </td>
                             <td><code class="mono table-code"><?= esc($pg['url_path'] ?? '-') ?></code></td>
+                            <td>
+                                <?php if (!empty($pg['blueprint_design_page_title'])): ?>
+                                <div class="page-blueprint-badge">
+                                    <span class="page-blueprint-icon"><i class="fas fa-link"></i></span>
+                                    <span class="page-blueprint-label"><?= esc($pg['blueprint_design_page_title']) ?></span>
+                                    <span class="page-blueprint-spec-count"><?= count($pg['blueprint_page_specs'] ?? []) ?> specs</span>
+                                </div>
+                                <?php else: ?>
+                                <span class="text-muted" style="font-size:12px">Not linked</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php $totalBugs = (int) ($pg['bug_total'] ?? 0); ?>
                                 <?php if ($totalBugs > 0): ?>
@@ -95,11 +107,55 @@
                             </td>
                             <td class="text-end">
                                 <div class="sap-btn-group">
+                                    <?php if (!empty($pg['blueprint_design_page_id'])): ?>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="ModuleDetail.toggleSpecs('<?= $pg['id'] ?>')" title="Toggle specifications"><i class="fas fa-list"></i></button>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="ModuleDetail.unassignBlueprintDesignPage('<?= $pg['id'] ?>')" title="Unlink design page"><i class="fas fa-unlink"></i></button>
+                                    <?php else: ?>
+                                    <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="ModuleDetail.openAssignDesignPageModal('<?= $pg['id'] ?>')" title="Assign design page"><i class="fas fa-link"></i></button>
+                                    <?php endif; ?>
                                     <button class="sap-btn sap-btn-ghost sap-btn-xs" onclick="ModuleDetail.editPage('<?= $pg['id'] ?>','<?= $module['id'] ?>','<?= esc($pg['name']) ?>','<?= esc($pg['url_path'] ?? '') ?>','<?= esc($pg['description'] ?? '') ?>')" title="Edit page"><i class="fas fa-pencil-alt"></i></button>
                                     <button class="sap-btn sap-btn-ghost sap-btn-xs sap-btn-danger-ghost" onclick="ModuleDetail.deletePage('<?= $pg['id'] ?>')" title="Delete page"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                             </td>
                         </tr>
+                        <?php if (!empty($pg['blueprint_page_specs'])): ?>
+                        <tr class="page-specs-row" id="specs-row-<?= $pg['id'] ?>" style="display:none">
+                            <td colspan="5">
+                                <div class="page-specs-panel">
+                                    <div class="page-specs-panel-header">
+                                        <span><i class="fas fa-list-ul me-1"></i>Page Specifications</span>
+                                        <span class="page-specs-panel-subtitle"><?= esc($pg['blueprint_design_page_title']) ?> &middot; <?= count($pg['blueprint_page_specs']) ?> fields</span>
+                                    </div>
+                                    <div class="sap-card-body" style="overflow-x:auto;padding:0">
+                                        <table class="sap-table sap-table-compact page-specs-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th style="min-width:160px">Field Name</th>
+                                                    <th style="min-width:100px">Datatype</th>
+                                                    <th style="min-width:120px">Control Type</th>
+                                                    <th style="min-width:140px">Validation</th>
+                                                    <th style="min-width:140px">Initial Data</th>
+                                                    <th style="min-width:160px">UX</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($pg['blueprint_page_specs'] as $spec): ?>
+                                                <tr>
+                                                    <td class="fw-medium"><?= esc($spec['field_name'] ?? '-') ?></td>
+                                                    <td><?= esc($spec['datatype'] ?? '-') ?></td>
+                                                    <td><?= esc($spec['control_type'] ?? '-') ?></td>
+                                                    <td><?= esc($spec['validation'] ?? '-') ?></td>
+                                                    <td><?= esc($spec['initial_data'] ?? '-') ?></td>
+                                                    <td><?= esc($spec['ux'] ?? '-') ?></td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -222,6 +278,34 @@
                     <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-check"></i> Save</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Design Page Modal -->
+<div class="modal fade sap-modal" id="designPageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-link me-2"></i>Assign Blueprint Design Page</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <input type="hidden" id="assignDesignPageTargetId">
+                <div id="designPagesLoading" class="text-center p-4">
+                    <i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--sap-brand)"></i>
+                    <p class="mt-2 mb-0 text-secondary" style="font-size:13px">Loading design pages...</p>
+                </div>
+                <div id="designPagesEmpty" class="text-center p-4" style="display:none">
+                    <i class="fas fa-inbox" style="font-size:36px;color:var(--sap-text-muted)"></i>
+                    <h5 class="mt-2">No design pages found</h5>
+                    <p class="mb-0 text-secondary" style="font-size:13px">Create design pages in a blueprint module first.</p>
+                </div>
+                <div id="designPagesList" style="max-height:60vh;overflow-y:auto"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
         </div>
     </div>
 </div>

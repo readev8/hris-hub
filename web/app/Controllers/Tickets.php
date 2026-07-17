@@ -284,18 +284,52 @@ class Tickets extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $data = $this->request->getPost();
 
-        if (empty(trim($data['resolution_note'] ?? ''))) {
-            return $this->response->setJSON(['status' => false, 'message' => 'Resolution note is required']);
+        $resolutionNote = $this->request->getPost('resolution_note');
+
+        if (empty(trim($resolutionNote ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Resolution summary wajib diisi']);
         }
 
+        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+        });
+
+        $savedFiles = [];
+        if (!empty($files)) {
+            $error = $this->validateUploadedFiles($files);
+            if ($error) {
+                return $this->response->setJSON(['status' => false, 'message' => $error]);
+            }
+            $savedFiles = $this->saveUploadedFiles($files);
+        }
+
+        $data = ['resolution_note' => $resolutionNote];
         $result = $this->api->post_data('tickets/' . $encryptedId . '/resolve', $data);
 
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Tickets resolve API failed for ' . $encryptedId . ': ' . json_encode($result));
+        if ($result && ($result['status'] ?? false)) {
+            if (!empty($savedFiles)) {
+                foreach ($savedFiles as $sf) {
+                    $attResult = $this->api->post_data('tickets/' . $encryptedId . '/attachments', $sf);
+                    if (!$attResult || !($attResult['status'] ?? false)) {
+                        $this->deleteUploadedFiles($savedFiles);
+                        log_message('error', 'Ticket resolve attachment save failed for ' . $encryptedId);
+                        return $this->response->setJSON([
+                            'status'  => false,
+                            'message' => 'Gagal menyimpan lampiran',
+                        ]);
+                    }
+                }
+            }
+
+            return $this->response->setJSON($result);
         }
 
+        if (!empty($savedFiles)) {
+            $this->deleteUploadedFiles($savedFiles);
+        }
+
+        log_message('error', 'Tickets resolve API failed for ' . $encryptedId . ': ' . json_encode($result));
         return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
     }
 

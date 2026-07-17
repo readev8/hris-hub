@@ -123,18 +123,27 @@ class MasterProjectList extends BaseApi
         $projectId = $this->resolveId($encryptedProjectId);
         if (!$projectId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $tickets = $this->db()->table('tickets')
+        $params = $this->req->getGet();
+        $moduleId = !empty($params['moduleId']) ? $this->resolveId($params['moduleId']) : null;
+
+        $builder = $this->db()->table('tickets')
             ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name, pages.name as page_name')
             ->join('pages', 'pages.id = tickets.page_id', 'left')
             ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
             ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
             ->join('modules', 'modules.id = pages.module_id', 'left')
-            ->where('modules.master_project_id', $projectId)
             ->where('tickets.status !=', Enums::TICKET_STATUS_REJECTED)
             ->where('tickets.active', 0)
             ->where('pages.active', 0)
-            ->where('modules.active', 0)
-            ->orderBy('tickets.priority', 'DESC')
+            ->where('modules.active', 0);
+
+        if ($moduleId) {
+            $builder->where('modules.id', $moduleId);
+        } else {
+            $builder->where('modules.master_project_id', $projectId);
+        }
+
+        $tickets = $builder->orderBy('tickets.priority', 'DESC')
             ->orderBy('tickets.created_at', 'ASC')
             ->get()
             ->getResultArray();
@@ -239,6 +248,68 @@ class MasterProjectList extends BaseApi
                 'name'            => $m['name'],
                 'scenario_count'  => $scenarioCount,
                 'design_page_count' => $designPageCount,
+            ];
+        }
+
+        return $this->JSONResponse('OK', array_values($grouped), 200);
+    }
+
+    public function get_available_design_pages(): ResponseInterface
+    {
+        $params = $this->req->getGet();
+        $encryptedModuleId = $params['module_id'] ?? null;
+        $moduleBlueprintModuleId = null;
+
+        if ($encryptedModuleId) {
+            $moduleId = $this->resolveId($encryptedModuleId);
+            if ($moduleId) {
+                $module = $this->db()->table('modules')
+                    ->select('blueprint_module_id')
+                    ->where('id', $moduleId)
+                    ->where('active', 0)
+                    ->get()
+                    ->getRowArray();
+                $moduleBlueprintModuleId = $module['blueprint_module_id'] ?? null;
+            }
+        }
+
+        $builder = $this->db()->table('blueprint_design_pages as bdp')
+            ->select('bdp.*, bm.name as blueprint_module_name, b.name as blueprint_name')
+            ->join('blueprint_modules as bm', 'bm.id = bdp.module_id AND bm.active = 0', 'left')
+            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
+            ->where('bdp.active', 0);
+
+        if ($moduleBlueprintModuleId) {
+            $builder->where('bdp.module_id', $moduleBlueprintModuleId);
+        }
+
+        $designPages = $builder->orderBy('b.name', 'ASC')
+            ->orderBy('bm.sort_order', 'ASC')
+            ->orderBy('bdp.sort_order', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $grouped = [];
+        foreach ($designPages as $dp) {
+            $bmId = $dp['module_id'];
+            if (!isset($grouped[$bmId])) {
+                $grouped[$bmId] = [
+                    'blueprint_module_id'  => $this->api->encryptId($bmId),
+                    'blueprint_module_name' => $dp['blueprint_module_name'] ?? 'Untitled Module',
+                    'blueprint_name'       => $dp['blueprint_name'] ?? 'Untitled Blueprint',
+                    'design_pages'         => [],
+                ];
+            }
+            $specCount = $this->db()->table('blueprint_page_specifications')
+                ->where('design_page_id', $dp['id'])
+                ->where('active', 0)
+                ->countAllResults();
+
+            $grouped[$bmId]['design_pages'][] = [
+                'id'          => $this->api->encryptId($dp['id']),
+                'title'       => $dp['title'],
+                'description' => $dp['description'],
+                'spec_count'  => $specCount,
             ];
         }
 
