@@ -12,6 +12,27 @@
     <?php endif; ?>
 </div>
 
+<div class="tickets-filter-bar mb-3">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <label class="sap-label mb-0" for="statusFilter" style="font-size:13px">Status</label>
+        <select id="statusFilter" class="sap-select" style="width:auto;min-width:140px">
+            <option value="">All Statuses</option>
+            <option value="0">Open</option>
+            <option value="1">Approved</option>
+            <option value="2">In Progress</option>
+            <option value="3">Resolved</option>
+            <option value="4">Closed</option>
+            <option value="5">Rejected</option>
+        </select>
+        <label class="d-flex align-items-center gap-1 mb-0" style="font-size:13px;cursor:pointer">
+            <input type="checkbox" id="overdueFilter"> Overdue only
+        </label>
+        <button class="sap-btn sap-btn-secondary sap-btn-sm" id="clearFiltersBtn" title="Clear filters">
+            <i class="fas fa-times"></i> Clear
+        </button>
+    </div>
+</div>
+
 <div class="sap-card">
     <div class="sap-card-body p-0">
         <table id="tickets-table" class="sap-table mb-0" style="width:100%">

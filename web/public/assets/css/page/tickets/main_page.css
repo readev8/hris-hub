@@ -4,6 +4,10 @@
 
 @import url('../_shared/column-search.css');
 
+/* ── Filter Bar ─────────────────────────────────────────────── */
+.tickets-filter-bar { padding: 0; }
+.tickets-filter-bar .sap-select { padding: 6px 10px; font-size: 13px; }
+
 #tickets-table tbody tr { cursor: pointer; transition: background var(--sap-transition); }
 #tickets-table tbody tr:hover { background: var(--sap-brand-hover); }
 #tickets-table tbody tr.row-status-open td:nth-child(3) .sap-badge { background: var(--sap-open-bg); color: var(--sap-open); }

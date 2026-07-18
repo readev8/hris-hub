@@ -16,6 +16,7 @@ $routes->get('/track/(:any)', 'Tracking::lookup/$1');
 
 $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/dashboard', 'Dashboard::index');
+    $routes->get('/dashboard/ajax-stats', 'Dashboard::ajaxStats');
 
     $routes->post('/auth/refresh-permissions', 'Auth::refreshPermissions');
 

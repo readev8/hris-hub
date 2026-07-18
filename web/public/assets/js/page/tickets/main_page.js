@@ -70,6 +70,12 @@ $(function() {
         },
         ajax: {
             url: site_url + '/tickets/ajax-list',
+            data: function (d) {
+                var status = $('#statusFilter').val();
+                var overdue = $('#overdueFilter').is(':checked') ? 1 : '';
+                if (status !== null && status !== '') d.status = status;
+                if (overdue) d.overdue = overdue;
+            },
             dataSrc: 'data'
         },
         columns: [
@@ -181,4 +187,38 @@ $(function() {
             window.location.href = site_url + '/tickets/' + data.id;
         }
     });
+
+    // ── Status/Overdue filter initialization from URL params ────
+    var urlParams = new URLSearchParams(window.location.search);
+    var initialStatus  = urlParams.get('status');
+    var initialOverdue = urlParams.get('overdue');
+
+    if (initialStatus !== null && initialStatus !== '') {
+        $('#statusFilter').val(initialStatus);
+    }
+    if (initialOverdue === '1') {
+        $('#overdueFilter').prop('checked', true);
+    }
+
+    $('#statusFilter, #overdueFilter').on('change', function () {
+        table.ajax.reload();
+        updateFilterUrl();
+    });
+
+    $('#clearFiltersBtn').on('click', function () {
+        $('#statusFilter').val('');
+        $('#overdueFilter').prop('checked', false);
+        table.ajax.reload();
+        updateFilterUrl();
+    });
+
+    function updateFilterUrl() {
+        var params = new URLSearchParams();
+        var s = $('#statusFilter').val();
+        var o = $('#overdueFilter').is(':checked') ? 1 : '';
+        if (s !== null && s !== '') params.set('status', s);
+        if (o) params.set('overdue', o);
+        var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        window.history.replaceState({}, '', newUrl);
+    }
 });

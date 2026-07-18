@@ -17,6 +17,7 @@ class TicketList extends BaseApi
         $status = $params['status'] ?? '';
         $type = $params['type'] ?? '';
         $priority = $params['priority'] ?? '';
+        $overdue = $params['overdue'] ?? '';
         $sort = $params['sort'] ?? 'tickets.id';
         $order = strtoupper($params['order'] ?? 'DESC');
 
@@ -43,6 +44,15 @@ class TicketList extends BaseApi
         }
         if ($priority !== '') {
             $builder->where('tickets.priority', (int) $priority);
+        }
+        if ($overdue === '1') {
+            $builder->where('tickets.due_date IS NOT NULL', null, false)
+                   ->where('tickets.due_date <', date('Y-m-d'))
+                   ->whereNotIn('tickets.status', [
+                       \App\Config\Enums::TICKET_STATUS_RESOLVED,
+                       \App\Config\Enums::TICKET_STATUS_CLOSED,
+                       \App\Config\Enums::TICKET_STATUS_REJECTED,
+                   ]);
         }
 
         $total = $builder->countAllResults(false);

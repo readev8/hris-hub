@@ -3,178 +3,244 @@
  * Dashboard Main Page
  * ============================================================================
  *
- * Description: Dashboard with metrics, charts (Chart.js), and activity log
- * Date: 2026-07-16
- * Standard: Mini (<400 lines)
+ * Description: Role-aware dashboard with KPI cards, charts, approval queue,
+ *              workload, project health, pipeline, and activity feed.
+ * Date: 2026-07-18
+ * Standard: Full (object-literal module pattern)
  */
 
-// ===========================
-// CONSTANTS
-// ===========================
+/* global $, site_url, toastr, Chart */
 
-var STATUS_COLORS = {
-    'Open': '#E76500',
-    'Approved': '#256F3A',
-    'In Progress': '#0070F2',
-    'Resolved': '#758CA4',
-    'Closed': '#556B82',
-    'Rejected': '#AA0808'
-};
+var Dashboard = (function () {
+    'use strict';
 
-var TYPE_COLORS = ['#0070F2', '#256F3A', '#E76500', '#8B5CF6'];
+    // ── Chart color tokens (read from CSS custom properties — Bug 4 fix) ──
+    var TOKENS = {};
+    function loadTokens() {
+        var root = getComputedStyle(document.documentElement);
+        TOKENS = {
+            brand:    root.getPropertyValue('--sap-brand').trim()    || '#0D9488',
+            brandDark:root.getPropertyValue('--sap-brand-dark').trim()|| '#0F766E',
+            success:  root.getPropertyValue('--sap-success').trim()  || '#059669',
+            warning:  root.getPropertyValue('--sap-warning').trim()  || '#D97706',
+            error:    root.getPropertyValue('--sap-error').trim()    || '#DC2626',
+            info:     root.getPropertyValue('--sap-info').trim()     || '#0D9488',
+            critical: root.getPropertyValue('--sap-critical').trim() || '#DC2626',
+            high:     root.getPropertyValue('--sap-high').trim()     || '#EA580C',
+            medium:   root.getPropertyValue('--sap-medium').trim()   || '#0D9488',
+            low:      root.getPropertyValue('--sap-low').trim()      || '#059669',
+            chart1:   root.getPropertyValue('--sap-chart-1').trim()  || '#0D9488',
+            chart2:   root.getPropertyValue('--sap-chart-2').trim()  || '#EA580C',
+            chart3:   root.getPropertyValue('--sap-chart-3').trim()  || '#059669',
+            chart4:   root.getPropertyValue('--sap-chart-4').trim()  || '#7C3AED',
+            chart5:   root.getPropertyValue('--sap-chart-5').trim()  || '#2563EB',
+            chart6:   root.getPropertyValue('--sap-chart-6').trim()  || '#DB2777',
+            textMuted:root.getPropertyValue('--sap-text-muted').trim()|| '#6B7280',
+            border:   root.getPropertyValue('--sap-border').trim()   || '#E5E7EB',
+        };
+    }
 
-// ===========================
-// UI
-// ===========================
+    var STATUS_COLORS = {
+        'Open':        function () { return TOKENS.warning; },
+        'Approved':    function () { return TOKENS.success; },
+        'In Progress': function () { return TOKENS.brand; },
+        'Resolved':    function () { return TOKENS.info; },
+        'Closed':      function () { return TOKENS.textMuted; },
+        'Rejected':    function () { return TOKENS.error; }
+    };
 
-var DashboardUI = {
-    renderStatusChart: function(statusData) {
-        if (!Object.keys(statusData).length) return;
+    var PRIORITY_COLORS = {
+        'Critical': function () { return TOKENS.critical; },
+        'High':     function () { return TOKENS.high; },
+        'Medium':   function () { return TOKENS.medium; },
+        'Low':      function () { return TOKENS.low; }
+    };
 
-        new Chart(document.getElementById('statusChart'), {
+    var TYPE_PALETTE = function () { return [TOKENS.chart1, TOKENS.chart2, TOKENS.chart3, TOKENS.chart4, TOKENS.chart5, TOKENS.chart6]; };
+
+    // ── State ──────────────────────────────────────────────────
+    var charts = {};
+    var autoRefresh = false;
+    var refreshTimer = null;
+
+    // ── Shared Chart.js defaults ───────────────────────────────
+    function chartDefaults() {
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = TOKENS.textMuted;
+    }
+
+    function destroyChart(name) {
+        if (charts[name]) { charts[name].destroy(); delete charts[name]; }
+    }
+
+    // ── Status Doughnut ────────────────────────────────────────
+    function renderStatusChart(data) {
+        var el = document.getElementById('statusChart');
+        if (!el || !Object.keys(data).length) return;
+        destroyChart('status');
+        var keys = Object.keys(data);
+        charts.status = new Chart(el, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(statusData),
+                labels: keys,
                 datasets: [{
-                    data: Object.values(statusData),
-                    backgroundColor: Object.keys(statusData).map(function(k) { return STATUS_COLORS[k] || '#758CA4'; }),
-                    borderWidth: 0,
-                    hoverOffset: 8
+                    data: Object.values(data),
+                    backgroundColor: keys.map(function (k) { return (STATUS_COLORS[k] || function () { return TOKENS.textMuted; })(); }),
+                    borderWidth: 0, hoverOffset: 8
                 }]
             },
             options: {
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, padding: 16, usePointStyle: true } }
+                    legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 11 } } },
+                    tooltip: { callbacks: { label: function (ctx) { return ctx.label + ': ' + ctx.raw; } } }
                 },
                 cutout: '68%',
-                animation: { animateRotate: true, duration: 800 }
+                animation: { animateRotate: true, duration: 800 },
+                onClick: function (_evt, els) {
+                    if (els.length) {
+                        var label = keys[els[0].index];
+                        window.location.href = site_url + '/tickets?status=' + encodeURIComponent(label);
+                    }
+                }
             }
         });
-    },
+    }
 
-    renderTypeChart: function(typeData) {
-        if (!Object.keys(typeData).length) return;
-
-        new Chart(document.getElementById('typeChart'), {
+    // ── Priority Doughnut ──────────────────────────────────────
+    function renderPriorityChart(data) {
+        var el = document.getElementById('priorityChart');
+        if (!el || !Object.keys(data).length) return;
+        destroyChart('priority');
+        var keys = Object.keys(data);
+        charts.priority = new Chart(el, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(typeData),
+                labels: keys,
                 datasets: [{
-                    data: Object.values(typeData),
-                    backgroundColor: TYPE_COLORS.slice(0, Object.keys(typeData).length),
-                    borderWidth: 0,
-                    hoverOffset: 8
+                    data: Object.values(data),
+                    backgroundColor: keys.map(function (k) { return (PRIORITY_COLORS[k] || function () { return TOKENS.textMuted; })(); }),
+                    borderWidth: 0, hoverOffset: 8
                 }]
             },
             options: {
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, padding: 16, usePointStyle: true } }
+                    legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 11 } } }
                 },
                 cutout: '68%',
-                animation: { animateRotate: true, duration: 800 }
+                animation: { animateRotate: true, duration: 800 },
+                onClick: function (_evt, els) {
+                    if (els.length) {
+                        var label = keys[els[0].index];
+                        window.location.href = site_url + '/tickets?priority=' + encodeURIComponent(label);
+                    }
+                }
             }
         });
-    },
+    }
 
-    renderTrendChart: function(trendData) {
-        if (!trendData.length || !document.getElementById('trendChart')) return;
-
-        new Chart(document.getElementById('trendChart'), {
+    // ── Daily Trend (dual line: created vs resolved) ────────────
+    function renderTrendChart(trendData) {
+        var el = document.getElementById('trendChart');
+        if (!el || !trendData.length) return;
+        destroyChart('trend');
+        charts.trend = new Chart(el, {
             type: 'line',
             data: {
-                labels: trendData.map(function(t) { return t.week; }),
-                datasets: [{
-                    label: 'Tickets Created',
-                    data: trendData.map(function(t) { return t.total; }),
-                    borderColor: '#0070F2',
-                    backgroundColor: 'rgba(0,112,242,0.08)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    borderWidth: 2
-                }]
+                labels: trendData.map(function (t) { return t.date; }),
+                datasets: [
+                    {
+                        label: 'Created',
+                        data: trendData.map(function (t) { return t.created; }),
+                        borderColor: TOKENS.brand,
+                        backgroundColor: 'rgba(13,148,136,0.08)',
+                        fill: true, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+                    },
+                    {
+                        label: 'Resolved',
+                        data: trendData.map(function (t) { return t.resolved; }),
+                        borderColor: TOKENS.success,
+                        backgroundColor: 'rgba(5,150,105,0.08)',
+                        fill: true, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+                    }
+                ]
             },
             options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } },
-                    x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 11 } } }
                 },
-                animation: { duration: 600 }
-            }
-        });
-    },
-
-    renderBugChart: function(bugsByProject) {
-        if (!bugsByProject.length || !document.getElementById('bugProjectChart')) return;
-
-        var bpLabels = bugsByProject.map(function(b) { return b.project_name; });
-        var bpData = bugsByProject.map(function(b) { return b.total; });
-
-        new Chart(document.getElementById('bugProjectChart'), {
-            type: 'bar',
-            data: {
-                labels: bpLabels,
-                datasets: [{
-                    label: 'Bugs',
-                    data: bpData,
-                    backgroundColor: bpData.map(function(v) {
-                        return v > 5 ? '#AA0808' : v > 2 ? '#E76500' : '#256F3A';
-                    }),
-                    borderRadius: 4,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } },
-                    x: { grid: { display: false }, ticks: { font: { family: 'Inter' } } }
+                    y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: TOKENS.border } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 },
                 animation: { duration: 600 }
             }
         });
     }
-};
 
-// ===========================
-// INITIALIZATION
-// ===========================
+    // ── Render all charts from a stats payload ─────────────────
+    function renderAllCharts(stats) {
+        renderStatusChart(stats.by_status || {});
+        renderPriorityChart(stats.by_priority || {});
+        renderTrendChart(stats.daily_trend || []);
+    }
 
-$(function() {
-    var data = window.PageData || {};
-    var statusData = data.statsByStatus || {};
-    var typeData = data.statsByType || {};
-    var trendData = data.statsWeeklyTrend || [];
-    var bugsByProject = data.statsBugsByProject || [];
+    // ── AJAX refresh (no full page reload) ─────────────────────
+    function ajaxRefresh(startDate, endDate) {
+        $.ajax({
+            url: site_url + '/dashboard/ajax-stats',
+            data: { start_date: startDate, end_date: endDate },
+            method: 'GET',
+            timeout: 15000
+        }).done(function (res) {
+            if (res && res.status) {
+                renderAllCharts(res.stats || {});
+                toastr.success('Dashboard refreshed');
+            } else {
+                toastr.error('Refresh failed');
+            }
+        }).fail(function () { toastr.error('Refresh failed'); });
+    }
 
-    var autoRefresh = false;
-    var refreshTimer = null;
+    // ── Filter button + auto-refresh handlers ──────────────────
+    function bindControls() {
+        $('#filterBtn').on('click', function () {
+            location.href = site_url + '/dashboard?start_date=' + $('#startDate').val() + '&end_date=' + $('#endDate').val();
+        });
 
-    DashboardUI.renderStatusChart(statusData);
-    DashboardUI.renderTypeChart(typeData);
-    DashboardUI.renderTrendChart(trendData);
-    DashboardUI.renderBugChart(bugsByProject);
+        $('#refreshToggle').on('click', function () {
+            autoRefresh = !autoRefresh;
+            var $btn = $(this);
+            if (autoRefresh) {
+                $('#refreshLabel').text('ON');
+                $btn.addClass('sap-btn-primary').removeClass('sap-btn-secondary');
+                toastr.info('Auto-refresh enabled (30s)');
+                refreshTimer = setInterval(function () {
+                    ajaxRefresh($('#startDate').val(), $('#endDate').val());
+                }, 30000);
+            } else {
+                $('#refreshLabel').text('Auto');
+                $btn.removeClass('sap-btn-primary').addClass('sap-btn-secondary');
+                if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+                toastr.info('Auto-refresh disabled');
+            }
+        });
+    }
 
-    $('#filterBtn').on('click', function() {
-        location.href = site_url + '/dashboard?start_date=' + $('#startDate').val() + '&end_date=' + $('#endDate').val();
+    // ── INIT ──────────────────────────────────────────────────
+    $(function () {
+        loadTokens();
+        chartDefaults();
+        var data = window.PageData || {};
+        renderAllCharts({
+            by_status:    data.byStatus,
+            by_priority:  data.byPriority,
+            daily_trend:  data.dailyTrend
+        });
+        bindControls();
     });
 
-    $('#refreshToggle').on('click', function() {
-        autoRefresh = !autoRefresh;
-        if (autoRefresh) {
-            $('#refreshLabel').text('ON');
-            $(this).addClass('sap-btn-primary').removeClass('sap-btn-secondary');
-            refreshTimer = setInterval(function() { location.reload(); }, 30000);
-            toastr.info('Auto-refresh enabled (30s)');
-        } else {
-            $('#refreshLabel').text('Auto');
-            $(this).removeClass('sap-btn-primary').addClass('sap-btn-secondary');
-            if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
-            toastr.info('Auto-refresh disabled');
-        }
-    });
-});
+    return { refresh: ajaxRefresh };
+})();

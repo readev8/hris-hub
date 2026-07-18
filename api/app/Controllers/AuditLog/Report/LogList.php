@@ -9,12 +9,23 @@ class LogList extends BaseApi
 {
     public function get_recent_logs(): ResponseInterface
     {
-        $limit = min(100, max(1, (int) ($this->req->getGet('limit') ?? 50)));
+        $params    = $this->req->getGet();
+        $limit     = min(100, max(1, (int) ($params['limit'] ?? 50)));
+        $dateStart = $params['start_date'] ?? null;
+        $dateEnd   = $params['end_date'] ?? null;
 
-        $logs = $this->db()->table('audit_logs')
+        $builder = $this->db()->table('audit_logs')
             ->select('audit_logs.*, users.full_name as user_name')
-            ->join('users', 'users.id = audit_logs.user_id', 'left')
-            ->orderBy('audit_logs.created_at', 'DESC')
+            ->join('users', 'users.id = audit_logs.user_id', 'left');
+
+        if ($dateStart) {
+            $builder->where('audit_logs.created_at >=', $dateStart . ' 00:00:00');
+        }
+        if ($dateEnd) {
+            $builder->where('audit_logs.created_at <=', $dateEnd . ' 23:59:59');
+        }
+
+        $logs = $builder->orderBy('audit_logs.created_at', 'DESC')
             ->limit($limit)
             ->get()
             ->getResultArray();

@@ -1,41 +1,158 @@
 /**
  * Dashboard Main Page Styles
- * Metric cards, Chart.js containers, activity log
+ * Role-aware KPI grid, charts, approval queue, workload bars, health badges.
  */
 
-.dashboard-metrics {
+/* ── KPI Grid ───────────────────────────────────────────────── */
+.kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
-    margin-bottom: 24px;
 }
 
-.dashboard-chart-container {
-    background: var(--sap-card-bg, #fff);
-    border: 1px solid var(--sap-border, #e5e7eb);
-    border-radius: var(--sap-radius-lg, 12px);
-    padding: 20px;
-    min-height: 280px;
+.metric-clickable {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.metric-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sap-shadow-lg, 0 10px 24px rgba(0,0,0,.08));
 }
 
-.dashboard-chart-container h6 {
-    margin: 0 0 16px 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--sap-text-secondary, #6b7280);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+.metric-pulse {
+    animation: metricPulse 2s ease-in-out infinite;
+}
+@keyframes metricPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.3); }
+    50%      { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .metric-pulse { animation: none; }
 }
 
-.dashboard-charts-grid {
+/* ── Chart Grid ─────────────────────────────────────────────── */
+.chart-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-    margin-bottom: 24px;
+}
+.chart-grid .sap-card-body { min-height: 240px; position: relative; }
+@media (max-width: 768px) {
+    .chart-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Approval Queue ─────────────────────────────────────────── */
+.approval-queue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 16px;
+}
+.approval-queue-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--sap-border);
+}
+.approval-queue-title i { color: var(--sap-brand); margin-right: 6px; }
+
+.approval-queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: var(--sap-radius);
+    margin-bottom: 4px;
+    transition: background .15s;
+}
+.approval-queue-item:hover { background: var(--sap-bg-secondary, #F8FAFC); }
+.aq-item-main { flex: 1; min-width: 0; }
+.aq-item-title {
+    display: block;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--sap-text);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.aq-item-title:hover { color: var(--sap-brand); }
+.aq-item-meta { font-size: 11px; color: var(--sap-text-muted); }
+.aq-item-age { flex-shrink: 0; margin-left: 8px; }
+
+@media (max-width: 640px) {
+    .approval-queue-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Workload Bars ──────────────────────────────────────────── */
+.workload-row {
+    display: grid;
+    grid-template-columns: 160px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--sap-border);
+}
+.workload-row:last-child { border-bottom: none; }
+.workload-name { font-weight: 500; font-size: 13px; }
+.workload-bar-wrap {
+    background: var(--sap-bg-secondary, #F1F5F9);
+    border-radius: var(--sap-radius-sm, 6px);
+    height: 10px;
+    overflow: hidden;
+}
+.workload-bar {
+    height: 100%;
+    background: var(--sap-info);
+    border-radius: var(--sap-radius-sm, 6px);
+    position: relative;
+    transition: width .4s ease;
+}
+.workload-bar-open {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: var(--sap-warning);
+    border-radius: var(--sap-radius-sm, 6px);
+}
+.workload-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+.workload-count strong { color: var(--sap-text); }
+
+/* ── Health Badges ──────────────────────────────────────────── */
+.health-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--sap-radius-pill, 100px);
+    font-size: 12px;
+    font-weight: 600;
+}
+.health-good { background: var(--sap-success-bg, #D1FAE5); color: var(--sap-success, #059669); }
+.health-warn { background: var(--sap-warning-bg, #FEF3C7); color: var(--sap-warning, #D97706); }
+.health-bad  { background: var(--sap-error-bg, #FEE2E2); color: var(--sap-error, #DC2626); }
+
+/* ── Pipeline Stats ─────────────────────────────────────────── */
+.pipeline-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ── Small badge variant ────────────────────────────────────── */
+.sap-badge-sm { font-size: 11px; padding: 2px 8px; }
+
+/* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .dashboard-charts-grid {
-        grid-template-columns: 1fr;
-    }
+    .workload-row { grid-template-columns: 1fr; gap: 4px; }
+    .workload-count { flex-wrap: wrap; }
 }
