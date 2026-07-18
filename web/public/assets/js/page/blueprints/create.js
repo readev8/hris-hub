@@ -19,18 +19,27 @@ var improvementTable = null;
 // UI
 // ===========================
 
+function openImprovementModal() {
+    var modal = new bootstrap.Modal(document.getElementById('improvementSearchModal'));
+    modal.show();
+}
+
 function selectImprovement(data) {
     selectedImprovement = data;
     $('#selectedImprovementName').text(data.name);
-    $('#selectedImprovementDesc').text(data.description || '');
-    $('#selectedImprovementCard').show();
-    bootstrap.Modal.getInstance(document.getElementById('improvementModal')).hide();
+    $('#selectedImprovementMeta').text(data.priority_name + ' | ' + (data.creator_name || '') + ' | ' + (data.created_at || ''));
+    $('#improvementSelectedCard').show();
+    $('#improvementHint').hide();
+    $('#improvementDisplay').val(data.name);
+    bootstrap.Modal.getInstance(document.getElementById('improvementSearchModal')).hide();
 }
 
 function clearImprovement() {
     selectedImprovement = null;
-    $('#selectedImprovementCard').hide();
-    $('#improvement_id').val('');
+    $('#improvementSelectedCard').hide();
+    $('#improvementHint').show();
+    $('#improvementDisplay').val('');
+    $('#improvementId').val('');
 }
 
 function clearFieldErrors() {
@@ -43,7 +52,7 @@ function clearFieldErrors() {
 // ===========================
 
 $(function() {
-    $('#improvementModal').on('shown.bs.modal', function() {
+    $('#improvementSearchModal').on('shown.bs.modal', function() {
         if (improvementTable) return;
 
         improvementTable = $('#improvementSearchTable').DataTable({
@@ -55,11 +64,14 @@ $(function() {
             columns: [
                 { data: 'name' },
                 { data: 'status_name', render: function(d) { return sapBadge(d); } },
+                { data: 'priority_name', render: function(d) { return sapBadge(d); } },
+                { data: 'creator_name' },
+                { data: 'created_at' },
                 {
                     data: 'id',
                     orderable: false,
                     render: function(d, t, row) {
-                        return '<button type="button" class="sap-btn sap-btn-primary sap-btn-sm" onclick=\'selectImprovement(' + JSON.stringify({id: row.id, name: row.name, description: row.description}) + ')\'>Select</button>';
+                        return '<button type="button" class="sap-btn sap-btn-primary sap-btn-sm" onclick=\'selectImprovement(' + JSON.stringify({id: row.id, name: row.name, priority_name: row.priority_name, creator_name: row.creator_name, created_at: row.created_at}) + ')\'>Select</button>';
                     }
                 }
             ],

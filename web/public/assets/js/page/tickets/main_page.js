@@ -58,6 +58,19 @@ $(function() {
         if (e.key === 'Escape') closeTrackingModal();
     });
 
+    // ── Status/Overdue filter initialization from URL params ────
+    // NOTE: must run BEFORE DataTable init so the first AJAX fetch is filtered.
+    var urlParams = new URLSearchParams(window.location.search);
+    var initialStatus  = urlParams.get('status');
+    var initialOverdue = urlParams.get('overdue');
+
+    if (initialStatus !== null && initialStatus !== '') {
+        $('#statusFilter').val(initialStatus);
+    }
+    if (initialOverdue === '1') {
+        $('#overdueFilter').prop('checked', true);
+    }
+
     var table = $('#tickets-table').DataTable({
         destroy: true,
         processing: true,
@@ -188,18 +201,7 @@ $(function() {
         }
     });
 
-    // ── Status/Overdue filter initialization from URL params ────
-    var urlParams = new URLSearchParams(window.location.search);
-    var initialStatus  = urlParams.get('status');
-    var initialOverdue = urlParams.get('overdue');
-
-    if (initialStatus !== null && initialStatus !== '') {
-        $('#statusFilter').val(initialStatus);
-    }
-    if (initialOverdue === '1') {
-        $('#overdueFilter').prop('checked', true);
-    }
-
+    // ── Status/Overdue filter event handlers ───────────────────
     $('#statusFilter, #overdueFilter').on('change', function () {
         table.ajax.reload();
         updateFilterUrl();

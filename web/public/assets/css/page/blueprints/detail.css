@@ -13,6 +13,16 @@
     color: var(--sap-text);
 }
 
+/* Blueprint description */
+.blueprint-description {
+    font-size: 14px;
+    color: var(--sap-text-secondary, #6b7280);
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0;
+    padding: 0;
+}
+
 /* Module tabs */
 .nav-tabs .nav-link {
     font-size: 13px;

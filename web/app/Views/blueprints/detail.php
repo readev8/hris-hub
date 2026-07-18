@@ -18,9 +18,12 @@
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
             <h1 style="font-size:22px" class="mb-1"><?= esc($blueprint['name']) ?></h1>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 mb-2">
                 <span id="blueprintStatusBadge"><?= status_badge($blueprint['status_name'] ?? '') ?></span>
             </div>
+            <?php if (!empty($blueprint['description'])): ?>
+            <p class="blueprint-description"><?= nl2br(esc($blueprint['description'])) ?></p>
+            <?php endif; ?>
         </div>
         <a href="<?= site_url('blueprints') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
     </div>
@@ -133,7 +136,7 @@
                 </div>
             </div>
 
-            <div class="sap-card mb-3">
+            <div class="sap-card mb-3" style="display:none">
                 <div class="sap-card-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-paperclip"></i> Attachments</span>
                     <?php if (has_permission('blueprints', 'can_update')): ?>
@@ -274,7 +277,7 @@
                 </div>
             </div>
 
-            <div class="sap-card mb-3">
+            <div class="sap-card mb-3" style="display:none">
                 <div class="sap-card-header">
                     <i class="fas fa-comment-dots"></i> Comments
                     <span id="commentCountBadge" class="sap-badge closed" style="font-size:11px;margin-left:4px"><?= count($blueprint['comments'] ?? []) ?></span>
