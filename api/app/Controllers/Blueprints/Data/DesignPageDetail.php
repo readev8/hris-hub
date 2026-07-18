@@ -37,8 +37,31 @@ class DesignPageDetail extends BaseApi
             ->orderBy('id', 'ASC')
             ->get()
             ->getResultArray();
+
+        $specIds = [];
+        foreach ($specs as $s) { $specIds[] = $s['id']; }
+
+        $uxAttachments = [];
+        if (!empty($specIds)) {
+            $atts = $this->db()->table('blueprint_attachments')
+                ->whereIn('section_id', $specIds)
+                ->where('section_type', 'page_specification')
+                ->where('active', 0)
+                ->orderBy('id', 'DESC')
+                ->get()
+                ->getResultArray();
+            foreach ($atts as $a) {
+                $sid = $a['section_id'];
+                if (!isset($uxAttachments[$sid])) {
+                    $a['id'] = $this->api->encryptId($a['id']);
+                    $uxAttachments[$sid] = $a;
+                }
+            }
+        }
+
         foreach ($specs as &$s) {
             $s['id_encrypted'] = $this->api->encryptId($s['id']);
+            $s['ux_attachment'] = $uxAttachments[$s['id']] ?? null;
         }
         $designPage['page_specifications'] = $specs;
 

@@ -3,97 +3,291 @@
  * Blueprints Page Specifications
  * ============================================================================
  *
- * Description: Inline specification field editing for design pages
- * Date: 2026-07-16
+ * Description: Modal-based specification CRUD with UX image upload
+ * Date: 2026-07-18
  * Standard: Mini (<400 lines)
  */
 
-// ===========================
-// PUBLIC API (called from onclick in view)
-// ===========================
+/* global $, site_url, toastr, Swal */
 
-function updateSpecField(el) {
-    var row = $(el).closest('tr');
-    var specId = row.data('spec-id');
-    var field = $(el).data('field');
-    var value = $(el).val();
-    var data = {};
-    data[field] = value;
-    $.ajax({
-        url: site_url + '/blueprints/page-specifications/' + specId + '/update',
-        type: 'POST',
-        data: data,
-        success: function(res) {
-            if (res.status) {
-                toastr.success('Updated');
-            } else {
-                toastr.error(res.message || 'Failed to update');
-            }
-        },
-        error: function() { toastr.error('Update failed'); }
-    });
-}
+var PageSpecs = (function () {
+    'use strict';
 
-function deleteSpec(el) {
-    var row = $(el).closest('tr');
-    var specId = row.data('spec-id');
-    Swal.fire({
-        title: 'Delete Specification?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Delete',
-        confirmButtonColor: '#AA0808',
-        cancelButtonColor: '#758CA4',
-    }).then(function(result) {
-        if (result.isConfirmed) {
-            $.post(site_url + '/blueprints/page-specifications/' + specId + '/delete', {}, function(res) {
-                if (res.status) {
-                    toastr.success('Specification deleted');
-                    row.fadeOut(300, function() { $(this).remove(); updateSpecCount(); });
-                } else {
-                    toastr.error(res.message || 'Failed');
-                }
-            });
-        }
-    });
-}
-
-function updateSpecCount() {
-    var count = $('#specsContainer tbody tr').length;
-    $('#specCountBadge').text(count + ' field' + (count !== 1 ? 's' : ''));
-    if (count === 0) {
-        $('#specsContainer').html('<div class="sap-empty" style="padding:40px"><i class="fas fa-list-alt" style="font-size:36px"></i><h4>No specifications</h4><p>Add page specifications for this design page.</p></div>');
-    }
-}
-
-function showAddSpec() {
-    $('#specForm')[0].reset();
-    $('#specModal').modal('show');
-}
-
-// ===========================
-// INITIALIZATION
-// ===========================
-
-$(function() {
     var data = window.PageData || {};
+    var pageData = data.designPage || {};
+    var baseUrl = site_url + '/uploads/blueprints/';
 
-    $('#specForm').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: site_url + '/blueprints/design-pages/' + data.token + '/page-specifications',
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function(res) {
-                if (res.status) {
-                    toastr.success('Specification added');
-                    $('#specModal').modal('hide');
-                    location.reload();
-                } else {
-                    toastr.error(res.message || 'Failed');
-                }
-            },
-            error: function() { toastr.error('Request failed'); }
+    // UX image upload state
+    var uxFile       = null;
+    var uxRemoveFlag = false;
+    var isEditMode   = false;
+
+    // ===========================
+    // PUBLIC API
+    // ===========================
+
+    function showAddSpec() {
+        isEditMode = false;
+        uxFile = null;
+        uxRemoveFlag = false;
+        $('#specForm')[0].reset();
+        $('#specFormId').val('');
+        $('#specFormExistingAttId').val('');
+        $('#specModalTitle').html('<i class="fas fa-list-alt me-2"></i>Add Page Specification');
+        $('#specSubmitText').text('Save');
+        renderUxPreview();
+        $('#specModal').modal('show');
+    }
+
+    function editSpec(el) {
+        isEditMode = true;
+        uxFile = null;
+        uxRemoveFlag = false;
+        var row = $(el).closest('tr');
+        var specId = row.data('spec-id');
+        var spec = findSpec(specId);
+        if (!spec) { toastr.error('Specification not found'); return; }
+
+        $('#specFormId').val(specId);
+        $('#specFormExistingAttId').val(spec.ux_attachment ? spec.ux_attachment.id : '');
+        $('#specFieldNameInput').val(spec.field_name || '');
+        $('#specDataInput').val(spec.data || '');
+        $('#specObjectiveInput').val(spec.objective || '');
+        $('#specInitialDataInput').val(spec.initial_data || '');
+        $('#specConditionInput').val(spec.condition || '');
+        $('#specValidationInput').val(spec.validation || '');
+        $('#specInputDisplayInput').val(spec.input_display || 'Input');
+        $('#specDatatypeInput').val(spec.datatype || 'text');
+        $('#specControlTypeInput').val(spec.control_type || 'text');
+
+        $('#specModalTitle').html('<i class="fas fa-pencil-alt me-2"></i>Edit Specification');
+        $('#specSubmitText').text('Update');
+        renderUxPreview();
+        $('#specModal').modal('show');
+    }
+
+    function deleteSpec(el) {
+        var row = $(el).closest('tr');
+        var specId = row.data('spec-id');
+        Swal.fire({
+            title: 'Delete Specification?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            confirmButtonColor: '#AA0808',
+            cancelButtonColor: '#758CA4',
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                $.post(site_url + '/blueprints/page-specifications/' + specId + '/delete', {}, function (res) {
+                    if (res.status) {
+                        toastr.success('Specification deleted');
+                        row.fadeOut(300, function () { $(this).remove(); updateSpecCount(); });
+                    } else {
+                        toastr.error(res.message || 'Failed');
+                    }
+                }).fail(function () { toastr.error('Request failed'); });
+            }
         });
+    }
+
+    function enlargeUx(img) {
+        var src = $(img).data('full') || $(img).attr('src');
+        $('#uxEnlargedImg').attr('src', src);
+        $('#uxEnlargedModal').modal('show');
+    }
+
+    // ===========================
+    // PRIVATE
+    // ===========================
+
+    function findSpec(encryptedId) {
+        var specs = pageData.page_specifications || [];
+        for (var i = 0; i < specs.length; i++) {
+            if ((specs[i].id_encrypted || specs[i].id) === encryptedId) {
+                return specs[i];
+            }
+        }
+        return null;
+    }
+
+    function updateSpecCount() {
+        var count = $('#specsContainer tbody tr').length;
+        $('#specCountBadge').text(count + ' field' + (count !== 1 ? 's' : ''));
+        if (count === 0) {
+            $('#specsContainer').html('<div class="sap-empty" style="padding:40px"><i class="fas fa-list-alt" style="font-size:36px"></i><h4>No specifications</h4><p>Add page specifications for this design page.</p></div>');
+        }
+    }
+
+    // ── UX Image Upload ────────────────────────────────────────
+
+    function bindSpecUxDropzone() {
+        var $zone = $('#specUxDropzone');
+        var $file = $('#specUxFile');
+
+        $zone.on('click', function (e) {
+            if (e.target !== this && !$(e.target).is('p, i')) return;
+            $file.click();
+        }).on('dragover', function (e) {
+            e.preventDefault();
+            $zone.addClass('dragover');
+        }).on('dragleave', function () {
+            $zone.removeClass('dragover');
+        }).on('drop', function (e) {
+            e.preventDefault();
+            $zone.removeClass('dragover');
+            var files = e.originalEvent.dataTransfer.files;
+            if (files.length > 0) { setUxFile(files[0]); }
+        });
+
+        $file.on('change', function () {
+            if (this.files.length > 0) { setUxFile(this.files[0]); }
+            $(this).val('');
+        });
+    }
+
+    function setUxFile(file) {
+        if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+            toastr.error('Only JPG, PNG, WebP images are allowed');
+            return;
+        }
+        if (file.size > 500 * 1024) {
+            toastr.error('Image size must be under 500KB');
+            return;
+        }
+        uxFile = file;
+        uxRemoveFlag = false;
+        renderUxPreview();
+    }
+
+    function renderUxPreview() {
+        var $preview = $('#specUxPreview');
+        $preview.empty();
+
+        if (uxFile) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $preview.html(
+                    '<div class="spec-ux-preview">' +
+                    '<img src="' + e.target.result + '" alt="Preview">' +
+                    '<button type="button" class="btn-remove" onclick="PageSpecs.removeUxFile()"><i class="fas fa-times"></i></button>' +
+                    '</div>'
+                );
+            };
+            reader.readAsDataURL(uxFile);
+        } else if (isEditMode && !uxRemoveFlag) {
+            var specId = $('#specFormId').val();
+            var spec = findSpec(specId);
+            if (spec && spec.ux_attachment) {
+                var url = baseUrl + spec.ux_attachment.stored_name;
+                $preview.html(
+                    '<div class="spec-ux-preview">' +
+                    '<img src="' + url + '" alt="Current UX">' +
+                    '<button type="button" class="btn-remove" onclick="PageSpecs.removeUxFile()"><i class="fas fa-times"></i></button>' +
+                    '</div>'
+                );
+            }
+        }
+    }
+
+    function removeUxFile() {
+        uxFile = null;
+        uxRemoveFlag = true;
+        $('#specFormExistingAttId').val('');
+        renderUxPreview();
+    }
+
+    // ── Form Submit ────────────────────────────────────────────
+
+    function serializeFormToFD(form) {
+        var fd = new FormData();
+        fd.append('blueprint_token', $(form).find('[name="blueprint_token"]').val());
+
+        var fields = ['field_name', 'data', 'objective', 'initial_data', 'condition', 'validation', 'input_display', 'datatype', 'control_type'];
+        for (var i = 0; i < fields.length; i++) {
+            var val = $(form).find('[name="' + fields[i] + '"]').val();
+            if (val !== undefined && val !== null) fd.append(fields[i], val);
+        }
+
+        var specId = $(form).find('#specFormId').val();
+        if (specId) fd.append('spec_id', specId);
+
+        if (uxFile) {
+            fd.append('ux_image[]', uxFile);
+        }
+
+        if (isEditMode && uxRemoveFlag) {
+            fd.append('remove_ux', '1');
+            var existingAttId = $(form).find('#specFormExistingAttId').val();
+            if (existingAttId) fd.append('existing_ux_att_id', existingAttId);
+        }
+
+        return fd;
+    }
+
+    function initFormHandlers() {
+        $('#specForm').on('submit', function (e) {
+            e.preventDefault();
+            var specId = $('#specFormId').val();
+            var url = isEditMode
+                ? site_url + '/blueprints/page-specifications/' + specId + '/update'
+                : site_url + '/blueprints/design-pages/' + data.token + '/page-specifications';
+
+            var fd = serializeFormToFD(this);
+
+            var $btn = $(this).find('[type="submit"]');
+            $btn.prop('disabled', true);
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: fd,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.status) {
+                        toastr.success(isEditMode ? 'Specification updated' : 'Specification added');
+                        $('#specModal').modal('hide');
+                        location.reload();
+                    } else {
+                        toastr.error(res.message || 'Failed');
+                    }
+                },
+                error: function () { toastr.error('Request failed'); },
+                complete: function () { $btn.prop('disabled', false); }
+            });
+        });
+    }
+
+    // ── Bootstrap modal cleanup ────────────────────────────────
+
+    function initModalDismiss() {
+        $('#specModal, #uxEnlargedModal').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('padding-right', '');
+        });
+    }
+
+    // ── INIT ──────────────────────────────────────────────────
+
+    $(function () {
+        bindSpecUxDropzone();
+        initFormHandlers();
+        initModalDismiss();
     });
-});
+
+    // ===========================
+    // EXPORTS
+    // ===========================
+    return {
+        showAddSpec:  showAddSpec,
+        editSpec:     editSpec,
+        deleteSpec:   deleteSpec,
+        enlargeUx:    enlargeUx,
+        removeUxFile: removeUxFile
+    };
+})();
+
+window.showAddSpec = PageSpecs.showAddSpec;
+window.editSpec    = PageSpecs.editSpec;
+window.deleteSpec  = PageSpecs.deleteSpec;
+window.enlargeUx   = PageSpecs.enlargeUx;

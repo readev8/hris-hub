@@ -31,6 +31,7 @@
 
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/_shared/column-search.css?v=' . config('App')->assetVersion) ?>">
+<style>.bug-stats{display:inline-flex;gap:4px;flex-wrap:wrap}.bug-stats .sap-badge{font-size:11px;padding:2px 6px}</style>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -63,11 +64,24 @@ $(function() {
                 }
             },
             {
-                data: 'bug_count',
+                data: null,
                 render: function(d) {
-                    var count = d || 0;
-                    var cls = count > 0 ? 'rejected' : 'closed';
-                    return '<span class="sap-badge ' + cls + '"><span class="badge-dot"></span>' + count + '</span>';
+                    var total  = d.bug_count  || 0;
+                    var open   = d.bug_open   || 0;
+                    var closed = d.bug_closed || 0;
+                    if (total === 0) {
+                        return '<span class="sap-badge closed"><span class="badge-dot"></span>0</span>';
+                    }
+                    var html = '<div class="bug-stats">';
+                    html += '<span class="sap-badge closed"><span class="badge-dot"></span>' + total + ' Total</span>';
+                    if (open > 0) {
+                        html += '<span class="sap-badge rejected"><span class="badge-dot"></span>' + open + ' Open</span>';
+                    }
+                    if (closed > 0) {
+                        html += '<span class="sap-badge approved"><span class="badge-dot"></span>' + closed + ' Closed</span>';
+                    }
+                    html += '</div>';
+                    return html;
                 }
             },
             {

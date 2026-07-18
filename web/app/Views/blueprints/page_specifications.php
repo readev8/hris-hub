@@ -72,37 +72,28 @@
                         <tbody>
                             <?php foreach ($designPage['page_specifications'] as $sp): ?>
                             <tr data-spec-id="<?= esc($sp['id_encrypted'] ?? $sp['id'], 'attr') ?>">
-                                <td><input type="text" value="<?= esc($sp['field_name'] ?? '', 'attr') ?>" data-field="field_name" onchange="updateSpecField(this)"></td>
-                                <td><input type="text" value="<?= esc($sp['data'] ?? '', 'attr') ?>" data-field="data" onchange="updateSpecField(this)"></td>
-                                <td><input type="text" value="<?= esc($sp['objective'] ?? '', 'attr') ?>" data-field="objective" onchange="updateSpecField(this)"></td>
-                                <td><input type="text" value="<?= esc($sp['initial_data'] ?? '', 'attr') ?>" data-field="initial_data" onchange="updateSpecField(this)"></td>
-                                <td><input type="text" value="<?= esc($sp['condition'] ?? '', 'attr') ?>" data-field="condition" onchange="updateSpecField(this)"></td>
-                                <td><input type="text" value="<?= esc($sp['validation'] ?? '', 'attr') ?>" data-field="validation" onchange="updateSpecField(this)"></td>
+                                <td><span class="spec-value"><?= esc($sp['field_name'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['data'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['objective'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['initial_data'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['condition'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['validation'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['input_display'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['datatype'] ?? '') ?></span></td>
+                                <td><span class="spec-value"><?= esc($sp['control_type'] ?? '') ?></span></td>
                                 <td>
-                                    <select data-field="input_display" onchange="updateSpecField(this)">
-                                        <option value="Input"<?= ($sp['input_display'] ?? '') === 'Input' ? ' selected' : '' ?>>Input</option>
-                                        <option value="Display"<?= ($sp['input_display'] ?? '') === 'Display' ? ' selected' : '' ?>>Display</option>
-                                        <option value="Both"<?= ($sp['input_display'] ?? '') === 'Both' ? ' selected' : '' ?>>Both</option>
-                                    </select>
+                                    <?php if (!empty($sp['ux_attachment'])): ?>
+                                    <img src="<?= site_url('uploads/blueprints/' . esc($sp['ux_attachment']['stored_name'] ?? '', 'attr')) ?>"
+                                         class="spec-ux-thumb" data-full="<?= site_url('uploads/blueprints/' . esc($sp['ux_attachment']['stored_name'] ?? '', 'attr')) ?>"
+                                         alt="UX" onclick="enlargeUx(this)">
+                                    <?php else: ?>
+                                    <span class="spec-ux-placeholder"><i class="fas fa-image"></i></span>
+                                    <?php endif; ?>
                                 </td>
-                                <td>
-                                    <select data-field="datatype" onchange="updateSpecField(this)">
-                                        <?php foreach (['text'=>'Text','number'=>'Number','date'=>'Date','datetime'=>'DateTime','time'=>'Time','image'=>'Image','pdf'=>'PDF','excel'=>'Excel'] as $val => $lbl): ?>
-                                        <option value="<?= $val ?>"<?= ($sp['datatype'] ?? '') === $val ? ' selected' : '' ?>><?= $lbl ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select data-field="control_type" onchange="updateSpecField(this)">
-                                        <?php foreach (['text'=>'Text','password'=>'Password','date'=>'Date','datetime'=>'DateTime','combobox'=>'Combobox','radiobutton'=>'Radio Button','checkbox'=>'Checkbox','multipleselect'=>'Multiple Select','uploadfile'=>'Upload File'] as $val => $lbl): ?>
-                                        <option value="<?= $val ?>"<?= ($sp['control_type'] ?? '') === $val ? ' selected' : '' ?>><?= $lbl ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                                <td><textarea data-field="ux" onchange="updateSpecField(this)" rows="1" style="min-height:30px"><?= esc($sp['ux'] ?? '') ?></textarea></td>
                                 <?php if (has_permission('blueprints', 'can_update')): ?>
                                 <td>
-                                    <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="deleteSpec(this)"><i class="fas fa-trash"></i></button>
+                                    <button class="sap-btn sap-btn-secondary sap-btn-sm me-1" onclick="editSpec(this)" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+                                    <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="deleteSpec(this)" title="Delete"><i class="fas fa-trash"></i></button>
                                 </td>
                                 <?php endif; ?>
                             </tr>
@@ -119,15 +110,18 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
-<!-- Add Specification Modal -->
+<?php if ($designPage): ?>
 <div class="modal fade sap-modal" id="specModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-list-alt me-2"></i>Add Page Specification</h5>
+                <h5 class="modal-title" id="specModalTitle"><i class="fas fa-list-alt me-2"></i>Add Page Specification</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="specForm">
+                <input type="hidden" name="blueprint_token" value="<?= esc($designPage['blueprint_id_encrypted'] ?? '', 'attr') ?>">
+                <input type="hidden" name="spec_id" id="specFormId">
+                <input type="hidden" name="existing_ux_att_id" id="specFormExistingAttId">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -190,19 +184,37 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label class="sap-label">UX</label>
-                            <textarea name="ux" class="sap-input" rows="2" id="specUxInput" placeholder="UX description or notes..." style="min-height:60px"></textarea>
+                            <label class="sap-label">UX Image <span class="text-secondary" style="font-weight:400;font-size:12px">(optional, max 500KB, JPG/PNG/WebP)</span></label>
+                            <div class="spec-ux-dropzone" id="specUxDropzone">
+                                <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--sap-text-muted);display:block;margin-bottom:4px"></i>
+                                <p class="mb-0 text-secondary" style="font-size:12px">Drop image here or click to browse</p>
+                                <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm mt-2" onclick="event.stopPropagation(); $('#specUxFile').click();">
+                                    <i class="fas fa-image"></i> Pilih Gambar
+                                </button>
+                                <input type="file" name="ux_image[]" accept="image/jpeg,image/png,image/webp" hidden id="specUxFile">
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-2" id="specUxPreview"></div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--sap-border)">
                     <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
+                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> <span id="specSubmitText">Save</span></button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<div class="modal fade sap-modal" id="uxEnlargedModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:transparent;border:none;box-shadow:none">
+            <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal" style="z-index:10;filter:invert(1)"></button>
+            <img src="" id="uxEnlargedImg" class="w-100" style="border-radius:8px;max-height:80vh;object-fit:contain">
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

@@ -2,13 +2,56 @@
  * Blueprints Page Specifications Styles
  */
 
+/* ── Read-only table ───────────────────────────────────────── */
 .spec-table { font-size: 12px; }
 .spec-table th { background: var(--sap-background); font-weight: 600; white-space: nowrap; }
 .spec-table td { vertical-align: middle; }
-.spec-table input, .spec-table select, .spec-table textarea {
-    width: 100%; padding: 4px 8px; border: 1px solid var(--sap-border);
-    border-radius: var(--sap-radius); font-size: 12px; background: var(--sap-bg); color: var(--sap-text);
+.spec-value { display: block; padding: 4px 0; min-height: 24px; color: var(--sap-text); word-break: break-word; }
+
+/* ── UX thumbnail in table ─────────────────────────────────── */
+.spec-ux-thumb {
+    width: 40px; height: 40px; object-fit: cover; border-radius: 6px;
+    border: 1px solid var(--sap-border); cursor: zoom-in;
+    transition: transform .15s ease, box-shadow .15s ease;
 }
-.spec-table input:focus, .spec-table select:focus, .spec-table textarea:focus {
-    outline: none; border-color: var(--sap-brand);
+.spec-ux-thumb:hover { transform: scale(1.8); box-shadow: 0 4px 16px rgba(0,0,0,.18); position: relative; z-index: 10; }
+.spec-ux-placeholder {
+    width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--sap-background); border: 1px dashed var(--sap-border); border-radius: 6px;
+    color: var(--sap-text-muted); font-size: 14px;
 }
+
+/* ── UX upload dropzone ────────────────────────────────────── */
+.spec-ux-dropzone {
+    border: 2px dashed var(--sap-border); border-radius: var(--sap-radius);
+    padding: 16px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.spec-ux-dropzone:hover,
+.spec-ux-dropzone.dragover {
+    border-color: var(--sap-brand); background: rgba(13,148,136,.04);
+}
+
+/* ── UX preview in modal ───────────────────────────────────── */
+.spec-ux-preview { position: relative; display: inline-block; }
+.spec-ux-preview img {
+    width: 120px; height: 120px; object-fit: cover; border-radius: 8px;
+    border: 1px solid var(--sap-border);
+}
+.spec-ux-preview .btn-remove {
+    position: absolute; top: -8px; right: -8px; width: 24px; height: 24px;
+    border-radius: 50%; border: none; background: var(--sap-error); color: #fff;
+    font-size: 12px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.2); transition: background .15s;
+}
+.spec-ux-preview .btn-remove:hover { background: #B91C1C; }
+
+/* ── Enlarged modal ────────────────────────────────────────── */
+#uxEnlargedModal .modal-content { background: transparent !important; border: none !important; box-shadow: none !important; }
+
+/* ── Dark mode ─────────────────────────────────────────────── */
+body.dark-mode .spec-value { color: var(--sap-text); }
+body.dark-mode .spec-ux-thumb { border-color: var(--sap-border); }
+body.dark-mode .spec-ux-placeholder { background: var(--sap-bg-secondary); border-color: var(--sap-border); color: var(--sap-text-muted); }
+body.dark-mode .spec-ux-dropzone { border-color: var(--sap-border); }
+body.dark-mode .spec-ux-dropzone.dragover { background: rgba(13,148,136,.08); }
+body.dark-mode .spec-ux-preview img { border-color: var(--sap-border); }

@@ -28,7 +28,8 @@ class BusinessScenarios extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $rawInput = $this->req->getJSON(true) ?? $this->req->getPost();
+        $input = $this->cleanInput($rawInput);
         $title = trim($input['title'] ?? '');
         if (empty($title)) {
             return $this->JSONResponse('Judul wajib diisi', null, 400);
@@ -43,7 +44,7 @@ class BusinessScenarios extends BaseApi
         $this->db()->table('blueprint_business_scenarios')->insert([
             'module_id'   => $moduleId,
             'title'       => $title,
-            'description' => $this->sanitizeRichText($this->req->getPost('description')),
+            'description' => $this->sanitizeRichText($rawInput['description'] ?? ''),
             'sort_order'  => $maxSort,
             'created_at'  => date('Y-m-d H:i:s'),
             'updated_at'  => date('Y-m-d H:i:s'),
@@ -73,10 +74,11 @@ class BusinessScenarios extends BaseApi
         $scenario = $this->db()->table('blueprint_business_scenarios')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$scenario) return $this->JSONResponse('Business scenario tidak ditemukan', null, 404);
 
-        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $rawInput = $this->req->getJSON(true) ?? $this->req->getPost();
+        $input = $this->cleanInput($rawInput);
         $update = [];
         if (isset($input['title']))       $update['title'] = trim($input['title']);
-        if (isset($input['description'])) $update['description'] = $this->sanitizeRichText($this->req->getPost('description'));
+        if (isset($rawInput['description'])) $update['description'] = $this->sanitizeRichText($rawInput['description']);
         $update['updated_at'] = date('Y-m-d H:i:s');
 
         $this->db()->transStart();

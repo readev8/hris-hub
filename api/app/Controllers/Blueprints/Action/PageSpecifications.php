@@ -65,7 +65,6 @@ class PageSpecifications extends BaseApi
             'input_display'  => trim($input['input_display'] ?? ''),
             'datatype'       => $datatype,
             'control_type'   => $controlType,
-            'ux'             => trim($input['ux'] ?? ''),
             'sort_order'     => $maxSort,
             'created_at'     => date('Y-m-d H:i:s'),
             'updated_at'     => date('Y-m-d H:i:s'),
@@ -97,7 +96,7 @@ class PageSpecifications extends BaseApi
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $update = [];
-        $fields = ['field_name', 'data', 'objective', 'initial_data', 'condition', 'validation', 'input_display', 'datatype', 'control_type', 'ux'];
+        $fields = ['field_name', 'data', 'objective', 'initial_data', 'condition', 'validation', 'input_display', 'datatype', 'control_type'];
         foreach ($fields as $f) {
             if (isset($input[$f])) $update[$f] = trim($input[$f]);
         }

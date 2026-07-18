@@ -103,6 +103,10 @@ class BlueprintDetail extends BaseApi
             }
             foreach ($mod['design_pages'] as &$dp) {
                 $dp['attachments'] = $attachmentsBySection['design_page:' . $dp['id']] ?? [];
+                foreach ($dp['page_specifications'] as &$ps) {
+                    $psUx = $attachmentsBySection['page_specification:' . $ps['id']] ?? [];
+                    $ps['ux_attachment'] = !empty($psUx) ? $psUx[0] : null;
+                }
             }
         }
         unset($mod, $bs, $dp);

@@ -35,6 +35,28 @@ class MasterProjectList extends BaseApi
                 ->where('modules.active', 0)
                 ->countAllResults();
 
+            $bugOpen = $this->db()->table('tickets')
+                ->join('pages', 'pages.id = tickets.page_id')
+                ->join('modules', 'modules.id = pages.module_id')
+                ->where('modules.master_project_id', $p['id'])
+                ->where('tickets.type', Enums::TICKET_TYPE_BUG)
+                ->where('tickets.active', 0)
+                ->where('pages.active', 0)
+                ->where('modules.active', 0)
+                ->whereIn('tickets.status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
+                ->countAllResults();
+
+            $bugClosed = $this->db()->table('tickets')
+                ->join('pages', 'pages.id = tickets.page_id')
+                ->join('modules', 'modules.id = pages.module_id')
+                ->where('modules.master_project_id', $p['id'])
+                ->where('tickets.type', Enums::TICKET_TYPE_BUG)
+                ->where('tickets.active', 0)
+                ->where('pages.active', 0)
+                ->where('modules.active', 0)
+                ->whereIn('tickets.status', [Enums::TICKET_STATUS_RESOLVED, Enums::TICKET_STATUS_CLOSED])
+                ->countAllResults();
+
             $result[] = [
                 'id'           => $this->api->encryptId($p['id']),
                 'name'         => $p['name'],
@@ -43,6 +65,8 @@ class MasterProjectList extends BaseApi
                 'status_name'  => $p['status'] ? 'Active' : 'Archived',
                 'module_count' => $moduleCount,
                 'bug_count'    => $bugCount,
+                'bug_open'     => $bugOpen,
+                'bug_closed'   => $bugClosed,
                 'creator_name' => $p['creator_name'],
                 'created_at'   => $p['created_at'],
             ];
@@ -125,6 +149,7 @@ class MasterProjectList extends BaseApi
 
         $params = $this->req->getGet();
         $moduleId = !empty($params['moduleId']) ? $this->resolveId($params['moduleId']) : null;
+        $pageId   = !empty($params['pageId'])   ? $this->resolveId($params['pageId'])   : null;
 
         $builder = $this->db()->table('tickets')
             ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name, pages.name as page_name')
@@ -137,7 +162,9 @@ class MasterProjectList extends BaseApi
             ->where('pages.active', 0)
             ->where('modules.active', 0);
 
-        if ($moduleId) {
+        if ($pageId) {
+            $builder->where('tickets.page_id', $pageId);
+        } elseif ($moduleId) {
             $builder->where('modules.id', $moduleId);
         } else {
             $builder->where('modules.master_project_id', $projectId);

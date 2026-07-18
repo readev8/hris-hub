@@ -147,14 +147,14 @@ var PageSpecs = (function () {
     // ── Kanban Board ───────────────────────────────────────────
     function loadKanban() {
         $('#kanbanBoard .kanban-cards').html('<div class="kanban-empty"><i class="fas fa-spinner fa-spin"></i>Loading...</div>');
+        var params = 'pageId=' + encodeURIComponent(pageId);
         $.ajax({
-            url: site_url + '/master-projects/' + projectId + '/kanban?moduleId=' + moduleId,
+            url: site_url + '/master-projects/' + projectId + '/kanban?' + params,
             method: 'GET',
             timeout: 15000,
         })
         .done(function (res) {
-            var allData = res || { open: [], in_progress: [], resolved: [], closed: [] };
-            kanbanData = filterByPage(allData);
+            kanbanData = res || { open: [], in_progress: [], resolved: [], closed: [] };
             renderKanban();
             initKanbanSortables();
         })
@@ -162,22 +162,6 @@ var PageSpecs = (function () {
             toastr.error('Failed to load kanban board');
             $('#kanbanBoard .kanban-cards').html('<div class="kanban-empty"><i class="fas fa-exclamation-triangle"></i>Failed to load kanban.</div>');
         });
-    }
-
-    function filterByPage(allData) {
-        var filtered = {};
-        var columns = ['open', 'in_progress', 'resolved', 'closed'];
-        for (var c = 0; c < columns.length; c++) {
-            var key = columns[c];
-            var tickets = allData[key] || [];
-            filtered[key] = [];
-            for (var i = 0; i < tickets.length; i++) {
-                if (tickets[i].page_id == pageId) {
-                    filtered[key].push(tickets[i]);
-                }
-            }
-        }
-        return filtered;
     }
 
     function renderKanban() {
