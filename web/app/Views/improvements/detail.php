@@ -88,6 +88,34 @@
             </div>
 
             <div class="sap-card mb-3">
+                <div class="sap-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-drafting-compass"></i> Linked Blueprints</span>
+                    <span class="sap-badge info" style="font-size:11px"><?= count($improvement['blueprints'] ?? []) ?></span>
+                </div>
+                <div class="sap-card-body">
+                    <?php if (empty($improvement['blueprints'])): ?>
+                        <div class="sap-empty" style="padding:20px">
+                            <i class="fas fa-drafting-compass" style="font-size:36px"></i>
+                            <h4>No blueprints</h4>
+                            <p class="mb-0 text-secondary" style="font-size:13px">No blueprints are linked to this improvement yet.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="d-flex flex-column gap-2">
+                            <?php foreach ($improvement['blueprints'] as $bp): ?>
+                            <a href="<?= site_url('blueprints/' . $bp['id']) ?>" class="d-flex justify-content-between align-items-center p-2" style="border:1px solid var(--sap-border);border-radius:var(--sap-radius);text-decoration:none;color:var(--sap-text);transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--sap-brand)'" onmouseout="this.style.borderColor='var(--sap-border)'">
+                                <div>
+                                    <div class="fw-medium" style="font-size:14px"><?= esc($bp['name']) ?></div>
+                                    <div class="text-muted" style="font-size:12px">Created by <?= esc($bp['creator_name'] ?? '') ?> · <?= esc($bp['created_at']) ?></div>
+                                </div>
+                                <?= status_badge($bp['status_name'] ?? '') ?>
+                            </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="sap-card mb-3">
                 <div class="sap-card-header">
                     <i class="fas fa-history"></i> Approval History
                 </div>

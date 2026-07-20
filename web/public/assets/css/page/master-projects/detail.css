@@ -401,6 +401,12 @@
     border-top: 1px solid var(--sap-border-light);
 }
 
+.module-blueprint-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .module-blueprint-assigned {
     display: flex;
     align-items: center;

@@ -40,11 +40,6 @@ class Blueprints extends BaseApi
             if (!$project) {
                 return $this->JSONResponse('Improvement tidak ditemukan', null, 404);
             }
-
-            $existing = $this->db()->table('blueprints')->where('improvement_id', $improvementId)->where('active', 0)->countAllResults();
-            if ($existing > 0) {
-                return $this->JSONResponse('Improvement ini sudah memiliki blueprint', null, 400);
-            }
         }
 
         $this->db()->transStart();
@@ -88,6 +83,16 @@ class Blueprints extends BaseApi
         $update = [];
         if (isset($input['name']))        $update['name'] = trim($input['name']);
         if (isset($input['description'])) $update['description'] = trim($input['description']);
+        if (array_key_exists('improvement_id', $input)) {
+            $newImprovementId = !empty($input['improvement_id']) ? $this->resolveId($input['improvement_id']) : null;
+            if ($newImprovementId) {
+                $project = $this->db()->table('projects')->where('id', $newImprovementId)->where('active', 0)->get()->getRowArray();
+                if (!$project) {
+                    return $this->JSONResponse('Improvement tidak ditemukan', null, 404);
+                }
+            }
+            $update['improvement_id'] = $newImprovementId;
+        }
         $update['updated_at'] = date('Y-m-d H:i:s');
 
         if (empty($update) || count($update) === 1) {

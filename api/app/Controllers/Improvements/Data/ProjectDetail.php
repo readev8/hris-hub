@@ -86,6 +86,21 @@ class ProjectDetail extends BaseApi
             ->get()
             ->getResultArray();
 
+        $blueprints = $this->db()->table('blueprints')
+            ->select('blueprints.id, blueprints.name, blueprints.status, blueprints.created_at, creator.full_name as creator_name')
+            ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
+            ->where('blueprints.improvement_id', $id)
+            ->where('blueprints.active', 0)
+            ->orderBy('blueprints.created_at', 'DESC')
+            ->get()
+            ->getResultArray();
+        foreach ($blueprints as &$bp) {
+            $bp['id'] = $this->api->encryptId($bp['id']);
+            $bp['status_name'] = \App\Config\Enums::projectStatusName($bp['status']);
+        }
+        unset($bp);
+        $project['blueprints'] = $blueprints;
+
         $project['id'] = $this->api->encryptId($project['id']);
         $project['status_name'] = \App\Config\Enums::projectStatusName($project['status']);
         $project['priority_name'] = \App\Config\Enums::priorityName($project['priority']);

@@ -98,7 +98,7 @@
                 <div id="improvementSearchEmpty" class="text-center p-4" style="display:none">
                     <i class="fas fa-inbox" style="font-size:36px;color:var(--sap-text-muted)"></i>
                     <h5 class="mt-2">No improvements found</h5>
-                    <p class="mb-0 text-secondary" style="font-size:13px">All improvements already have blueprints, or try a different search.</p>
+                    <p class="mb-0 text-secondary" style="font-size:13px">No improvements found. Try a different search.</p>
                 </div>
                 <table id="improvementSearchTable" class="sap-table mb-0" style="width:100%">
                     <thead>

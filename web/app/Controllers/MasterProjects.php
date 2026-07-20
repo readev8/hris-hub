@@ -243,7 +243,8 @@ class MasterProjects extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
         }
 
-        $result = $this->api->post_data('modules/' . $encryptedId . '/unassign-blueprint');
+        $post = $this->request->getPost();
+        $result = $this->api->post_data('modules/' . $encryptedId . '/unassign-blueprint', $post);
         return $this->response->setJSON($result);
     }
 

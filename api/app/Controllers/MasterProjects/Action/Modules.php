@@ -114,10 +114,18 @@ class Modules extends BaseApi
             if (!$blueprintModule) return $this->JSONResponse('Blueprint module tidak ditemukan', null, 404);
         }
 
-        $this->db()->table('modules')->update([
-            'blueprint_module_id' => $blueprintModuleId,
-            'updated_at'          => date('Y-m-d H:i:s'),
-        ], ['id' => $id]);
+        $existing = $this->db()->table('module_blueprint_modules')
+            ->where('module_id', $id)
+            ->where('blueprint_module_id', $blueprintModuleId)
+            ->get()->getRowArray();
+
+        if (!$existing) {
+            $this->db()->table('module_blueprint_modules')->insert([
+                'module_id'           => $id,
+                'blueprint_module_id' => $blueprintModuleId,
+                'created_at'          => date('Y-m-d H:i:s'),
+            ]);
+        }
 
         return $this->JSONResponse('Blueprint module berhasil diassign');
     }
@@ -134,13 +142,20 @@ class Modules extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah modul', null, 403);
         }
 
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $blueprintModuleId = !empty($input['blueprint_module_id']) ? $this->resolveId($input['blueprint_module_id']) : null;
+
         $module = $this->db()->table('modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
-        $this->db()->table('modules')->update([
-            'blueprint_module_id' => null,
-            'updated_at'          => date('Y-m-d H:i:s'),
-        ], ['id' => $id]);
+        if (!$blueprintModuleId) {
+            return $this->JSONResponse('blueprint_module_id wajib diisi', null, 400);
+        }
+
+        $this->db()->table('module_blueprint_modules')
+            ->where('module_id', $id)
+            ->where('blueprint_module_id', $blueprintModuleId)
+            ->delete();
 
         return $this->JSONResponse('Blueprint module berhasil diunassign');
     }

@@ -84,17 +84,21 @@
                                 <?php endif; ?>
                             </div>
                             <div class="module-blueprint-bar mt-2">
-                                <?php if (!empty($mod['blueprint_module_id'])): ?>
-                                <div class="module-blueprint-assigned">
-                                    <span class="module-blueprint-icon"><i class="fas fa-link"></i></span>
-                                    <span class="module-blueprint-label"><?= esc($mod['blueprint_name'] ?? '') ?> → <?= esc($mod['blueprint_module_name'] ?? '') ?></span>
-                                    <button type="button" class="module-blueprint-remove" onclick="MasterProjectDetail.unassignBlueprintModule('<?= $mod['id'] ?>')" title="Remove assignment"><i class="fas fa-times"></i></button>
+                                <?php $bpMods = $mod['blueprint_modules'] ?? []; ?>
+                                <?php if (!empty($bpMods)): ?>
+                                <div class="module-blueprint-list">
+                                    <?php foreach ($bpMods as $bm): ?>
+                                    <div class="module-blueprint-assigned">
+                                        <span class="module-blueprint-icon"><i class="fas fa-link"></i></span>
+                                        <span class="module-blueprint-label"><?= esc($bm['bp_name'] ?? '') ?> → <?= esc($bm['bm_name'] ?? '') ?></span>
+                                        <button type="button" class="module-blueprint-remove" onclick="MasterProjectDetail.unassignBlueprintModule('<?= $mod['id'] ?>', '<?= $bm['bm_id'] ?>')" title="Remove assignment"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <?php endforeach; ?>
                                 </div>
-                                <?php else: ?>
-                                <button type="button" class="module-blueprint-unassigned" onclick="MasterProjectDetail.openAssignBlueprintModal('<?= $mod['id'] ?>')">
+                                <?php endif; ?>
+                                <button type="button" class="module-blueprint-unassigned mt-1" onclick="MasterProjectDetail.openAssignBlueprintModal('<?= $mod['id'] ?>')">
                                     <i class="fas fa-link"></i> Assign Blueprint Module
                                 </button>
-                                <?php endif; ?>
                             </div>
                         </div>
                         <div class="module-card-footer">

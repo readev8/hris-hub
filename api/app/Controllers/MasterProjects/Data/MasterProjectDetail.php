@@ -24,14 +24,31 @@ class MasterProjectDetail extends BaseApi
         if (!$project) return $this->JSONResponse('Project tidak ditemukan', null, 404);
 
         $modules = $this->db()->table('modules')
-            ->select('modules.*, bm.name as blueprint_module_name, b.name as blueprint_name')
-            ->join('blueprint_modules as bm', 'bm.id = modules.blueprint_module_id AND bm.active = 0', 'left')
-            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
             ->where('modules.master_project_id', $id)
             ->where('modules.active', 0)
             ->orderBy('modules.sort_order', 'ASC')
             ->get()
             ->getResultArray();
+
+        $moduleIds = array_column($modules, 'id');
+        $blueprintModulesByModule = [];
+        if (!empty($moduleIds)) {
+            $junctionRows = $this->db()->table('module_blueprint_modules as mbm')
+                ->select('mbm.module_id, bm.id as bm_id, bm.name as bm_name, b.id as bp_id, b.name as bp_name')
+                ->join('blueprint_modules as bm', 'bm.id = mbm.blueprint_module_id AND bm.active = 0')
+                ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0')
+                ->whereIn('mbm.module_id', $moduleIds)
+                ->get()
+                ->getResultArray();
+            foreach ($junctionRows as $jr) {
+                $blueprintModulesByModule[$jr['module_id']][] = [
+                    'bm_id'          => $this->api->encryptId($jr['bm_id']),
+                    'bm_name'        => $jr['bm_name'],
+                    'bp_id'          => $this->api->encryptId($jr['bp_id']),
+                    'bp_name'        => $jr['bp_name'],
+                ];
+            }
+        }
 
         $moduleList = [];
         foreach ($modules as $m) {
@@ -77,14 +94,12 @@ class MasterProjectDetail extends BaseApi
             }
 
             $moduleList[] = [
-                'id'                    => $this->api->encryptId($m['id']),
-                'name'                  => $m['name'],
-                'description'           => $m['description'],
-                'sort_order'            => (int) $m['sort_order'],
-                'blueprint_module_id'   => $m['blueprint_module_id'] ? $this->api->encryptId($m['blueprint_module_id']) : null,
-                'blueprint_module_name' => $m['blueprint_module_name'] ?? null,
-                'blueprint_name'        => $m['blueprint_name'] ?? null,
-                'pages'                 => $pageList,
+                'id'                => $this->api->encryptId($m['id']),
+                'name'              => $m['name'],
+                'description'       => $m['description'],
+                'sort_order'        => (int) $m['sort_order'],
+                'blueprint_modules' => $blueprintModulesByModule[$m['id']] ?? [],
+                'pages'             => $pageList,
             ];
         }
 

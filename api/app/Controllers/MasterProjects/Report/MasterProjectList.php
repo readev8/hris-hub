@@ -285,18 +285,17 @@ class MasterProjectList extends BaseApi
     {
         $params = $this->req->getGet();
         $encryptedModuleId = $params['module_id'] ?? null;
-        $moduleBlueprintModuleId = null;
+        $moduleBmIds = [];
 
         if ($encryptedModuleId) {
             $moduleId = $this->resolveId($encryptedModuleId);
             if ($moduleId) {
-                $module = $this->db()->table('modules')
+                $assignedBmIds = $this->db()->table('module_blueprint_modules')
                     ->select('blueprint_module_id')
-                    ->where('id', $moduleId)
-                    ->where('active', 0)
+                    ->where('module_id', $moduleId)
                     ->get()
-                    ->getRowArray();
-                $moduleBlueprintModuleId = $module['blueprint_module_id'] ?? null;
+                    ->getResultArray();
+                $moduleBmIds = array_column($assignedBmIds, 'blueprint_module_id');
             }
         }
 
@@ -306,8 +305,10 @@ class MasterProjectList extends BaseApi
             ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
             ->where('bdp.active', 0);
 
-        if ($moduleBlueprintModuleId) {
-            $builder->where('bdp.module_id', $moduleBlueprintModuleId);
+        if (!empty($moduleBmIds)) {
+            $builder->whereIn('bdp.module_id', $moduleBmIds);
+        } elseif ($encryptedModuleId) {
+            return $this->JSONResponse('OK', [], 200);
         }
 
         $designPages = $builder->orderBy('b.name', 'ASC')

@@ -194,10 +194,10 @@ var MasterProjectDetail = (function () {
         });
     }
 
-    function unassignBlueprintModule(moduleId) {
+    function unassignBlueprintModule(moduleId, bmId) {
         Swal.fire({
             title: 'Remove blueprint assignment?',
-            text: 'This module will no longer be linked to a blueprint module.',
+            text: 'This module will no longer be linked to this blueprint module.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#AA0808',
@@ -205,7 +205,7 @@ var MasterProjectDetail = (function () {
             confirmButtonText: 'Remove',
         }).then(function (r) {
             if (r.isConfirmed) {
-                $.post(site_url + '/modules/' + moduleId + '/unassign-blueprint', function (res) {
+                $.post(site_url + '/modules/' + moduleId + '/unassign-blueprint', { blueprint_module_id: bmId }, function (res) {
                     if (res.status) {
                         toastr.success('Blueprint module unassigned');
                         window.location.reload();
@@ -253,17 +253,22 @@ var MasterProjectDetail = (function () {
             if (openBugs > 0) html += '<span class="module-card-stat module-card-stat--open"><i class="fas fa-exclamation-circle"></i> ' + openBugs + ' open</span>';
             html += '</div>';
             html += '<div class="module-blueprint-bar mt-2">';
-            if (m.blueprint_module_id) {
-                html += '<div class="module-blueprint-assigned">';
-                html += '<span class="module-blueprint-icon"><i class="fas fa-link"></i></span>';
-                html += '<span class="module-blueprint-label">' + escHtml(m.blueprint_name || '') + ' → ' + escHtml(m.blueprint_module_name || '') + '</span>';
-                html += '<button type="button" class="module-blueprint-remove" onclick="MasterProjectDetail.unassignBlueprintModule(\'' + m.id + '\')" title="Remove assignment"><i class="fas fa-times"></i></button>';
+            var bpMods = m.blueprint_modules || [];
+            if (bpMods.length) {
+                html += '<div class="module-blueprint-list">';
+                for (var b = 0; b < bpMods.length; b++) {
+                    var bm = bpMods[b];
+                    html += '<div class="module-blueprint-assigned">';
+                    html += '<span class="module-blueprint-icon"><i class="fas fa-link"></i></span>';
+                    html += '<span class="module-blueprint-label">' + escHtml(bm.bp_name || '') + ' → ' + escHtml(bm.bm_name || '') + '</span>';
+                    html += '<button type="button" class="module-blueprint-remove" onclick="MasterProjectDetail.unassignBlueprintModule(\'' + m.id + '\',\'' + bm.bm_id + '\')" title="Remove assignment"><i class="fas fa-times"></i></button>';
+                    html += '</div>';
+                }
                 html += '</div>';
-            } else {
-                html += '<button type="button" class="module-blueprint-unassigned" onclick="MasterProjectDetail.openAssignBlueprintModal(\'' + m.id + '\')">';
-                html += '<i class="fas fa-link"></i> Assign Blueprint Module';
-                html += '</button>';
             }
+            html += '<button type="button" class="module-blueprint-unassigned mt-1" onclick="MasterProjectDetail.openAssignBlueprintModal(\'' + m.id + '\')">';
+            html += '<i class="fas fa-link"></i> Assign Blueprint Module';
+            html += '</button>';
             html += '</div>';
             html += '</div>';
             html += '<div class="module-card-footer">';

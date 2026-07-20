@@ -14,15 +14,25 @@ class ModuleDetail extends BaseApi
         if (!$moduleId) return $this->JSONResponse('ID tidak valid', null, 400);
 
         $module = $this->db()->table('modules')
-            ->select('modules.*, bm.name as blueprint_module_name, b.name as blueprint_name')
-            ->join('blueprint_modules as bm', 'bm.id = modules.blueprint_module_id AND bm.active = 0', 'left')
-            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
             ->where('modules.id', $moduleId)
             ->where('modules.active', 0)
             ->get()
             ->getRowArray();
 
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
+
+        $blueprintModules = $this->db()->table('module_blueprint_modules as mbm')
+            ->select('bm.id as bm_id, bm.name as bm_name, b.id as bp_id, b.name as bp_name')
+            ->join('blueprint_modules as bm', 'bm.id = mbm.blueprint_module_id AND bm.active = 0')
+            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0')
+            ->where('mbm.module_id', $moduleId)
+            ->get()
+            ->getResultArray();
+        foreach ($blueprintModules as &$bm) {
+            $bm['bm_id'] = $this->api->encryptId($bm['bm_id']);
+            $bm['bp_id'] = $this->api->encryptId($bm['bp_id']);
+        }
+        unset($bm);
 
         $pages = $this->db()->table('pages')
             ->select('pages.*, bdp.title as blueprint_design_page_title')
@@ -101,9 +111,7 @@ class ModuleDetail extends BaseApi
             'name'                  => $module['name'],
             'description'           => $module['description'],
             'sort_order'            => (int) $module['sort_order'],
-            'blueprint_module_id'   => $module['blueprint_module_id'] ? $this->api->encryptId($module['blueprint_module_id']) : null,
-            'blueprint_module_name' => $module['blueprint_module_name'] ?? null,
-            'blueprint_name'        => $module['blueprint_name'] ?? null,
+            'blueprint_modules'     => $blueprintModules,
             'pages'                 => $pageList,
         ], 200);
     }

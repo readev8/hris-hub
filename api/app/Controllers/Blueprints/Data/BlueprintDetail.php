@@ -13,7 +13,7 @@ class BlueprintDetail extends BaseApi
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
         $blueprint = $this->db()->table('blueprints')
-            ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name, approver.full_name as approver_name')
+            ->select('blueprints.*, p.id as improvement_id_raw, p.name as improvement_name, creator.full_name as creator_name, approver.full_name as approver_name')
             ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
             ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
             ->join('users as approver', 'approver.id = blueprints.approver_id', 'left')
@@ -132,6 +132,10 @@ class BlueprintDetail extends BaseApi
 
         $blueprint['id'] = $this->api->encryptId($blueprint['id']);
         $blueprint['status_name'] = \App\Config\Enums::projectStatusName($blueprint['status']);
+        if (!empty($blueprint['improvement_id_raw'])) {
+            $blueprint['improvement_token'] = $this->api->encryptId($blueprint['improvement_id_raw']);
+        }
+        unset($blueprint['improvement_id_raw']);
 
         foreach ($approvals as &$a) {
             $a['id'] = $this->api->encryptId($a['id']);
