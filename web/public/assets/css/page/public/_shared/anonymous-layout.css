@@ -1,0 +1,621 @@
+/* ── Anonymous Portal Layout ─────────────────────────── */
+.anon-body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--sap-background, #f8f9fa);
+    color: var(--sap-text, #32363a);
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Header */
+.anon-header {
+    background: #fff;
+    border-bottom: 1px solid var(--sap-border, #e5e7eb);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.anon-header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.anon-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--sap-brand, #0070f2);
+}
+.anon-logo i { font-size: 20px; }
+.anon-back {
+    font-size: 13px;
+    color: var(--sap-text-secondary, #6a6d70);
+    text-decoration: none;
+    transition: color 150ms;
+}
+.anon-back:hover { color: var(--sap-brand, #0070f2); }
+
+/* Main */
+.anon-main {
+    min-height: calc(100vh - 120px);
+}
+.anon-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+.anon-container--wide {
+    max-width: 960px;
+}
+
+/* Footer */
+.anon-footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: var(--sap-text-muted, #999);
+    border-top: 1px solid var(--sap-border-light, #f0f0f0);
+}
+
+/* Breadcrumb */
+.anon-breadcrumb {
+    font-size: 13px;
+    color: var(--sap-text-muted, #999);
+    margin-bottom: 24px;
+}
+.anon-breadcrumb a {
+    color: var(--sap-text-secondary, #6a6d70);
+    text-decoration: none;
+}
+.anon-breadcrumb a:hover { color: var(--sap-brand, #0070f2); }
+.anon-breadcrumb .sep { margin: 0 6px; }
+.anon-breadcrumb .active { color: var(--sap-text, #32363a); }
+
+/* Page Header */
+.anon-page-header {
+    margin-bottom: 32px;
+}
+.anon-page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--sap-text, #32363a);
+}
+.anon-subtitle {
+    font-size: 14px;
+    color: var(--sap-text-secondary, #6a6d70);
+    margin: 0;
+}
+
+/* Back link */
+.anon-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--sap-text-secondary, #6a6d70);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 150ms;
+}
+.anon-back-link:hover { color: var(--sap-brand, #0070f2); }
+
+/* ── Form Elements ──────────────────────────────────── */
+.anon-form { display: flex; flex-direction: column; gap: 20px; }
+
+.anon-form-group { display: flex; flex-direction: column; gap: 6px; }
+.anon-form-row { display: flex; gap: 16px; }
+@media (max-width: 640px) { .anon-form-row { flex-direction: column; } }
+
+.anon-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text, #32363a);
+}
+.anon-hint {
+    font-size: 12px;
+    color: var(--sap-text-muted, #999);
+    margin: 0 0 4px;
+}
+
+.anon-input, .anon-select, .anon-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    background: #fff;
+    color: var(--sap-text, #32363a);
+    transition: border-color 150ms, box-shadow 150ms;
+    box-sizing: border-box;
+}
+.anon-input:focus, .anon-select:focus, .anon-textarea:focus {
+    outline: none;
+    border-color: var(--sap-brand, #0070f2);
+    box-shadow: 0 0 0 3px rgba(0, 112, 242, 0.12);
+}
+.anon-input--sm { font-size: 13px; padding: 8px 12px; }
+.anon-select--sm { font-size: 13px; padding: 8px 12px; }
+
+.anon-textarea { resize: vertical; min-height: 100px; }
+
+.anon-field-error {
+    font-size: 12px;
+    color: var(--sap-error, #aa0808);
+    min-height: 16px;
+}
+
+.anon-hp { position: absolute; left: -9999px; opacity: 0; height: 0; }
+
+/* ── Segmented Control ──────────────────────────────── */
+.anon-segmented-control {
+    display: flex;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    overflow: hidden;
+}
+.seg-option {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    border: none;
+    background: #fff;
+    color: var(--sap-text-secondary, #6a6d70);
+    cursor: pointer;
+    transition: all 150ms;
+    border-right: 1px solid var(--sap-border, #d9d9d9);
+}
+.seg-option:last-child { border-right: none; }
+.seg-option:hover { background: var(--sap-surface, #f8f9fa); }
+.seg-option:focus-visible {
+    outline: 2px solid var(--sap-brand, #0070f2);
+    outline-offset: -2px;
+    z-index: 1;
+}
+.seg-option.active {
+    background: var(--sap-brand, #0070f2);
+    color: #fff;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.anon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    border: 1px solid transparent;
+    border-radius: var(--sap-radius, 8px);
+    cursor: pointer;
+    transition: all 150ms;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.anon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.anon-btn-primary {
+    background: var(--sap-brand, #0070f2);
+    color: #fff;
+    border-color: var(--sap-brand, #0070f2);
+}
+.anon-btn-primary:hover:not(:disabled) {
+    background: var(--sap-brand-hover, #005ac1);
+}
+.anon-btn-secondary {
+    background: #fff;
+    color: var(--sap-text-secondary, #6a6d70);
+    border-color: var(--sap-border, #d9d9d9);
+}
+.anon-btn-secondary:hover { background: var(--sap-surface, #f8f9fa); }
+.anon-btn-ghost {
+    background: transparent;
+    color: var(--sap-text-secondary, #6a6d70);
+    border-color: transparent;
+}
+.anon-btn-ghost:hover { color: var(--sap-error, #aa0808); }
+.anon-btn-sm { padding: 6px 14px; font-size: 13px; }
+.anon-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--sap-text-muted, #999);
+    border-radius: var(--sap-radius, 8px);
+    cursor: pointer;
+    transition: all 150ms;
+}
+.anon-btn-icon:hover { background: var(--sap-surface, #f8f9fa); color: var(--sap-brand, #0070f2); }
+
+.anon-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 8px;
+}
+
+/* ── Dropzone ────────────────────────────────────────── */
+.anon-dropzone {
+    border: 2px dashed var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    padding: 32px 24px;
+    text-align: center;
+    color: var(--sap-text-muted, #999);
+    cursor: pointer;
+    transition: all 150ms;
+}
+.anon-dropzone:hover, .anon-dropzone.dragover {
+    border-color: var(--sap-brand, #0070f2);
+    background: rgba(0, 112, 242, 0.04);
+    color: var(--sap-brand, #0070f2);
+}
+.anon-dropzone i { font-size: 32px; margin-bottom: 8px; display: block; }
+.anon-dropzone p { margin: 0; font-size: 14px; }
+.anon-dropzone-browse { color: var(--sap-brand, #0070f2); font-weight: 600; cursor: pointer; }
+
+.anon-preview-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+.anon-preview-item {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--sap-radius, 8px);
+    overflow: hidden;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    position: relative;
+}
+.anon-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.anon-preview-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Badges ──────────────────────────────────────────── */
+.anon-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.anon-badge--open { background: #fef3e2; color: #e76500; }
+.anon-badge--approved { background: #e8f4e8; color: #256f3a; }
+.anon-badge--in-progress { background: #e8f4fd; color: #0070f2; }
+.anon-badge--resolved { background: #e8f4fd; color: #0070f2; }
+.anon-badge--closed { background: #f0f0f0; color: #6a6d70; }
+.anon-badge--rejected { background: #fde7e7; color: #aa0808; }
+.anon-badge--outline {
+    background: transparent;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    color: var(--sap-text-secondary, #6a6d70);
+}
+
+/* ── Alert ───────────────────────────────────────────── */
+.anon-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: var(--sap-radius, 8px);
+    margin-bottom: 24px;
+}
+.anon-alert--error {
+    background: #fde7e7;
+    color: var(--sap-error, #aa0808);
+    border: 1px solid rgba(170,8,8,0.15);
+}
+.anon-alert--error i { font-size: 18px; margin-top: 2px; }
+.anon-alert strong { display: block; font-size: 14px; margin-bottom: 2px; }
+.anon-alert p { margin: 0; font-size: 13px; opacity: 0.85; }
+
+/* ── Ticket Header ───────────────────────────────────── */
+.anon-ticket-header {
+    margin-bottom: 32px;
+}
+.anon-ticket-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.anon-ticket-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--sap-text, #32363a);
+}
+.anon-ticket-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--sap-text-muted, #999);
+}
+.anon-tracking-code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text-secondary, #6a6d70);
+    background: var(--sap-surface, #f8f9fa);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.anon-meta-sep { color: var(--sap-border, #d9d9d9); }
+
+/* ── Sections ────────────────────────────────────────── */
+.anon-section {
+    margin-bottom: 28px;
+}
+.anon-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sap-text, #32363a);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--sap-border-light, #f0f0f0);
+}
+.anon-description {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--sap-text, #32363a);
+    background: var(--sap-surface, #f8f9fa);
+    padding: 16px 20px;
+    border-radius: var(--sap-radius, 8px);
+    border: 1px solid var(--sap-border-light, #f0f0f0);
+}
+
+/* ── Attachments ─────────────────────────────────────── */
+.anon-attachments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+.anon-attachment-thumb {
+    border-radius: var(--sap-radius, 8px);
+    overflow: hidden;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    aspect-ratio: 1;
+}
+.anon-attachment-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.anon-attachment-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    text-decoration: none;
+    color: var(--sap-text, #32363a);
+    font-size: 13px;
+    transition: border-color 150ms;
+}
+.anon-attachment-file:hover { border-color: var(--sap-brand, #0070f2); }
+.anon-attachment-file i { font-size: 16px; color: var(--sap-brand, #0070f2); }
+
+/* ── Timeline ────────────────────────────────────────── */
+.anon-timeline {
+    position: relative;
+    padding-left: 28px;
+}
+.anon-timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--sap-border, #d9d9d9);
+}
+.anon-timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+.anon-timeline-item:last-child { padding-bottom: 0; }
+.anon-timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--sap-brand, #0070f2);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px var(--sap-brand, #0070f2);
+}
+.anon-timeline-item:first-child .anon-timeline-dot {
+    background: var(--sap-success, #256f3a);
+    box-shadow: 0 0 0 2px var(--sap-success, #256f3a);
+}
+.anon-timeline-action {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sap-text, #32363a);
+    margin-bottom: 2px;
+}
+.anon-timeline-status {
+    font-size: 12px;
+    color: var(--sap-text-secondary, #6a6d70);
+}
+.anon-timeline-time {
+    font-size: 12px;
+    color: var(--sap-text-muted, #999);
+}
+
+/* ── Empty State ─────────────────────────────────────── */
+.anon-empty-state {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--sap-text-secondary, #6a6d70);
+}
+.anon-empty-state i {
+    font-size: 48px;
+    color: var(--sap-text-muted, #d9d9d9);
+    margin-bottom: 16px;
+    display: block;
+}
+.anon-empty-state h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--sap-text, #32363a);
+}
+.anon-empty-state p {
+    font-size: 14px;
+    margin: 0 0 20px;
+}
+
+/* ── List Controls ───────────────────────────────────── */
+.anon-add-code-bar {
+    margin-bottom: 20px;
+}
+.anon-add-code-input-wrap {
+    display: flex;
+    gap: 8px;
+}
+.anon-add-code-input-wrap .anon-input { flex: 1; }
+
+.anon-list-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.anon-list-controls .anon-select { width: auto; min-width: 140px; }
+.anon-list-controls .anon-input { flex: 1; min-width: 200px; }
+.anon-list-controls .anon-btn-ghost { margin-left: auto; }
+
+/* ── Tickets Grid ────────────────────────────────────── */
+.anon-tickets-grid { min-height: 200px; }
+
+.anon-tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.anon-ticket-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #fff;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    transition: border-color 150ms, box-shadow 150ms;
+    gap: 16px;
+}
+.anon-ticket-card:hover {
+    border-color: var(--sap-brand, #0070f2);
+    box-shadow: 0 2px 8px rgba(0,112,242,0.08);
+}
+.anon-ticket-card-main { flex: 1; min-width: 0; }
+.anon-ticket-card-tracking {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary, #6a6d70);
+    margin-bottom: 4px;
+}
+.anon-ticket-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sap-text, #32363a);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.anon-ticket-card-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.anon-ticket-card-badges .anon-badge { font-size: 11px; padding: 2px 8px; }
+.anon-ticket-card-meta {
+    font-size: 12px;
+    color: var(--sap-text-muted, #999);
+    margin-top: 4px;
+}
+.anon-ticket-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.anon-ticket-card-remove {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--sap-text-muted, #999);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: all 150ms;
+}
+.anon-ticket-card-remove:hover {
+    background: rgba(170,8,8,0.08);
+    color: var(--sap-error, #aa0808);
+}
+
+.anon-list-footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--sap-border-light, #f0f0f0);
+    text-align: center;
+}
+.anon-list-footer p {
+    font-size: 12px;
+    color: var(--sap-text-muted, #999);
+    margin: 0;
+}
+.anon-list-footer i { margin-right: 4px; }
+
+@media (max-width: 640px) {
+    .anon-ticket-card { flex-direction: column; align-items: flex-start; }
+    .anon-ticket-card-actions { align-self: flex-end; }
+    .anon-list-controls { flex-direction: column; }
+}

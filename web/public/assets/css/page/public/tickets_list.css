@@ -1,0 +1,15 @@
+/* ── Tickets List Page ────────────────────────────────── */
+.anon-tickets-list .anon-ticket-card {
+    animation: anonCardIn 200ms ease;
+}
+@keyframes anonCardIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.anon-list-controls {
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+}

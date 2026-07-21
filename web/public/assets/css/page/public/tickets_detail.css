@@ -1,0 +1,197 @@
+/* ── Tickets Detail Page ──────────────────────────────── */
+.anon-ticket-body {
+    background: #fff;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    padding: 24px;
+}
+
+/* ── Resolution Callout ───────────────────────────────── */
+.anon-resolution-callout {
+    display: flex;
+    gap: 16px;
+    padding: 20px 24px;
+    background: var(--sap-success-bg, #e8f4e8);
+    border: 1px solid rgba(37, 111, 58, 0.2);
+    border-left: 4px solid var(--sap-success, #256f3a);
+    border-radius: var(--sap-radius, 8px);
+    margin-bottom: 20px;
+}
+.anon-resolution-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sap-success, #256f3a);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 18px;
+}
+.anon-resolution-body { flex: 1; min-width: 0; }
+.anon-resolution-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.anon-resolution-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sap-success, #256f3a);
+}
+.anon-resolution-by {
+    font-size: 13px;
+    color: var(--sap-text-secondary, #6a6d70);
+}
+.anon-resolution-by::before {
+    content: 'by';
+    margin-right: 4px;
+    color: var(--sap-text-muted, #999);
+}
+.anon-resolution-date {
+    font-size: 12px;
+    color: var(--sap-text-muted, #999);
+}
+.anon-resolution-date::before {
+    content: '\00b7';
+    margin-right: 8px;
+}
+.anon-resolution-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--sap-text, #32363a);
+    white-space: pre-wrap;
+}
+
+/* ── Loading Skeleton ─────────────────────────────────── */
+.anon-loading-skeleton {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    margin-bottom: 20px;
+}
+.anon-skeleton-line {
+    height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #eee 25%, #e0e0e0 50%, #eee 75%);
+    background-size: 200% 100%;
+    animation: anon-shimmer 1.5s infinite ease-in-out;
+    margin-bottom: 12px;
+}
+.anon-skeleton-line--lg { width: 80%; height: 18px; }
+.anon-skeleton-line--md { width: 60%; }
+.anon-skeleton-line--sm { width: 40%; }
+.anon-skeleton-line:last-child { margin-bottom: 0; }
+
+@keyframes anon-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .anon-skeleton-line { animation: none; }
+}
+
+/* ── Comment Count Badge ──────────────────────────────── */
+.anon-comment-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+    background: var(--sap-surface, #f8f9fa);
+    color: var(--sap-text-secondary, #6a6d70);
+    border: 1px solid var(--sap-border, #d9d9d9);
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* ── Comment Thread ───────────────────────────────────── */
+.anon-comments {
+    display: flex;
+    flex-direction: column;
+}
+.anon-comment {
+    display: flex;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--sap-border-light, #f0f0f0);
+}
+.anon-comment:last-child { border-bottom: none; }
+
+.anon-comment-avatar {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--sap-brand, #0070F2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.anon-comment-main { flex: 1; min-width: 0; }
+.anon-comment-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+.anon-comment-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text, #32363a);
+}
+.anon-comment-time {
+    font-size: 12px;
+    color: var(--sap-text-muted, #999);
+}
+.anon-comment-body {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--sap-text, #32363a);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.anon-comment-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+.anon-comment-attachments .anon-attachment-thumb {
+    width: 64px;
+    height: 64px;
+}
+.anon-comment-attachments .anon-attachment-file {
+    font-size: 12px;
+    padding: 6px 10px;
+}
+
+/* ── Comment Empty State ──────────────────────────────── */
+.anon-comments-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--sap-text-muted, #999);
+}
+.anon-comments-empty i {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
+    color: var(--sap-border, #d9d9d9);
+}
+.anon-comments-empty p {
+    font-size: 14px;
+    margin: 0;
+}

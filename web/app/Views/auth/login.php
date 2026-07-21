@@ -221,6 +221,42 @@
             color: var(--sap-text-muted, #9ca3af);
         }
 
+        .auth-public-links {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .auth-public-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 150ms;
+        }
+        .auth-public-link--primary {
+            background: var(--sap-brand, #0070F2);
+            color: #fff;
+        }
+        .auth-public-link--primary:hover {
+            background: var(--sap-brand-hover, #005ac1);
+            color: #fff;
+        }
+        .auth-public-link:not(.auth-public-link--primary) {
+            background: transparent;
+            color: var(--sap-text-secondary, #6a6d70);
+            border: 1px solid var(--sap-border, #d9d9d9);
+        }
+        .auth-public-link:not(.auth-public-link--primary):hover {
+            background: var(--sap-surface, #f8f9fa);
+            color: var(--sap-brand, #0070F2);
+        }
+
         @media (max-width: 900px) {
             .auth-split-left { display: none; }
             .auth-split-right { width: 100%; padding: 24px; }
@@ -286,6 +322,15 @@
                     Sign In
                 </button>
             <?= form_close() ?>
+
+            <div class="auth-public-links">
+                <a href="<?= site_url('public/tickets/create') ?>" class="auth-public-link auth-public-link--primary">
+                    <i class="fas fa-paper-plane"></i> Submit a Ticket
+                </a>
+                <a href="<?= site_url('public/tickets') ?>" class="auth-public-link">
+                    <i class="fas fa-ticket-alt"></i> Track My Tickets
+                </a>
+            </div>
 
             <p class="auth-footer">Project Management &mdash; Enterprise Edition</p>
         </div>

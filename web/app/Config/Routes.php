@@ -14,6 +14,18 @@ $routes->get('/request/get', 'Request::get');
 $routes->get('/track', 'Tracking::index');
 $routes->get('/track/(:any)', 'Tracking::lookup/$1');
 
+// Public anonymous ticket portal (no session required)
+$routes->get('/public/tickets',                      'PublicTickets::list');
+$routes->get('/public/tickets/create',               'PublicTickets::create');
+$routes->post('/public/tickets/create',              'PublicTickets::create');
+$routes->get('/public/tickets/ajax-lookup/(:segment)','PublicTickets::ajaxLookup/$1');
+$routes->get('/public/tickets/ajax-batch',           'PublicTickets::ajaxBatchLookup');
+$routes->get('/public/tickets/ajax/projects',        'PublicTickets::ajaxProjects');
+$routes->get('/public/tickets/ajax/modules/(:segment)','PublicTickets::ajaxModules/$1');
+$routes->get('/public/tickets/ajax/pages/(:segment)','PublicTickets::ajaxPages/$1');
+$routes->get('/public/attachment/(:any)',            'PublicTickets::serveAttachment/$1');
+$routes->get('/public/tickets/(:any)',               'PublicTickets::detail/$1');
+
 $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/dashboard', 'Dashboard::index');
     $routes->get('/dashboard/ajax-stats', 'Dashboard::ajaxStats');

@@ -8,6 +8,15 @@ use CodeIgniter\Router\RouteCollection;
 $routes->post('auth/login', 'Auth\Action\Auth::login');
 $routes->get('tickets/track/(:any)', 'Tickets\Report\TicketTracking::get_by_code/$1', ['filter' => 'ratelimit']);
 
+// Public anonymous ticket routes (no apikeyauth, ratelimited)
+$routes->post('tickets/public/create',                       'Tickets\Action\PublicTickets::create', ['filter' => ['cors', 'ratelimit']]);
+$routes->get('tickets/public/by-code/(:any)',                 'Tickets\Data\PublicTicketDetail::get_by_code/$1', ['filter' => ['cors', 'ratelimit']]);
+$routes->get('tickets/public/batch-by-codes',                 'Tickets\Data\PublicTicketDetail::get_batch_by_codes', ['filter' => ['cors', 'ratelimit']]);
+$routes->post('tickets/public/(:any)/attachments',            'Tickets\Action\PublicAttachments::add/$1', ['filter' => ['cors', 'ratelimit']]);
+$routes->get('master-projects/public/active',                 'MasterProjects\Report\PublicMasterProjectList::get_active', ['filter' => ['cors', 'ratelimit']]);
+$routes->get('master-projects/public/(:any)/modules',         'MasterProjects\Report\PublicMasterProjectList::get_modules/$1', ['filter' => ['cors', 'ratelimit']]);
+$routes->get('modules/public/(:any)/pages',                   'MasterProjects\Report\PublicMasterProjectList::get_pages/$1', ['filter' => ['cors', 'ratelimit']]);
+
 // Protected API routes
 $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($routes) {
     // Auth
