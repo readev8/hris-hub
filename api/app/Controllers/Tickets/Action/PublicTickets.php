@@ -67,14 +67,18 @@ class PublicTickets extends BaseApi
             return $this->JSONResponse('Gagal membuat ticket', null, 500);
         }
 
-        $this->db()->table('audit_logs')->insert([
-            'entity_type' => 'ticket',
-            'entity_id'   => $ticketId,
-            'user_id'     => null,
-            'action'      => 'public_create',
-            'new_values'  => json_encode(['tracking_code' => $trackingCode, 'title' => $title, 'type' => $type]),
-            'created_at'  => date('Y-m-d H:i:s'),
-        ]);
+        try {
+            $this->db()->table('audit_logs')->insert([
+                'entity_type' => 'ticket',
+                'entity_id'   => $ticketId,
+                'user_id'     => null,
+                'action'      => 'public_create',
+                'new_values'  => json_encode(['tracking_code' => $trackingCode, 'title' => $title, 'type' => $type]),
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Audit log insert failed for ticket ' . $ticketId . ': ' . $e->getMessage());
+        }
 
         $cache->save($cacheKey, $count + 1, 3600);
 

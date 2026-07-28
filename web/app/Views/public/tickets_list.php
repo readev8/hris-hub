@@ -7,17 +7,8 @@
 <?= $this->section('content') ?>
 <div class="anon-container anon-container--wide">
     <div class="anon-page-header">
-        <h1>My Tickets</h1>
-        <p class="anon-subtitle">Tiket yang Anda simpan di browser ini. Data tersimpan secara lokal &mdash; tidak ada yang dikirim ke server.</p>
-    </div>
-
-    <div class="anon-add-code-bar">
-        <div class="anon-add-code-input-wrap">
-            <input type="text" id="addCodeInput" class="anon-input" placeholder="Add tracking code (e.g., TKT-20260721-A3F9)" maxlength="20">
-            <button type="button" id="addCodeBtn" class="anon-btn anon-btn-primary anon-btn-sm">
-                <i class="fas fa-plus"></i> Add
-            </button>
-        </div>
+        <h1>Public Tickets</h1>
+        <p class="anon-subtitle">Semua tiket yang dibuat secara anonim.</p>
     </div>
 
     <div class="anon-list-controls">
@@ -30,16 +21,13 @@
             <option value="5">Rejected</option>
         </select>
         <input type="text" id="searchInput" class="anon-input anon-input--sm" placeholder="Search tickets...">
-        <button type="button" id="clearAllBtn" class="anon-btn anon-btn-ghost anon-btn-sm">
-            <i class="fas fa-trash-alt"></i> Clear All
-        </button>
     </div>
 
     <div id="ticketsGrid" class="anon-tickets-grid">
         <div id="emptyState" class="anon-empty-state">
             <i class="fas fa-inbox"></i>
-            <h3>Belum ada tiket yang disimpan</h3>
-            <p>Submit tiket baru atau tambahkan kode pelacakan yang ada di atas.</p>
+            <h3>Belum ada tiket</h3>
+            <p>Belum ada tiket anonim yang tersedia.</p>
             <a href="<?= site_url('public/tickets/create') ?>" class="anon-btn anon-btn-primary">
                 <i class="fas fa-paper-plane"></i> Submit New Ticket
             </a>
@@ -47,14 +35,23 @@
         <div id="ticketsList" class="anon-tickets-list" style="display:none"></div>
     </div>
 
+    <div id="paginationWrap" class="anon-list-controls" style="display:none; justify-content:center; gap:8px; margin-top:16px;">
+        <button type="button" id="prevPageBtn" class="anon-btn anon-btn-ghost anon-btn-sm" disabled>
+            <i class="fas fa-chevron-left"></i> Prev
+        </button>
+        <span id="pageInfo" class="anon-badge anon-badge--outline"></span>
+        <button type="button" id="nextPageBtn" class="anon-btn anon-btn-ghost anon-btn-sm">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
     <div class="anon-list-footer">
-        <p><i class="fas fa-info-circle"></i> Tiket disimpan secara lokal di browser Anda. Hapus cookies atau browser data akan menghapus daftar ini.</p>
+        <p><i class="fas fa-info-circle"></i> Tiket anonim ditampilkan dari server secara real-time.</p>
     </div>
 </div>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>window.PageData = <?= json_encode(['ajaxBaseUrl' => site_url('public/tickets')]) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/public/_shared/tracking-store.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/assets/js/page/public/tickets_list.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

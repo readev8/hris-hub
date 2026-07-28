@@ -206,7 +206,7 @@ class ApiClient
 
         $decoded = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            log_message('error', 'ApiClient JSON decode error: ' . json_last_error_msg());
+            log_message('error', 'ApiClient JSON decode error: ' . json_last_error_msg() . ' | URL: ' . $url . ' | Response: ' . mb_substr($response ?? '', 0, 500));
             return null;
         }
 

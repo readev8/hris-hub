@@ -10,6 +10,7 @@ $routes->get('tickets/track/(:any)', 'Tickets\Report\TicketTracking::get_by_code
 
 // Public anonymous ticket routes (no apikeyauth, ratelimited)
 $routes->post('tickets/public/create',                       'Tickets\Action\PublicTickets::create', ['filter' => ['cors', 'ratelimit']]);
+$routes->get('tickets/public/list',                          'Tickets\Data\PublicTicketDetail::get_list', ['filter' => ['cors', 'ratelimit']]);
 $routes->get('tickets/public/by-code/(:any)',                 'Tickets\Data\PublicTicketDetail::get_by_code/$1', ['filter' => ['cors', 'ratelimit']]);
 $routes->get('tickets/public/batch-by-codes',                 'Tickets\Data\PublicTicketDetail::get_batch_by_codes', ['filter' => ['cors', 'ratelimit']]);
 $routes->post('tickets/public/(:any)/attachments',            'Tickets\Action\PublicAttachments::add/$1', ['filter' => ['cors', 'ratelimit']]);

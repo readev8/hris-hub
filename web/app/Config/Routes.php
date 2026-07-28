@@ -16,6 +16,7 @@ $routes->get('/track/(:any)', 'Tracking::lookup/$1');
 
 // Public anonymous ticket portal (no session required)
 $routes->get('/public/tickets',                      'PublicTickets::list');
+$routes->get('/public/tickets/ajax-list',            'PublicTickets::ajaxList');
 $routes->get('/public/tickets/create',               'PublicTickets::create');
 $routes->post('/public/tickets/create',              'PublicTickets::create');
 $routes->get('/public/tickets/ajax-lookup/(:segment)','PublicTickets::ajaxLookup/$1');

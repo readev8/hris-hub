@@ -3,7 +3,7 @@
  * @package App\Views\public
  * @file    tickets_list.js
  */
-/* global $, site_url, toastr, TrackingStore */
+/* global $, site_url, toastr */
 
 (function () {
     'use strict';
@@ -11,23 +11,31 @@
     var pageData = window.PageData || {};
     var baseUrl  = pageData.ajaxBaseUrl || site_url + '/public/tickets';
     var allTickets = [];
+    var currentPage = 1;
+    var perPage = 20;
+    var searchTimer = null;
 
     $(function () {
         loadTickets();
-        bindAddCode();
-        bindClearAll();
         bindFilters();
+        bindPagination();
     });
 
-    function loadTickets() {
-        var codes = TrackingStore.getCodes();
-        if (!codes.length) {
-            showEmpty();
-            return;
-        }
-        $.get(baseUrl + '/ajax-batch', { codes: codes.join(',') }, function (res) {
-            allTickets = res || [];
+    function loadTickets(page) {
+        page = page || 1;
+        currentPage = page;
+
+        var params = {
+            page: currentPage,
+            per_page: perPage,
+            status: $('#statusFilter').val() || '',
+            search: $.trim($('#searchInput').val()) || ''
+        };
+
+        $.get(baseUrl + '/ajax-list', params, function (res) {
+            allTickets = res.data || [];
             renderTickets(allTickets);
+            renderPagination(res.total || 0, res.page || 1, res.per_page || perPage);
         }).fail(function () {
             showEmpty();
         });
@@ -43,7 +51,6 @@
         for (var i = 0; i < tickets.length; i++) {
             $list.append(buildCard(tickets[i]));
         }
-        bindCardActions();
     }
 
     function buildCard(t) {
@@ -61,81 +68,44 @@
         html += '</div>';
         html += '<div class="anon-ticket-card-actions">';
         html += '<a href="' + site_url + '/public/tickets/' + t.tracking_code + '" class="anon-btn anon-btn-primary anon-btn-sm">View <i class="fas fa-arrow-right"></i></a>';
-        html += '<button type="button" class="anon-ticket-card-remove" data-remove="' + escAttr(t.tracking_code) + '" title="Remove from list"><i class="fas fa-times"></i></button>';
         html += '</div>';
         html += '</div>';
         return html;
     }
 
-    function bindCardActions() {
-        $('.anon-ticket-card-remove').off('click').on('click', function (e) {
-            e.preventDefault();
-            var code = $(this).data('remove');
-            TrackingStore.removeCode(code);
-            $(this).closest('.anon-ticket-card').fadeOut(200, function () {
-                $(this).remove();
-                if (!$('.anon-ticket-card').length) showEmpty();
-            });
-        });
+    function renderPagination(total, page, perPageVal) {
+        var totalPages = Math.ceil(total / perPageVal);
+        if (totalPages <= 1) {
+            $('#paginationWrap').hide();
+            return;
+        }
+        $('#paginationWrap').show();
+        $('#pageInfo').text(page + ' / ' + totalPages);
+        $('#prevPageBtn').prop('disabled', page <= 1);
+        $('#nextPageBtn').prop('disabled', page >= totalPages);
     }
 
     function showEmpty() {
         $('#ticketsList').hide();
         $('#emptyState').show();
-    }
-
-    function bindAddCode() {
-        $('#addCodeBtn').on('click', function () { addCode(); });
-        $('#addCodeInput').on('keypress', function (e) {
-            if (e.which === 13) { e.preventDefault(); addCode(); }
-        });
-    }
-
-    function addCode() {
-        var $input = $('#addCodeInput');
-        var code = $.trim($input.val());
-        if (!code) { toastr.warning('Masukkan kode pelacakan'); return; }
-        if (!/^TKT-\d{8}-[A-F0-9]{4}$/i.test(code)) {
-            toastr.warning('Format kode tidak valid. Contoh: TKT-20260721-A3F9');
-            return;
-        }
-        code = code.toUpperCase();
-        if (TrackingStore.hasCode(code)) {
-            toastr.info('Kode sudah ada di daftar');
-            $input.val('');
-            return;
-        }
-        TrackingStore.addCode(code);
-        $input.val('');
-        toastr.success('Kode ditambahkan');
-        loadTickets();
-    }
-
-    function bindClearAll() {
-        $('#clearAllBtn').on('click', function () {
-            if (!confirm('Hapus semua kode dari daftar ini? Tiket tidak akan terhapus.')) return;
-            TrackingStore.clearAll();
-            showEmpty();
-            toastr.success('Daftar dikosongkan');
-        });
+        $('#paginationWrap').hide();
     }
 
     function bindFilters() {
-        $('#statusFilter').on('change', applyFilters);
-        $('#searchInput').on('keyup', applyFilters);
+        $('#statusFilter').on('change', function () { loadTickets(1); });
+        $('#searchInput').on('keyup', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () { loadTickets(1); }, 300);
+        });
     }
 
-    function applyFilters() {
-        var status = $('#statusFilter').val();
-        var search = $.trim($('#searchInput').val()).toLowerCase();
-        var filtered = [];
-        for (var i = 0; i < allTickets.length; i++) {
-            var t = allTickets[i];
-            if (status !== '' && String(t.status) !== status) continue;
-            if (search && t.title.toLowerCase().indexOf(search) === -1 && t.tracking_code.toLowerCase().indexOf(search) === -1) continue;
-            filtered.push(t);
-        }
-        renderTickets(filtered);
+    function bindPagination() {
+        $('#prevPageBtn').on('click', function () {
+            if (currentPage > 1) loadTickets(currentPage - 1);
+        });
+        $('#nextPageBtn').on('click', function () {
+            loadTickets(currentPage + 1);
+        });
     }
 
     function getStatusClass(status) {

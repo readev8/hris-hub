@@ -127,6 +127,67 @@ class PublicTicketDetail extends BaseApi
         return $this->JSONResponse('OK', $result, 200);
     }
 
+    public function get_list(): ResponseInterface
+    {
+        $params = $this->req->getGet();
+        $page = max(1, (int) ($params['page'] ?? 1));
+        $perPage = max(1, min(100, (int) ($params['per_page'] ?? 20)));
+        $offset = ($page - 1) * $perPage;
+        $search = $params['search'] ?? '';
+        $status = $params['status'] ?? '';
+        $sort = $params['sort'] ?? 'tickets.id';
+        $order = strtoupper($params['order'] ?? 'DESC');
+
+        $allowedSort = ['tickets.id', 'title', 'status', 'priority', 'created_at'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'tickets.id';
+        }
+        $order = in_array($order, ['ASC', 'DESC']) ? $order : 'DESC';
+
+        $builder = $this->db()->table('tickets')
+            ->select('tracking_code, title, status, type, priority, created_at')
+            ->where('is_anonymous', 1)
+            ->where('active', 0);
+
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('title', $search)
+                ->orLike('tracking_code', $search)
+                ->groupEnd();
+        }
+        if ($status !== '') {
+            $builder->where('status', (int) $status);
+        }
+
+        $total = $builder->countAllResults(false);
+        $rows = $builder->orderBy($sort, $order)
+            ->limit($perPage, $offset)
+            ->get()
+            ->getResultArray();
+
+        $result = [];
+        foreach ($rows as $t) {
+            $result[] = [
+                'tracking_code' => $t['tracking_code'],
+                'title'         => $t['title'],
+                'status'        => (int) $t['status'],
+                'status_name'   => Enums::ticketStatusName((int) $t['status']),
+                'type'          => (int) $t['type'],
+                'type_name'     => Enums::ticketTypeName((int) $t['type']),
+                'priority'      => (int) $t['priority'],
+                'priority_name' => Enums::priorityName((int) $t['priority']),
+                'created_at'    => $t['created_at'],
+            ];
+        }
+
+        return $this->JSONResponse('OK', [
+            'data'     => $result,
+            'total'    => $total,
+            'page'     => $page,
+            'per_page' => $perPage,
+        ], 200);
+    }
+
     public function get_batch_by_codes(): ResponseInterface
     {
         $params = $this->req->getGet();

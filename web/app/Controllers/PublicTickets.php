@@ -13,6 +13,21 @@ class PublicTickets extends BaseController
         ]);
     }
 
+    public function ajaxList()
+    {
+        $params = $this->request->getGet();
+        $result = $this->api->get_data('tickets/public/list', $params);
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON([
+                'data'     => [],
+                'total'    => 0,
+                'page'     => 1,
+                'per_page' => 20,
+            ]);
+        }
+        return $this->response->setJSON($result['data']['result'] ?? []);
+    }
+
     public function create()
     {
         helper('form');
@@ -99,7 +114,7 @@ class PublicTickets extends BaseController
 
             return $this->response->setJSON([
                 'status'        => true,
-                'redirect'      => site_url('public/tickets/' . $trackingCode),
+                'redirect'      => site_url('public/tickets'),
                 'tracking_code' => $trackingCode,
             ]);
         }

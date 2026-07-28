@@ -202,7 +202,7 @@
                     if (res.status && res.redirect) {
                         if (res.tracking_code) TrackingStore.addCode(res.tracking_code);
                         toastr.success('Ticket berhasil dibuat!');
-                        setTimeout(function () { window.location.href = res.redirect; }, 1200);
+                        setTimeout(function () { window.location.href = baseUrl; }, 1200);
                     } else {
                         $btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit Ticket');
                         if (res.errors) {
