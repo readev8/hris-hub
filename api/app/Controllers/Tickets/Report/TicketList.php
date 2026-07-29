@@ -131,4 +131,63 @@ class TicketList extends BaseApi
 
         return $this->JSONResponse('OK', $rows, 200);
     }
+
+    public function get_my_taken_tickets(): ResponseInterface
+    {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            return $this->JSONResponse('Unauthorized', null, 401);
+        }
+
+        $params = $this->req->getGet();
+        $page = max(1, (int) ($params['page'] ?? 1));
+        $perPage = max(1, min(100, (int) ($params['per_page'] ?? 20)));
+        $offset = ($page - 1) * $perPage;
+        $search = $params['search'] ?? '';
+        $status = $params['status'] ?? '';
+        $overdue = $params['overdue'] ?? '';
+
+        $builder = $this->db()->table('tickets')
+            ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
+            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
+            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
+            ->where('tickets.active', 0)
+            ->where('tickets.assignee_id', $userId);
+
+        if (!empty($search)) {
+            $builder->like('tickets.title', $search);
+        }
+        if ($status !== '') {
+            $builder->where('tickets.status', (int) $status);
+        }
+        if ($overdue === '1') {
+            $builder->where('tickets.due_date IS NOT NULL', null, false)
+                   ->where('tickets.due_date <', date('Y-m-d'))
+                   ->whereNotIn('tickets.status', [
+                       \App\Config\Enums::TICKET_STATUS_RESOLVED,
+                       \App\Config\Enums::TICKET_STATUS_CLOSED,
+                       \App\Config\Enums::TICKET_STATUS_REJECTED,
+                   ]);
+        }
+
+        $total = $builder->countAllResults(false);
+        $rows = $builder->orderBy('tickets.id', 'DESC')
+            ->limit($perPage, $offset)
+            ->get()
+            ->getResultArray();
+
+        foreach ($rows as &$r) {
+            $r['id'] = $this->api->encryptId($r['id']);
+            $r['status_name'] = \App\Config\Enums::ticketStatusName($r['status']);
+            $r['type_name'] = \App\Config\Enums::ticketTypeName($r['type']);
+            $r['priority_name'] = \App\Config\Enums::priorityName($r['priority']);
+        }
+
+        return $this->JSONResponse('OK', [
+            'data'     => $rows,
+            'total'    => $total,
+            'page'     => $page,
+            'per_page' => $perPage,
+        ], 200);
+    }
 }

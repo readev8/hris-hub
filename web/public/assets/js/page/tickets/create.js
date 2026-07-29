@@ -3,7 +3,7 @@
  * Tickets Create
  * ============================================================================
  *
- * Description: Ticket creation form with cascading dropdowns, file upload, segmented control
+ * Description: Ticket creation form with page search modal, file upload, segmented control
  * Date: 2026-07-16
  * Standard: Mini (<400 lines)
  */
@@ -12,10 +12,9 @@
 // STATE
 // ===========================
 
-var projectsCache = null;
-var activeModuleReq = null;
-var activePageReq = null;
 var referralSearchTimer = null;
+var pageSearchTimer = null;
+var selectedPageId = null;
 
 // ===========================
 // EVENTS
@@ -43,79 +42,40 @@ $(function() {
     $('#ticketType').on('change', function() {
         if (['0','3','4','5'].includes($(this).val())) {
             $('#bugTraceSection').slideDown(200);
-            loadProjects();
         } else {
             $('#bugTraceSection').slideUp(200);
             $('#pageIdValue').val('');
-            $('#projectSelect').val('');
-            $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
+            $('#pageSelectDisplay').val('');
+            selectedPageId = null;
         }
     });
 
-    // Cascading dropdowns
-    $('#projectSelect').on('change', function() {
-        var pid = $(this).val();
-        if (!pid) {
-            $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-            $('#pageIdValue').val('');
-            return;
-        }
-        if (activeModuleReq) activeModuleReq.abort();
-        $('#moduleSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        activeModuleReq = $.ajax({
-            url: site_url + '/master-projects/' + pid + '/modules',
-            type: 'GET',
-            timeout: 10000,
-            success: function(res) {
-                if (!Array.isArray(res)) { $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', false); return; }
-                var html = '<option value="">Select Module...</option>';
-                for (var i = 0; i < res.length; i++) {
-                    html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
-                }
-                $('#moduleSelect').html(html).prop('disabled', false);
-                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-                $('#pageIdValue').val('');
-            },
-            error: function() {
-                toastr.error('Failed to load modules');
-                $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', false);
-            }
-        });
+    // Page search
+    $('#searchPageBtn, #pageSelectDisplay').on('click', function() {
+        loadPageList(1, '');
+        $('#pageSearch').val('');
+        $('#pageModal').modal('show');
     });
 
-    $('#moduleSelect').on('change', function() {
-        var mid = $(this).val();
-        if (!mid) {
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-            $('#pageIdValue').val('');
-            return;
-        }
-        if (activePageReq) activePageReq.abort();
-        $('#pageSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-        activePageReq = $.ajax({
-            url: site_url + '/modules/' + mid + '/pages',
-            type: 'GET',
-            timeout: 10000,
-            success: function(res) {
-                var pages = Array.isArray(res) ? res : (res && Array.isArray(res.pages)) ? res.pages : [];
-                if (!pages.length) { $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false); return; }
-                var html = '<option value="">Select Page...</option>';
-                for (var i = 0; i < pages.length; i++) {
-                    html += '<option value="' + pages[i].id + '">' + pages[i].name + '</option>';
-                }
-                $('#pageSelect').html(html).prop('disabled', false);
-            },
-            error: function() {
-                toastr.error('Failed to load pages');
-                $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', false);
-            }
-        });
+    $('#pageSearch').on('keyup', function() {
+        clearTimeout(pageSearchTimer);
+        var searchVal = $(this).val();
+        pageSearchTimer = setTimeout(function() {
+            loadPageList(1, searchVal);
+        }, 300);
     });
 
-    $('#pageSelect').on('change', function() {
-        $('#pageIdValue').val($(this).val());
+    $(document).on('click', '.btn-select-page', function() {
+        selectedPageId = $(this).data('id') || $(this).attr('data-id');
+        console.log('=== PAGE SELECTED ===');
+        console.log('data-id attr:', $(this).attr('data-id'));
+        console.log('data("id"):', $(this).data('id'));
+        console.log('selectedPageId:', selectedPageId);
+        $('#pageIdValue').val(selectedPageId);
+        $('#pageSelectDisplay').val($(this).data('name') + ' — ' + $(this).data('module') + ' / ' + $(this).data('project'));
+        $('#pageSelectDisplay').css('border-color', 'var(--sap-success)');
+        $('#pageModal').modal('hide');
+        toastr.success('Page selected: ' + $(this).data('name'));
     });
 
     // Referral search
@@ -177,7 +137,12 @@ $(function() {
     $('#ticketForm').on('submit', function(e) {
         e.preventDefault();
         var type = $('#ticketType').val();
-        var pageId = $('#pageIdValue').val();
+        var pageId = selectedPageId || $('#pageIdValue').val();
+        console.log('=== FORM SUBMIT ===');
+        console.log('type:', type);
+        console.log('selectedPageId:', selectedPageId);
+        console.log('pageIdValue:', $('#pageIdValue').val());
+        console.log('final pageId:', pageId);
         if (['0','3','4','5'].includes(type) && !pageId) {
             toastr.warning('Untuk tipe ini, wajib memilih halaman di bagian Affected Page');
             $('#bugTraceSection').slideDown(200);
@@ -186,6 +151,7 @@ $(function() {
         var btn = $(this).find('[type="submit"]');
         btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Submitting...');
         var formData = new FormData(this);
+        console.log('FormData page_id:', formData.get('page_id'));
         $.ajax({
             url: site_url + '/tickets/create',
             type: 'POST',
@@ -229,40 +195,60 @@ $(function() {
 // HELPERS
 // ===========================
 
-function loadProjects() {
-    if (projectsCache) {
-        populateProjects(projectsCache);
-        return;
-    }
-    $('#projectSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-    $.ajax({
-        url: site_url + '/master-projects/active',
-        type: 'GET',
-        timeout: 10000,
-        success: function(res) {
-            if (!Array.isArray(res)) { $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false); return; }
-            projectsCache = res;
-            populateProjects(res);
-        },
-        error: function() {
-            toastr.error('Failed to load projects');
-            $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false);
-            $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
-            $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
+function loadPageList(page, search) {
+    var $list = $('#pageList');
+    $list.html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+
+    $.get(site_url + '/tickets/ajax/pages-search', {
+        page: page,
+        per_page: 15,
+        search: search
+    }, function(res) {
+        var rows = res.data || [];
+        if (!rows.length) {
+            $list.html('<div class="text-center py-3 text-muted">No pages found</div>');
+            $('#pagePagination').html('');
+            return;
         }
+        var html = '<table class="table table-sm table-hover mb-0">';
+        html += '<thead><tr>';
+        html += '<th>Page</th>';
+        html += '<th>Module</th>';
+        html += '<th>Project</th>';
+        html += '<th style="width:100px"></th>';
+        html += '</tr></thead><tbody>';
+        for (var i = 0; i < rows.length; i++) {
+            var p = rows[i];
+            var pageId = p.page_id || p.id || '';
+            html += '<tr>';
+            html += '<td style="font-size:13px;font-weight:500">' + escHtml(p.page_name || '') + '</td>';
+            html += '<td style="font-size:12px;color:var(--sap-text-secondary)">' + escHtml(p.module_name || '') + '</td>';
+            html += '<td style="font-size:12px;color:var(--sap-text-secondary)">' + escHtml(p.project_name || '') + '</td>';
+            html += '<td><button type="button" class="sap-btn sap-btn-primary sap-btn-sm btn-select-page" ';
+            html += 'data-id="' + escAttr(pageId) + '" data-name="' + escAttr(p.page_name) + '" ';
+            html += 'data-module="' + escAttr(p.module_name) + '" data-project="' + escAttr(p.project_name) + '">Select</button></td>';
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+        $list.html(html);
+
+        var totalPages = Math.ceil((res.total || 0) / 15);
+        var pagHtml = '';
+        if (totalPages > 1) {
+            pagHtml += '<button type="button" class="sap-btn sap-btn-secondary sap-btn-sm btn-page-page" data-page="' + (page - 1) + '"' + (page <= 1 ? ' disabled' : '') + '><i class="fas fa-chevron-left"></i> Prev</button>';
+            pagHtml += '<span style="font-size:13px;color:var(--sap-text-secondary);padding:6px 12px">' + page + ' / ' + totalPages + '</span>';
+            pagHtml += '<button type="button" class="sap-btn sap-btn-secondary sap-btn-sm btn-page-page" data-page="' + (page + 1) + '"' + (page >= totalPages ? ' disabled' : '') + '>Next <i class="fas fa-chevron-right"></i></button>';
+        }
+        $('#pagePagination').html(pagHtml);
+    }).fail(function() {
+        $list.html('<div class="text-center py-3 text-danger">Failed to load pages</div>');
     });
 }
 
-function populateProjects(res) {
-    var html = '<option value="">Select Project...</option>';
-    for (var i = 0; i < res.length; i++) {
-        html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
-    }
-    $('#projectSelect').html(html).prop('disabled', false);
-    $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
-    $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
-    $('#pageIdValue').val('');
-}
+$(document).on('click', '.btn-page-page', function() {
+    if ($(this).prop('disabled')) return;
+    loadPageList(parseInt($(this).data('page')), $('#pageSearch').val());
+});
 
 function loadReferralList(page, search) {
     var $list = $('#referralTicketList');

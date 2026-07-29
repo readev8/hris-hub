@@ -67,24 +67,13 @@
                         <i class="fas fa-project-diagram me-1"></i> Affected Page <span class="text-danger">*</span>
                     </h5>
                     <p class="text-secondary" style="font-size:13px">Select the page affected by this ticket</p>
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <select class="sap-select" id="projectSelect">
-                                <option value="">Select Project...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select class="sap-select" id="moduleSelect" disabled>
-                                <option value="">Select Module...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select class="sap-select" id="pageSelect" disabled>
-                                <option value="">Select Page...</option>
-                            </select>
-                            <input type="hidden" name="page_id" id="pageIdValue">
-                        </div>
+                    <div class="input-group">
+                        <input type="text" id="pageSelectDisplay" class="sap-input" placeholder="Click search to select page..." disabled>
+                        <button type="button" id="searchPageBtn" class="sap-btn sap-btn-secondary search-btn" title="Search page">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
+                    <input type="hidden" name="page_id" id="pageIdValue">
                 </div>
 
                 <div class="mb-4">
@@ -128,6 +117,23 @@
                     </a>
                 </div>
             </form>
+
+            <!-- Page Search Modal -->
+            <div class="modal fade" id="pageModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-search me-2"></i>Select Affected Page</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="pageSearch" class="sap-input mb-3" placeholder="Search by page name, module, or project...">
+                            <div id="pageList" style="max-height:400px;overflow-y:auto"></div>
+                            <div id="pagePagination" class="d-flex justify-content-center mt-3 gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Referral Search Modal -->
             <div class="modal fade" id="referralModal" tabindex="-1">

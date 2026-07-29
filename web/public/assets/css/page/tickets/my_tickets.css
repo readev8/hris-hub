@@ -1,0 +1,74 @@
+/**
+ * My Taken Tickets Styles
+ */
+
+@import url('../_shared/column-search.css');
+
+/* ── Summary Cards ─────────────────────────────────────── */
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid var(--sap-border, #e5e7eb);
+    transition: all 200ms ease;
+}
+.summary-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+}
+.summary-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+.summary-card-info {
+    display: flex;
+    flex-direction: column;
+}
+.summary-card-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--sap-text, #1f2937);
+    line-height: 1;
+}
+.summary-card-label {
+    font-size: 12px;
+    color: var(--sap-text-muted, #6b7280);
+    margin-top: 2px;
+}
+
+.summary-card--open .summary-card-icon {
+    background: #dbeafe;
+    color: #2563eb;
+}
+.summary-card--inprogress .summary-card-icon {
+    background: #fef3c7;
+    color: #d97706;
+}
+.summary-card--resolved .summary-card-icon {
+    background: #d1fae5;
+    color: #059669;
+}
+.summary-card--closed .summary-card-icon {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* ── Filter Bar ────────────────────────────────────────── */
+.tickets-filter-bar { padding: 0; }
+.tickets-filter-bar .sap-select { padding: 6px 10px; font-size: 13px; }
+
+/* ── Table ─────────────────────────────────────────────── */
+#myTicketsTable tbody tr { cursor: pointer; transition: background var(--sap-transition); }
+#myTicketsTable tbody tr:hover { background: var(--sap-brand-hover); }
+#myTicketsTable tbody tr.row-status-open td:nth-child(3) .sap-badge { background: var(--sap-open-bg); color: var(--sap-open); }
+#myTicketsTable tbody tr.row-status-closed td:nth-child(3) .sap-badge { background: var(--sap-closed-bg); color: var(--sap-closed); }
+#myTicketsTable tbody tr.row-status-resolved td:nth-child(3) .sap-badge { background: var(--sap-resolved-bg); color: var(--sap-resolved); }
+#myTicketsTable tbody tr.row-status-rejected td:nth-child(3) .sap-badge { background: var(--sap-rejected-bg); color: var(--sap-rejected); }

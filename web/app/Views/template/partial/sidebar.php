@@ -32,6 +32,12 @@ $canBlueprints     = !empty($perms['blueprints']['can_view']);
                         <span>Tickets</span>
                     </a>
                 </li>
+                <li>
+                    <a href="<?= site_url('my-tickets') ?>">
+                        <i class="fas fa-user-check"></i>
+                        <span>My Tickets</span>
+                    </a>
+                </li>
             <?php endif; ?>
 
             <?php if ($canApprove): ?>

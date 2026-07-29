@@ -26,6 +26,32 @@ class Tickets extends BaseController
         ]);
     }
 
+    public function myTickets(): string
+    {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
+        return $this->view('tickets/my_tickets', [
+            'title' => 'My Taken Tickets',
+        ]);
+    }
+
+    public function ajaxMyTickets()
+    {
+        if (!$this->guard()) {
+            return $this->response->setJSON(['data' => [], 'total' => 0]);
+        }
+
+        $params = $this->request->getGet();
+        $result = $this->api->get_data('tickets/my-taken', $params);
+
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON(['data' => [], 'total' => 0]);
+        }
+
+        return $this->response->setJSON($result['data']['result'] ?? ['data' => [], 'total' => 0]);
+    }
+
     public function ajaxList()
     {
         if (!$this->guard()) {
@@ -45,6 +71,22 @@ class Tickets extends BaseController
             'recordsTotal'    => $data['total'] ?? 0,
             'recordsFiltered' => $data['total'] ?? 0,
         ]);
+    }
+
+    public function ajaxPagesSearch()
+    {
+        if (!$this->guard()) {
+            return $this->response->setJSON(['data' => [], 'total' => 0]);
+        }
+
+        $params = $this->request->getGet();
+        $result = $this->api->get_data('pages/public/search', $params);
+
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON(['data' => [], 'total' => 0]);
+        }
+
+        return $this->response->setJSON($result['data']['result'] ?? ['data' => [], 'total' => 0]);
     }
 
     public function create()

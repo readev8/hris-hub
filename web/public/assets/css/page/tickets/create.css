@@ -71,3 +71,29 @@
     vertical-align: middle;
     padding: 10px 8px;
 }
+
+/* Page Modal */
+#pageModal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+#pageModal .modal-header {
+    border-bottom: 1px solid var(--sap-border-light, #f0f0f0);
+    padding: 16px 24px;
+}
+#pageModal .modal-body {
+    padding: 20px 24px;
+}
+#pageModal .table th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary, #6a6d70);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid var(--sap-border, #e5e7eb);
+}
+#pageModal .table td {
+    vertical-align: middle;
+    padding: 10px 8px;
+}

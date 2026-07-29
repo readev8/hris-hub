@@ -36,6 +36,9 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
 
     $routes->get('/tickets', 'Tickets::index');
     $routes->get('/tickets/ajax-list', 'Tickets::ajaxList');
+    $routes->get('/tickets/ajax/pages-search', 'Tickets::ajaxPagesSearch');
+    $routes->get('/my-tickets', 'Tickets::myTickets');
+    $routes->get('/my-tickets/ajax-list', 'Tickets::ajaxMyTickets');
     $routes->get('/tickets/create', 'Tickets::create');
     $routes->post('/tickets/create', 'Tickets::create');
     $routes->post('/tickets/(:any)/take', 'Tickets::take/$1');

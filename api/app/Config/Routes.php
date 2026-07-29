@@ -40,10 +40,11 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('tickets/(:any)/reopen',       'Tickets\Action\Tickets::reopen_ticket/$1');
     $routes->post('tickets/(:any)/comments',     'Tickets\Action\Tickets::add_comment/$1');
     $routes->post('tickets/(:any)/attachments',  'Tickets\Action\Attachments::add/$1');
-    $routes->get('tickets/(:any)',               'Tickets\Data\TicketDetail::get_detail/$1');
-    $routes->get('tickets',                      'Tickets\Report\TicketList::get_list');
+    $routes->get('tickets/my-taken',             'Tickets\Report\TicketList::get_my_taken_tickets');
     $routes->get('tickets/pending-approval',     'Tickets\Report\TicketList::get_pending_approval');
     $routes->get('tickets/my-tickets',           'Tickets\Report\TicketList::get_my_tickets');
+    $routes->get('tickets/(:any)',               'Tickets\Data\TicketDetail::get_detail/$1');
+    $routes->get('tickets',                      'Tickets\Report\TicketList::get_list');
 
     // Improvements
     $routes->post('improvements/create',                 'Improvements\Action\Projects::create_improvement');
@@ -92,6 +93,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('modules/(:any)/pages',               'MasterProjects\Report\MasterProjectList::get_pages/$1');
     $routes->get('modules/(:any)',                     'MasterProjects\Data\ModuleDetail::get_detail/$1');
     $routes->get('pages/(:any)/bugs',                  'MasterProjects\Report\MasterProjectList::get_bugs/$1');
+    $routes->get('pages/public/search',                'Tickets\Data\PageSearch::search');
     $routes->get('pages/(:any)',                       'MasterProjects\Data\PageDetail::get_detail/$1');
     $routes->post('tickets/(:any)/move',               'Tickets\Action\Tickets::move_ticket/$1');
     $routes->post('master-projects/create',            'MasterProjects\Action\Projects::create_project');
