@@ -146,4 +146,65 @@ class Pages extends BaseApi
 
         return $this->JSONResponse('Blueprint design page berhasil diunassign');
     }
+
+    public function import_design_pages(string $encryptedModuleId): ResponseInterface
+    {
+        $moduleId = $this->resolveId($encryptedModuleId);
+        if (!$moduleId) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('master_projects', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $designPageIds = $input['design_page_ids'] ?? [];
+
+        if (empty($designPageIds)) {
+            return $this->JSONResponse('Pilih minimal satu design page', null, 400);
+        }
+
+        $module = $this->db()->table('modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
+        if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
+
+        $imported = 0;
+        $skipped = 0;
+        $this->db()->transStart();
+
+        foreach ($designPageIds as $encryptedDesignPageId) {
+            $designPageId = $this->resolveId($encryptedDesignPageId);
+            if (!$designPageId) { $skipped++; continue; }
+
+            $designPage = $this->db()->table('blueprint_design_pages')
+                ->where('id', $designPageId)->where('active', 0)->get()->getRowArray();
+            if (!$designPage) { $skipped++; continue; }
+
+            // Skip if already imported
+            $existing = $this->db()->table('pages')
+                ->where('module_id', $moduleId)
+                ->where('blueprint_design_page_id', $designPageId)
+                ->where('active', 0)->get()->getRowArray();
+            if ($existing) { $skipped++; continue; }
+
+            $this->db()->table('pages')->insert([
+                'module_id'                => $moduleId,
+                'blueprint_design_page_id' => $designPageId,
+                'name'                     => $designPage['title'],
+                'description'              => $designPage['description'] ?? '',
+                'sort_order'               => $designPage['sort_order'] ?? 0,
+                'created_at'              => date('Y-m-d H:i:s'),
+                'updated_at'              => date('Y-m-d H:i:s'),
+            ]);
+            $imported++;
+        }
+
+        $this->db()->transComplete();
+
+        return $this->JSONResponse("Berhasil import {$imported} design page(s)", [
+            'imported' => $imported,
+            'skipped'  => $skipped,
+        ], 201);
+    }
 }

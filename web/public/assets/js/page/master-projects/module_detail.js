@@ -45,6 +45,7 @@ var ModuleDetail = (function () {
         bindKanbanCardClick();
         bindDrawerEvents();
         bindFilterEvents();
+        bindImportEvents();
     });
 
     // ── Helpers ────────────────────────────────────────────────
@@ -246,7 +247,7 @@ var ModuleDetail = (function () {
     }
 
     function bindModalDismiss() {
-        $('#pageModal, #bugListModal, #moduleModal, #designPageModal').on('hidden.bs.modal', function () {
+        $('#pageModal, #bugListModal, #moduleModal, #designPageModal, #importDesignPagesModal').on('hidden.bs.modal', function () {
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open').css('padding-right', '');
         });
@@ -720,6 +721,226 @@ var ModuleDetail = (function () {
         });
     }
 
+    // ── Import Events ───────────────────────────────────────────
+    function bindImportEvents() {
+        // Search
+        $('#importSearchInput').on('keyup', function () {
+            var search = $(this).val().toLowerCase();
+            $('.import-design-item').each(function () {
+                var name = $(this).find('.import-design-name').text().toLowerCase();
+                var meta = $(this).find('.import-design-meta').text().toLowerCase();
+                $(this).toggle(name.indexOf(search) !== -1 || meta.indexOf(search) !== -1);
+            });
+        });
+
+        // Select All
+        $('#importSelectAll').on('change', function () {
+            var checked = $(this).is(':checked');
+            $('.import-design-cb:not(:disabled)').prop('checked', checked);
+            updateImportCount();
+        });
+
+        // Individual checkbox
+        $(document).on('change', '.import-design-cb', function () {
+            updateImportCount();
+        });
+    }
+
+    // ── Import Design Pages ─────────────────────────────────────
+    function showImportModal() {
+        loadAvailableDesignPages();
+        $('#importSearchInput').val('');
+        $('#importSelectAll').prop('checked', false);
+        $('#importCountBadge').text('0 selected');
+        $('#importSelectedInfo').text('0 pages selected');
+        $('#importBtn').prop('disabled', true);
+        var modal = new bootstrap.Modal(document.getElementById('importDesignPagesModal'));
+        modal.show();
+    }
+
+    function loadAvailableDesignPages() {
+        var $list = $('#importDesignPagesList');
+        var $loading = $('#importDesignPagesLoading');
+        var $empty = $('#importDesignPagesEmpty');
+        var $skipped = $('#importDesignPagesSkipped');
+        var $selectWrap = $('#importSelectAllWrap');
+
+        $loading.show();
+        $empty.hide();
+        $skipped.hide();
+        $selectWrap.hide();
+        $list.html('');
+
+        $.get(site_url + '/design-pages/available?module_id=' + moduleId, function (res) {
+            $loading.hide();
+            var groups = res || [];
+            if (!groups.length) {
+                $empty.show();
+                $('#importModalSubtitle').text('No design pages available');
+                return;
+            }
+
+            // Collect already imported design page IDs
+            var importedIds = {};
+            var pages = pageData.pages || [];
+            for (var p = 0; p < pages.length; p++) {
+                if (pages[p].blueprint_design_page_id) {
+                    importedIds[pages[p].blueprint_design_page_id] = true;
+                }
+            }
+
+            var html = '';
+            var skippedCount = 0;
+            var availableCount = 0;
+            for (var g = 0; g < groups.length; g++) {
+                var group = groups[g];
+                var hasAvailable = false;
+                for (var k = 0; k < group.design_pages.length; k++) {
+                    if (!importedIds[group.design_pages[k].id]) {
+                        hasAvailable = true;
+                        availableCount++;
+                    }
+                }
+                if (!hasAvailable) {
+                    skippedCount += group.design_pages.length;
+                    continue;
+                }
+
+                html += '<div class="import-design-group">';
+                html += '<div class="import-design-group-header">';
+                html += '<i class="fas fa-drafting-compass"></i> ';
+                html += '<strong>' + escHtml(group.blueprint_name) + '</strong>';
+                html += ' <span style="color:var(--sap-text-muted);margin:0 4px">→</span> ';
+                html += '<span style="color:var(--sap-text-muted);font-weight:400;text-transform:none;letter-spacing:normal">' + escHtml(group.blueprint_module_name) + '</span>';
+                html += '</div>';
+
+                for (var k2 = 0; k2 < group.design_pages.length; k2++) {
+                    var dp = group.design_pages[k2];
+                    var isImported = importedIds[dp.id];
+
+                    html += '<div class="import-design-item' + (isImported ? ' imported' : '') + '">';
+                    html += '<input type="checkbox" class="form-check-input import-design-cb" value="' + dp.id + '"' + (isImported ? ' disabled checked' : '') + '>';
+                    html += '<div class="import-design-info">';
+                    html += '<span class="import-design-name">' + escHtml(dp.title) + '</span>';
+                    html += '<span class="import-design-meta">' + escHtml(group.blueprint_module_name) + ' · ' + (dp.spec_count || 0) + ' specifications</span>';
+                    html += '</div>';
+                    if (isImported) {
+                        html += '<span class="import-design-status imported"><i class="fas fa-check"></i> Imported</span>';
+                    } else {
+                        html += '<span class="import-design-status available">Available</span>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+
+            $list.html(html);
+
+            // Update subtitle
+            var subtitle = availableCount + ' available';
+            if (skippedCount > 0) {
+                subtitle += ' · ' + skippedCount + ' already imported';
+            }
+            $('#importModalSubtitle').text(subtitle);
+
+            // Show select all if there are available items
+            if (availableCount > 0) {
+                $selectWrap.show();
+                $('#importSelectAllText').text('Select All (' + availableCount + ' available)');
+            }
+
+            if (skippedCount > 0) {
+                $skipped.text(skippedCount + ' page(s) already imported (skipped)').show();
+            }
+        }).fail(function () {
+            $loading.hide();
+            $empty.show();
+            $('#importModalSubtitle').text('Failed to load');
+            toastr.error('Failed to load design pages');
+        });
+    }
+
+    function updateImportCount() {
+        var total = $('.import-design-cb:not(:disabled)').length;
+        var checked = $('.import-design-cb:checked:not(:disabled)').length;
+        $('#importCountBadge').text(checked + ' selected');
+        $('#importSelectedInfo').text(checked + ' page(s) selected');
+        $('#importBtn').prop('disabled', checked === 0);
+        $('#importSelectAll').prop('checked', total > 0 && total === checked);
+    }
+
+    function importSelectedDesignPages() {
+        var selected = [];
+        $('.import-design-cb:checked:not(:disabled)').each(function () {
+            selected.push($(this).val());
+        });
+
+        if (!selected.length) {
+            toastr.warning('Pilih minimal satu design page');
+            return;
+        }
+
+        // Build list of selected names for confirmation
+        var names = [];
+        $('.import-design-cb:checked:not(:disabled)').each(function () {
+            var $item = $(this).closest('.import-design-item');
+            names.push($item.find('.import-design-name').text());
+        });
+
+        var confirmHtml = '<div style="text-align:left">';
+        confirmHtml += '<p>Import ' + selected.length + ' design page(s)?</p>';
+        confirmHtml += '<ul style="margin:8px 0 0 16px;font-size:13px">';
+        for (var i = 0; i < names.length; i++) {
+            confirmHtml += '<li>' + escHtml(names[i]) + '</li>';
+        }
+        confirmHtml += '</ul>';
+        confirmHtml += '<p class="text-muted" style="margin-top:8px;font-size:12px">Pages will be created with links to original blueprint design pages.</p>';
+        confirmHtml += '</div>';
+
+        Swal.fire({
+            title: 'Import Design Pages',
+            html: confirmHtml,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0070F2',
+            cancelButtonColor: '#758CA4',
+            confirmButtonText: 'Yes, Import',
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                doImportDesignPages(selected);
+            }
+        });
+    }
+
+    function doImportDesignPages(selected) {
+        var $btn = $('#importBtn');
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Importing...');
+
+        $.ajax({
+            url: site_url + '/modules/' + moduleId + '/import-design-pages',
+            type: 'POST',
+            data: { design_page_ids: selected },
+            success: function (res) {
+                if (res.status) {
+                    var msg = 'Successfully imported ' + (res.imported || 0) + ' design page(s)';
+                    if (res.skipped && res.skipped > 0) {
+                        msg += ' (' + res.skipped + ' skipped)';
+                    }
+                    toastr.success(msg);
+                    bootstrap.Modal.getInstance(document.getElementById('importDesignPagesModal')).hide();
+                    window.location.reload();
+                } else {
+                    toastr.error(res.message || 'Import failed');
+                    $btn.prop('disabled', false).html('<i class="fas fa-file-import"></i> Import Selected');
+                }
+            },
+            error: function (xhr) {
+                toastr.error('Import failed (HTTP ' + xhr.status + ')');
+                $btn.prop('disabled', false).html('<i class="fas fa-file-import"></i> Import Selected');
+            }
+        });
+    }
+
     // ── Public API ─────────────────────────────────────────────
     return {
         switchDetailTab:              switchDetailTab,
@@ -733,6 +954,8 @@ var ModuleDetail = (function () {
         assignBlueprintDesignPage:    assignBlueprintDesignPage,
         unassignBlueprintDesignPage:  unassignBlueprintDesignPage,
         navigateToPage:               navigateToPage,
-        resetKanbanFilters:           resetKanbanFilters
+        resetKanbanFilters:           resetKanbanFilters,
+        showImportModal:              showImportModal,
+        importSelectedDesignPages:    importSelectedDesignPages
     };
 })();

@@ -146,6 +146,7 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/modules/(:any)/delete',       'MasterProjects::deleteModule/$1');
     $routes->post('/modules/(:any)/assign-blueprint',  'MasterProjects::assignBlueprintModule/$1');
     $routes->post('/modules/(:any)/unassign-blueprint', 'MasterProjects::unassignBlueprintModule/$1');
+    $routes->post('/modules/(:any)/import-design-pages', 'MasterProjects::importDesignPages/$1');
     $routes->get('/blueprint-modules/available',       'MasterProjects::getAvailableBlueprintModules');
     $routes->post('/modules/(:any)/pages',        'MasterProjects::createPage/$1');
     $routes->get('/modules/(:any)/pages',         'MasterProjects::getPages/$1');

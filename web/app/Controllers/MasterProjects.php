@@ -248,6 +248,30 @@ class MasterProjects extends BaseController
         return $this->response->setJSON($result);
     }
 
+    public function importDesignPages(string $moduleId)
+    {
+        if (!$this->guard('can_update')) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
+        }
+
+        $post = $this->request->getPost();
+        $result = $this->api->post_data('modules/' . $moduleId . '/import-design-pages', $post);
+
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => $result['data']['message'] ?? 'Import gagal',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status'   => true,
+            'message'  => $result['data']['message'] ?? 'Import berhasil',
+            'imported' => $result['data']['result']['imported'] ?? 0,
+            'skipped'  => $result['data']['result']['skipped'] ?? 0,
+        ]);
+    }
+
     public function getAvailableBlueprintModules()
     {
         if (!$this->guard()) {
