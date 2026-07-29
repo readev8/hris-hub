@@ -10,7 +10,7 @@
             <div class="brand-icon">
                 <i class="fas fa-layer-group"></i>
             </div>
-            <span class="brand-text d-none d-sm-inline">Project Management</span>
+            <span class="brand-text d-none d-sm-inline">HRIS-Hub</span>
         </a>
     </div>
 

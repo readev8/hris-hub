@@ -1,4 +1,4 @@
-# Project Management System
+# HRIS-Hub
 
 Two-app CI4 architecture: **API** (`:8080`) + **Web** (`:8081`).
 
@@ -21,7 +21,7 @@ cd ..
 ### 2. Database Setup
 
 ```bash
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS project_management"
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS hris_hub"
 
 # Run migrations (creates all tables)
 cd api && php spark migrate && cd ..
@@ -37,7 +37,7 @@ Both `api/.env` and `web/.env` are pre-configured for localhost development:
 | File | Key | Value |
 |------|-----|-------|
 | `api/.env` | `app.baseURL` | `http://localhost:8080/` |
-| `api/.env` | `database.default.database` | `project_management` |
+| `api/.env` | `database.default.database` | `hris_hub` |
 | `api/.env` | `database.default.username` | `root` |
 | `api/.env` | `database.default.password` | *(empty)* |
 | `web/.env` | `app.baseURL` | `http://localhost:8081/` |

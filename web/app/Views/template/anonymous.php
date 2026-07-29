@@ -30,7 +30,7 @@
     </main>
 
     <footer class="anon-footer">
-        <p>Project Management &mdash; Anonymous Ticket Portal</p>
+        <p>HRIS-Hub &mdash; Anonymous Ticket Portal</p>
     </footer>
 
     <script src="<?= base_url('public/vendor/jquery/3.7.1/jquery.min.js') ?>"></script>

@@ -1,6 +1,6 @@
 <footer class="app-footer">
     <div class="footer-left">
-        <span>Project Management</span>
+        <span>HRIS-Hub</span>
         <span class="footer-sep">&middot;</span>
         <span>v<?= config('App')->assetVersion ?></span>
     </div>

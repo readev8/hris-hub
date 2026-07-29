@@ -26,7 +26,7 @@ class Auth extends BaseController
             $authResult = $this->api->postToMyhrAuth('auth-winit/authenticate', [
                 'username'   => $encUsername,
                 'password'   => $encPassword,
-                'apps'       => 'project_management',
+                'apps'       => 'hris_hub',
                 'lat'        => 0,
                 'lon'        => 0,
                 'ipaddress'  => '',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Project Management</title>
+    <title>Sign In — HRIS-Hub</title>
     <link rel="stylesheet" href="<?= base_url('public/vendor/fonts/plus-jakarta-sans.css?v=' . config('App')->assetVersion) ?>">
     <link rel="stylesheet" href="<?= base_url('public/vendor/font-awesome/6.6.0/css/all.min.css?v=' . config('App')->assetVersion) ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css') ?>">
@@ -23,7 +23,7 @@
         /* Left Panel — Branding */
         .auth-split-left {
             flex: 1;
-            background: linear-gradient(135deg, #1D2D3E 0%, #2C4056 50%, #1D2D3E 100%);
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -38,8 +38,8 @@
             position: absolute;
             top: -50%; left: -50%;
             width: 200%; height: 200%;
-            background: radial-gradient(circle at 30% 50%, rgba(0,112,242,0.08) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 80%, rgba(0,176,255,0.05) 0%, transparent 50%);
+            background: radial-gradient(circle at 30% 50%, rgba(15,118,110,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(20,184,166,0.05) 0%, transparent 50%);
             animation: authBgDrift 20s ease-in-out infinite alternate;
         }
         @keyframes authBgDrift {
@@ -52,7 +52,7 @@
         }
         .auth-brand .brand-icon {
             width: 72px; height: 72px;
-            background: rgba(0,112,242,0.15);
+            background: rgba(15,118,110,0.15);
             border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 24px;
@@ -84,10 +84,10 @@
         }
         .auth-feature i {
             width: 32px; height: 32px;
-            background: rgba(0,112,242,0.15);
+            background: rgba(15,118,110,0.15);
             border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            color: #0070F2; font-size: 14px; flex-shrink: 0;
+            color: #0F766E; font-size: 14px; flex-shrink: 0;
         }
 
         /* Right Panel — Form */
@@ -108,7 +108,7 @@
         }
         .auth-form-logo {
             width: 48px; height: 48px;
-            background: var(--sap-brand, #0070F2);
+            background: #0F766E;
             border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 22px;
@@ -156,8 +156,8 @@
         }
         .field-input-wrap .field-input:focus {
             outline: none;
-            border-color: var(--sap-brand, #0070F2);
-            box-shadow: 0 0 0 3px rgba(0,112,242,0.12);
+            border-color: #0F766E;
+            box-shadow: 0 0 0 3px rgba(15,118,110,0.12);
         }
         .field-input-wrap .field-input::placeholder {
             color: var(--sap-text-placeholder, #9ca3af);
@@ -172,7 +172,7 @@
         .btn-auth-submit {
             width: 100%;
             padding: 11px;
-            background: var(--sap-brand, #0070F2);
+            background: #0F766E;
             color: #fff;
             border: none;
             border-radius: var(--sap-radius, 8px);
@@ -183,7 +183,7 @@
             display: flex; align-items: center; justify-content: center;
             gap: 8px; height: 42px;
         }
-        .btn-auth-submit:hover { background: var(--sap-brand-dark, #005ec4); }
+        .btn-auth-submit:hover { background: #14B8A6; }
         .btn-auth-submit:active { transform: scale(0.98); }
         .btn-auth-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-auth-submit .spinner {
@@ -240,11 +240,11 @@
             transition: all 150ms;
         }
         .auth-public-link--primary {
-            background: var(--sap-brand, #0070F2);
+            background: #0F766E;
             color: #fff;
         }
         .auth-public-link--primary:hover {
-            background: var(--sap-brand-hover, #005ac1);
+            background: #14B8A6;
             color: #fff;
         }
         .auth-public-link:not(.auth-public-link--primary) {
@@ -254,7 +254,7 @@
         }
         .auth-public-link:not(.auth-public-link--primary):hover {
             background: var(--sap-surface, #f8f9fa);
-            color: var(--sap-brand, #0070F2);
+            color: #0F766E;
         }
 
         @media (max-width: 900px) {
@@ -267,22 +267,22 @@
     <div class="auth-split-left">
         <div class="auth-brand">
             <div class="brand-icon">
-                <i class="fas fa-tasks"></i>
+                <i class="fas fa-users-cog"></i>
             </div>
-            <h1>Project Management</h1>
-            <p>Streamline your team's workflow with enterprise-grade ticket tracking, approvals, and project oversight.</p>
+            <h1>HRIS-Hub</h1>
+            <p>Human Resource Information System — Kelola SDM dengan mudah dan efisien.</p>
             <div class="auth-features">
                 <div class="auth-feature">
-                    <i class="fas fa-ticket-alt"></i>
-                    <span>Centralized bug &amp; issue tracking</span>
+                    <i class="fas fa-users"></i>
+                    <span>Manajemen data karyawan</span>
                 </div>
                 <div class="auth-feature">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Multi-level approval workflows</span>
+                    <i class="fas fa-check-double"></i>
+                    <span>Approval workflow otomatis</span>
                 </div>
                 <div class="auth-feature">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Real-time dashboard &amp; analytics</span>
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard &amp; analytics real-time</span>
                 </div>
             </div>
         </div>
@@ -290,7 +290,7 @@
     <div class="auth-split-right">
         <div class="auth-form-wrap">
             <div class="auth-form-logo">
-                <i class="fas fa-tasks"></i>
+                <i class="fas fa-users-cog"></i>
             </div>
             <h2>Welcome back</h2>
             <p class="subtitle">Sign in with your HRIS account to continue</p>
@@ -332,7 +332,7 @@
                 </a>
             </div>
 
-            <p class="auth-footer">Project Management &mdash; Enterprise Edition</p>
+            <p class="auth-footer">HRIS-Hub &mdash; Human Resource Information System</p>
         </div>
     </div>
     <script>
