@@ -251,10 +251,24 @@ class Tickets extends BaseController
             log_message('error', 'Tickets detail API failed for ' . $encryptedId . ': ' . json_encode($result));
         }
 
+        $ticket = $result['data']['result'] ?? null;
+        $referralToken = null;
+        if (!empty($ticket['referral'])) {
+            $allTickets = $this->api->get_data('tickets');
+            $ticketsList = $allTickets['data']['result'] ?? [];
+            foreach ($ticketsList as $t) {
+                if (($t['tracking_code'] ?? '') === $ticket['referral']) {
+                    $referralToken = $t['id'] ?? null;
+                    break;
+                }
+            }
+        }
+
         return $this->view('tickets/detail', [
             'title'  => 'Ticket Detail',
-            'ticket' => $result['data']['result'] ?? null,
+            'ticket' => $ticket,
             'token'  => $encryptedId,
+            'referralToken' => $referralToken,
         ]);
     }
 

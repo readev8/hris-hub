@@ -277,6 +277,14 @@
                                 <button class="sap-btn sap-btn-secondary sap-btn-sm" style="padding:2px 6px;font-size:11px" onclick="copyTrackingCode('<?= esc($ticket['tracking_code'] ?? '') ?>')" title="Copy tracking code"><i class="fas fa-copy"></i></button>
                             </div>
                         </dd>
+                        <?php if (!empty($ticket['referral'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Referral</dt>
+                        <dd class="col-7">
+                            <a href="<?= site_url('tickets/' . ($referralToken ?? '')) ?>" style="text-decoration:none">
+                                <code style="font-size:13px;background:var(--sap-background);padding:2px 8px;border-radius:4px;font-family:'SF Mono',Monaco,Consolas,monospace;color:var(--sap-brand)"><?= esc($ticket['referral']) ?></code>
+                            </a>
+                        </dd>
+                        <?php endif; ?>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Creator</dt>
                         <dd class="col-7"><?= esc($ticket['creator_name'] ?? '') ?></dd>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Assignee</dt>

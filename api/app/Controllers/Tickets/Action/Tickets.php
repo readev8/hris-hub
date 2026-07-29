@@ -73,6 +73,7 @@ class Tickets extends BaseApi
             'due_date'       => $dueDate,
             'needs_approval' => !empty($input['needs_approval']) ? 1 : 0,
             'tracking_code'  => 'TKT-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2))),
+            'referral'       => !empty($input['referral']) ? trim($input['referral']) : null,
             'created_at'     => date('Y-m-d H:i:s'),
             'updated_at'     => date('Y-m-d H:i:s'),
         ]);
@@ -604,17 +605,23 @@ class Tickets extends BaseApi
             $pageId = !empty($input['page_id']) ? $this->resolveId($input['page_id']) : null;
         }
 
+        $referral = $ticket['referral'];
+        if (array_key_exists('referral', $input)) {
+            $referral = !empty($input['referral']) ? trim($input['referral']) : null;
+        }
+
         $old = [
             'title' => $ticket['title'], 'description' => $ticket['description'],
             'type' => $ticket['type'], 'priority' => $ticket['priority'],
             'due_date' => $ticket['due_date'], 'assignee_id' => $ticket['assignee_id'],
-            'approver_id' => $ticket['approver_id'],
+            'approver_id' => $ticket['approver_id'], 'referral' => $ticket['referral'],
         ];
         $new = [
             'title' => $title, 'description' => $description,
             'type' => $type, 'priority' => $priority,
             'due_date' => $dueDate, 'assignee_id' => $assigneeId,
             'page_id' => $pageId, 'approver_id' => $approverId,
+            'referral' => $referral,
             'updated_at' => date('Y-m-d H:i:s'),
         ];
 

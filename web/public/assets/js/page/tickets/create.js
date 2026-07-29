@@ -15,6 +15,7 @@
 var projectsCache = null;
 var activeModuleReq = null;
 var activePageReq = null;
+var referralSearchTimer = null;
 
 // ===========================
 // EVENTS
@@ -115,6 +116,26 @@ $(function() {
 
     $('#pageSelect').on('change', function() {
         $('#pageIdValue').val($(this).val());
+    });
+
+    // Referral search
+    $('#searchReferralBtn, #referralInput').on('click', function() {
+        loadReferralList(1, '');
+        $('#referralSearch').val('');
+        $('#referralModal').modal('show');
+    });
+
+    $('#referralSearch').on('keyup', function() {
+        clearTimeout(referralSearchTimer);
+        var searchVal = $(this).val();
+        referralSearchTimer = setTimeout(function() {
+            loadReferralList(1, searchVal);
+        }, 300);
+    });
+
+    $(document).on('click', '.btn-select-referral', function() {
+        $('#referralInput').val($(this).data('code'));
+        $('#referralModal').modal('hide');
     });
 
     // File dropzone
@@ -241,4 +262,63 @@ function populateProjects(res) {
     $('#moduleSelect').html('<option value="">Select Module...</option>').prop('disabled', true);
     $('#pageSelect').html('<option value="">Select Page...</option>').prop('disabled', true);
     $('#pageIdValue').val('');
+}
+
+function loadReferralList(page, search) {
+    var $list = $('#referralTicketList');
+    $list.html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+
+    $.get(site_url + '/tickets/ajax-list', {
+        page: page,
+        per_page: 10,
+        search: search
+    }, function(res) {
+        var rows = res.data || [];
+        if (!rows.length) {
+            $list.html('<div class="text-center py-3 text-muted">No tickets found</div>');
+            $('#referralPagination').html('');
+            return;
+        }
+        var html = '<table class="table table-sm table-hover mb-0">';
+        html += '<thead><tr>';
+        html += '<th style="width:140px">Code</th>';
+        html += '<th>Title</th>';
+        html += '<th style="width:100px">Status</th>';
+        html += '<th style="width:80px"></th>';
+        html += '</tr></thead><tbody>';
+        for (var i = 0; i < rows.length; i++) {
+            var t = rows[i];
+            html += '<tr>';
+            html += '<td><code style="font-size:12px;background:var(--sap-background);padding:2px 6px;border-radius:4px">' + escHtml(t.tracking_code || '') + '</code></td>';
+            html += '<td style="font-size:13px">' + escHtml(t.title || '') + '</td>';
+            html += '<td><span class="sap-badge info" style="font-size:11px;padding:2px 8px">' + escHtml(t.status_name || '') + '</span></td>';
+            html += '<td><button type="button" class="sap-btn sap-btn-primary sap-btn-sm btn-select-referral" data-code="' + escAttr(t.tracking_code) + '" style="font-size:11px;padding:4px 10px">Select</button></td>';
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+        $list.html(html);
+
+        var totalPages = Math.ceil((res.total || 0) / 10);
+        var pagHtml = '';
+        if (totalPages > 1) {
+            pagHtml += '<button type="button" class="sap-btn sap-btn-secondary sap-btn-sm btn-referral-page" data-page="' + (page - 1) + '"' + (page <= 1 ? ' disabled' : '') + '><i class="fas fa-chevron-left"></i> Prev</button>';
+            pagHtml += '<span style="font-size:13px;color:var(--sap-text-secondary);padding:6px 12px">' + page + ' / ' + totalPages + '</span>';
+            pagHtml += '<button type="button" class="sap-btn sap-btn-secondary sap-btn-sm btn-referral-page" data-page="' + (page + 1) + '"' + (page >= totalPages ? ' disabled' : '') + '>Next <i class="fas fa-chevron-right"></i></button>';
+        }
+        $('#referralPagination').html(pagHtml);
+    }).fail(function() {
+        $list.html('<div class="text-center py-3 text-danger">Failed to load tickets</div>');
+    });
+}
+
+$(document).on('click', '.btn-referral-page', function() {
+    if ($(this).prop('disabled')) return;
+    loadReferralList(parseInt($(this).data('page')), $('#referralSearch').val());
+});
+
+function escHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escAttr(s) {
+    return String(s || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }

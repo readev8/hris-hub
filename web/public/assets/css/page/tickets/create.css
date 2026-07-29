@@ -11,3 +11,63 @@
 .segmented-control .seg-option[data-value="2"].active { background: var(--sap-warning); color: #fff; border-color: var(--sap-warning); }
 .segmented-control .seg-option[data-value="3"]:hover { background: var(--sap-error-bg); color: var(--sap-error); }
 .segmented-control .seg-option[data-value="3"].active { background: var(--sap-error); color: #fff; border-color: var(--sap-error); }
+
+/* Referral Input Group */
+.input-group {
+    display: flex;
+    gap: 0;
+}
+.input-group .sap-input {
+    border-radius: 8px 0 0 8px;
+    flex: 1;
+    border-right: none;
+}
+.input-group .sap-input:disabled {
+    background: var(--sap-surface, #f9fafb);
+    opacity: 0.65;
+    cursor: not-allowed;
+    border-color: var(--sap-border-input, #d1d5db);
+}
+.input-group .search-btn {
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    border: 1.5px solid var(--sap-border-input, #d1d5db);
+    background: var(--sap-surface, #f9fafb);
+    color: var(--sap-text-muted, #9ca3af);
+    cursor: pointer;
+    transition: all 150ms;
+}
+.input-group .search-btn:hover {
+    background: var(--sap-brand, #0070F2);
+    color: #fff;
+    border-color: var(--sap-brand, #0070F2);
+}
+.input-group .search-btn i {
+    font-size: 14px;
+}
+
+/* Referral Modal */
+#referralModal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+#referralModal .modal-header {
+    border-bottom: 1px solid var(--sap-border-light, #f0f0f0);
+    padding: 16px 24px;
+}
+#referralModal .modal-body {
+    padding: 20px 24px;
+}
+#referralModal .table th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary, #6a6d70);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid var(--sap-border, #e5e7eb);
+}
+#referralModal .table td {
+    vertical-align: middle;
+    padding: 10px 8px;
+}
