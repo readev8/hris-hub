@@ -13,6 +13,7 @@ $routes->post('tickets/public/create',                       'Tickets\Action\Pub
 $routes->get('tickets/public/list',                          'Tickets\Data\PublicTicketDetail::get_list', ['filter' => ['cors', 'ratelimit']]);
 $routes->get('tickets/public/by-code/(:any)',                 'Tickets\Data\PublicTicketDetail::get_by_code/$1', ['filter' => ['cors', 'ratelimit']]);
 $routes->get('tickets/public/batch-by-codes',                 'Tickets\Data\PublicTicketDetail::get_batch_by_codes', ['filter' => ['cors', 'ratelimit']]);
+$routes->post('tickets/public/(:any)/close',                  'Tickets\Data\PublicTicketDetail::close_by_code/$1', ['filter' => ['cors', 'ratelimit']]);
 $routes->post('tickets/public/(:any)/attachments',            'Tickets\Action\PublicAttachments::add/$1', ['filter' => ['cors', 'ratelimit']]);
 $routes->get('master-projects/public/active',                 'MasterProjects\Report\PublicMasterProjectList::get_active', ['filter' => ['cors', 'ratelimit']]);
 $routes->get('master-projects/public/(:any)/modules',         'MasterProjects\Report\PublicMasterProjectList::get_modules/$1', ['filter' => ['cors', 'ratelimit']]);
@@ -55,9 +56,10 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('improvements/(:any)/comments',        'Improvements\Action\Projects::add_comment/$1');
     $routes->post('improvements/(:any)/attachments',     'Improvements\Action\Attachments::add/$1');
     $routes->delete('improvements/(:any)/attachments/(:any)', 'Improvements\Action\Attachments::delete/$1/$2');
+    $routes->get('improvements/user-types',              'Improvements\Action\Projects::get_user_types');
+    $routes->get('improvements/pending-approvals',       'Improvements\Report\ProjectList::get_pending_approvals');
     $routes->get('improvements/(:any)',                  'Improvements\Data\ProjectDetail::get_detail/$1');
     $routes->get('improvements',                         'Improvements\Report\ProjectList::get_list');
-    $routes->get('improvements/pending-approvals',       'Improvements\Report\ProjectList::get_pending_approvals');
 
     // Dashboard
     $routes->get('dashboard/stats', 'Dashboard\Report\Stats::get_stats');

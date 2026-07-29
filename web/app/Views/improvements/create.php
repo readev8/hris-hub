@@ -88,6 +88,15 @@
                             <small class="text-muted" style="font-size:11px">If set, only this user can approve. Otherwise, role-based approval applies.</small>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Target Pengguna Aplikasi <span style="font-weight:400;color:var(--sap-text-muted)">(optional)</span></label>
+                        <select name="user_type_ids[]" class="sap-select" id="userTypeSelect" multiple>
+                            <?php foreach ($userTypes as $ut): ?>
+                                <option value="<?= esc($ut['id']) ?>"><?= esc($ut['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="text-muted" style="font-size:11px">Pilih pengguna yang terdampak improvement ini</small>
+                    </div>
                 </div>
 
                 <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">

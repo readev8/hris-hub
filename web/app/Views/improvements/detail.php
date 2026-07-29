@@ -218,6 +218,14 @@
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Target Date</dt>
                         <dd class="col-7"><?= esc($improvement['target_date']) ?></dd>
                         <?php endif; ?>
+                        <?php if (!empty($improvement['user_types'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Target Pengguna</dt>
+                        <dd class="col-7 d-flex flex-wrap gap-1">
+                            <?php foreach ($improvement['user_types'] as $ut): ?>
+                                <span class="sap-badge info"><?= esc($ut['name']) ?></span>
+                            <?php endforeach; ?>
+                        </dd>
+                        <?php endif; ?>
                     </dl>
                 </div>
             </div>

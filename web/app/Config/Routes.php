@@ -24,6 +24,7 @@ $routes->get('/public/tickets/ajax-batch',           'PublicTickets::ajaxBatchLo
 $routes->get('/public/tickets/ajax/projects',        'PublicTickets::ajaxProjects');
 $routes->get('/public/tickets/ajax/modules/(:segment)','PublicTickets::ajaxModules/$1');
 $routes->get('/public/tickets/ajax/pages/(:segment)','PublicTickets::ajaxPages/$1');
+$routes->post('/public/tickets/(:any)/close',          'PublicTickets::ajaxClose/$1');
 $routes->get('/public/attachment/(:any)',            'PublicTickets::serveAttachment/$1');
 $routes->get('/public/tickets/(:any)',               'PublicTickets::detail/$1');
 

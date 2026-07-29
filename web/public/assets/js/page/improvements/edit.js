@@ -24,6 +24,12 @@ function clearFieldErrors() {
 $(function() {
     var data = window.PageData || {};
 
+    $('#userTypeSelect').select2({
+        placeholder: 'Pilih target pengguna...',
+        allowClear: true,
+        width: '100%'
+    });
+
     $('[name="name"], [name="description"], [name="business_case"], [name="priority"]').on('input change', function() {
         $(this).removeClass('is-invalid');
         var fieldName = $(this).attr('name');

@@ -63,6 +63,19 @@ class Projects extends BaseApi
         ]);
         $projectId = $this->db()->insertID();
 
+        $userTypeIds = $input['user_type_ids'] ?? [];
+        if (!empty($userTypeIds) && is_array($userTypeIds)) {
+            $insertBatch = [];
+            foreach ($userTypeIds as $utId) {
+                $insertBatch[] = [
+                    'project_id'   => $projectId,
+                    'user_type_id' => (int) $utId,
+                    'created_at'   => date('Y-m-d H:i:s'),
+                ];
+            }
+            $this->db()->table('project_user_types')->insertBatch($insertBatch);
+        }
+
         $this->audit->log($userId, 'project', $projectId, 'create_improvement', null, [
             'name' => $name, 'priority' => $priority,
         ]);
@@ -115,6 +128,23 @@ class Projects extends BaseApi
 
         $this->db()->transStart();
         $this->db()->table('projects')->update($update, ['id' => $id]);
+
+        if (array_key_exists('user_type_ids', $input)) {
+            $this->db()->table('project_user_types')->where('project_id', $id)->delete();
+            $userTypeIds = $input['user_type_ids'] ?? [];
+            if (!empty($userTypeIds) && is_array($userTypeIds)) {
+                $insertBatch = [];
+                foreach ($userTypeIds as $utId) {
+                    $insertBatch[] = [
+                        'project_id'   => $id,
+                        'user_type_id' => (int) $utId,
+                        'created_at'   => date('Y-m-d H:i:s'),
+                    ];
+                }
+                $this->db()->table('project_user_types')->insertBatch($insertBatch);
+            }
+        }
+
         $this->audit->log($userId, 'project', $id, 'update_improvement', null, $update);
         $this->db()->transComplete();
 
@@ -408,5 +438,17 @@ class Projects extends BaseApi
         $this->db()->transComplete();
 
         return $this->JSONResponse($message);
+    }
+
+    public function get_user_types(): ResponseInterface
+    {
+        $userTypes = $this->db()->table('master_user_types')
+            ->select('id, name, description')
+            ->where('active', 1)
+            ->orderBy('id', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        return $this->JSONResponse('OK', $userTypes, 200);
     }
 }

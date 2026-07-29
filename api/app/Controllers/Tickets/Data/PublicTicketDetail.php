@@ -127,6 +127,49 @@ class PublicTicketDetail extends BaseApi
         return $this->JSONResponse('OK', $result, 200);
     }
 
+    public function close_by_code(string $code): ResponseInterface
+    {
+        $code = trim($code);
+        if (empty($code)) {
+            return $this->JSONResponse('Kode pelacakan wajib diisi', null, 400);
+        }
+
+        $ticket = $this->db()->table('tickets')
+            ->where('tracking_code', $code)
+            ->where('is_anonymous', 1)
+            ->where('active', 0)
+            ->get()
+            ->getRowArray();
+
+        if (!$ticket) {
+            return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+        }
+
+        if ((int) $ticket['status'] !== Enums::TICKET_STATUS_RESOLVED) {
+            return $this->JSONResponse('Hanya tiket dengan status Resolved yang bisa ditutup', null, 400);
+        }
+
+        $ticketId = (int) $ticket['id'];
+        $now = date('Y-m-d H:i:s');
+
+        $this->db()->table('tickets')->where('id', $ticketId)->update([
+            'status'     => Enums::TICKET_STATUS_CLOSED,
+            'closed_at'  => $now,
+            'updated_at' => $now,
+        ]);
+
+        $this->db()->table('audit_logs')->insert([
+            'entity_type' => 'ticket',
+            'entity_id'   => $ticketId,
+            'user_id'     => null,
+            'action'      => 'close_ticket',
+            'new_values'  => json_encode(['status' => Enums::TICKET_STATUS_CLOSED]),
+            'created_at'  => $now,
+        ]);
+
+        return $this->JSONResponse('Ticket berhasil ditutup', null, 200);
+    }
+
     public function get_list(): ResponseInterface
     {
         $params = $this->req->getGet();

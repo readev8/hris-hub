@@ -136,9 +136,13 @@ class Improvements extends BaseController
         $usersResult = $this->api->get_data('users');
         $usersList = $usersResult['data']['result'] ?? [];
 
+        $userTypesResult = $this->api->get_data('improvements/user-types');
+        $userTypesList = $userTypesResult['data']['result'] ?? [];
+
         return $this->view('improvements/create', [
             'title' => 'Create Improvement',
             'users' => $usersList,
+            'userTypes' => $userTypesList,
         ]);
     }
 
@@ -174,11 +178,15 @@ class Improvements extends BaseController
         $usersResult = $this->api->get_data('users');
         $usersList = $usersResult['data']['result'] ?? [];
 
+        $userTypesResult = $this->api->get_data('improvements/user-types');
+        $userTypesList = $userTypesResult['data']['result'] ?? [];
+
         return $this->view('improvements/edit', [
             'title'       => 'Edit Improvement',
             'improvement' => $result['data']['result'] ?? null,
             'token'       => $encryptedId,
             'users'       => $usersList,
+            'userTypes'   => $userTypesList,
         ]);
     }
 

@@ -151,6 +151,21 @@ class PublicTickets extends BaseController
         return $this->response->setJSON($result['data']['result'] ?? []);
     }
 
+    public function ajaxClose(string $code)
+    {
+        $result = $this->api->post_data('tickets/public/' . $code . '/close');
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => $result['data']['message'] ?? 'Gagal menutup ticket',
+            ]);
+        }
+        return $this->response->setJSON([
+            'status'  => true,
+            'message' => $result['data']['message'] ?? 'Ticket berhasil ditutup',
+        ]);
+    }
+
     public function ajaxProjects()
     {
         $result = $this->api->get_data('master-projects/public/active');
@@ -181,11 +196,6 @@ class PublicTickets extends BaseController
     public function serveAttachment(string $filename)
     {
         if (!preg_match('/^[a-zA-Z0-9_]+\.[a-z0-9]{3,5}$/', $filename)) {
-            return $this->response->setStatusCode(404)->setBody('Not found');
-        }
-
-        $att = $this->api->get_data('attachments/' . $filename);
-        if (!$att || !($att['status'] ?? false)) {
             return $this->response->setStatusCode(404)->setBody('Not found');
         }
 

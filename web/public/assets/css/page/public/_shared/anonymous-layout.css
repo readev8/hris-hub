@@ -482,6 +482,24 @@
     color: var(--sap-text-muted, #999);
 }
 
+/* ── Timeline Dot Colors ─────────────────────────────── */
+.anon-timeline-dot--create {
+    background: var(--sap-success, #256f3a) !important;
+    box-shadow: 0 0 0 2px var(--sap-success, #256f3a) !important;
+}
+.anon-timeline-dot--resolve {
+    background: var(--sap-brand, #0070f2) !important;
+    box-shadow: 0 0 0 2px var(--sap-brand, #0070f2) !important;
+}
+.anon-timeline-dot--close {
+    background: var(--sap-text-muted, #999) !important;
+    box-shadow: 0 0 0 2px var(--sap-text-muted, #999) !important;
+}
+.anon-timeline-dot--reject {
+    background: var(--sap-error, #aa0808) !important;
+    box-shadow: 0 0 0 2px var(--sap-error, #aa0808) !important;
+}
+
 /* ── Empty State ─────────────────────────────────────── */
 .anon-empty-state {
     text-align: center;

@@ -101,6 +101,15 @@ class ProjectDetail extends BaseApi
         unset($bp);
         $project['blueprints'] = $blueprints;
 
+        $userTypes = $this->db()->table('master_user_types')
+            ->select('master_user_types.id, master_user_types.name')
+            ->join('project_user_types', 'project_user_types.user_type_id = master_user_types.id')
+            ->where('project_user_types.project_id', $id)
+            ->where('master_user_types.active', 1)
+            ->get()
+            ->getResultArray();
+        $project['user_types'] = $userTypes;
+
         $project['id'] = $this->api->encryptId($project['id']);
         $project['status_name'] = \App\Config\Enums::projectStatusName($project['status']);
         $project['priority_name'] = \App\Config\Enums::priorityName($project['priority']);

@@ -58,6 +58,12 @@ function clearFieldErrors() {
 // ===========================
 
 $(function() {
+    $('#userTypeSelect').select2({
+        placeholder: 'Pilih target pengguna...',
+        allowClear: true,
+        width: '100%'
+    });
+
     $('#dropzone').on('click', function() {
         $(this).find('input[type="file"]').click();
     }).on('dragover', function(e) {
