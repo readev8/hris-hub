@@ -5,7 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /** @var RouteCollection $routes */
 
 // Public routes (no auth)
-$routes->post('auth/login', 'Auth\Action\Auth::login');
+// $routes->post('auth/login', 'Auth\Action\Auth::login'); // DEPRECATED: Removed for security. Use web Auth controller instead.
 $routes->get('tickets/track/(:any)', 'Tickets\Report\TicketTracking::get_by_code/$1', ['filter' => 'ratelimit']);
 
 // Public anonymous ticket routes (no apikeyauth, ratelimited)

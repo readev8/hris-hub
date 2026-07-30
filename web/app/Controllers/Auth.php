@@ -133,6 +133,9 @@ class Auth extends BaseController
             $session->set('role_id', $user['role_id']);
             $session->set('permissions', $permMap);
 
+            // Regenerate session ID to prevent session fixation
+            $session->regenerate(true);
+
             return redirect()->to('/dashboard');
         }
 

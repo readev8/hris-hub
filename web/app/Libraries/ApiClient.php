@@ -82,7 +82,7 @@ class ApiClient
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => http_build_query($data),
             CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => true,
         ]);
 
         $response = curl_exec($ch);
@@ -138,7 +138,7 @@ class ApiClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => true,
         ]);
 
         $response = curl_exec($ch);
@@ -180,7 +180,7 @@ class ApiClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => true,
         ]);
 
         if ($method === 'POST') {

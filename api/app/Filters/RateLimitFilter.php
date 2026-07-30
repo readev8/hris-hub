@@ -23,7 +23,7 @@ class RateLimitFilter implements FilterInterface
         if ($count === 1) {
             $cache->save($key, $count, $this->windowSeconds);
         } else {
-            $cache->save($key, $count);
+            $cache->save($key, $count, $this->windowSeconds);
         }
 
         if ($count > $this->maxRequests) {
