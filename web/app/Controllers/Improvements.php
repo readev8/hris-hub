@@ -300,20 +300,6 @@ class Improvements extends BaseController
             ->setBody(file_get_contents($filePath));
     }
 
-    public function approveIt(string $encryptedId)
-    {
-        if (!$this->guard('can_approve')) {
-            return $this->denyResponse();
-        }
-        $result = $this->api->post_data('improvements/' . $encryptedId . '/approve-it');
-
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Improvements approveIt API failed for ' . $encryptedId . ': ' . json_encode($result));
-        }
-
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-    }
-
     public function approveDept(string $encryptedId)
     {
         if (!$this->guard('can_approve')) {

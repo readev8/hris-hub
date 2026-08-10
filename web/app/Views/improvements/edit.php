@@ -72,6 +72,54 @@
 
                 <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">
                     <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
+                        <i class="fas fa-cogs me-1"></i> Operational Details
+                    </h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="sap-label">Frekuensi Penggunaan</label>
+                            <select name="frekuensi_penggunaan" class="sap-select">
+                                <option value="">-- Select --</option>
+                                <option value="Harian" <?= ($improvement['frekuensi_penggunaan'] ?? '') == 'Harian' ? 'selected' : '' ?>>Harian</option>
+                                <option value="Mingguan" <?= ($improvement['frekuensi_penggunaan'] ?? '') == 'Mingguan' ? 'selected' : '' ?>>Mingguan</option>
+                                <option value="Bulanan" <?= ($improvement['frekuensi_penggunaan'] ?? '') == 'Bulanan' ? 'selected' : '' ?>>Bulanan</option>
+                                <option value="Kuartal" <?= ($improvement['frekuensi_penggunaan'] ?? '') == 'Kuartal' ? 'selected' : '' ?>>Kuartal</option>
+                                <option value="Tahunan" <?= ($improvement['frekuensi_penggunaan'] ?? '') == 'Tahunan' ? 'selected' : '' ?>>Tahunan</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="sap-label">Ada Data Dianalisa?</label>
+                            <div class="d-flex gap-3 mt-2">
+                                <label class="d-flex align-items-center gap-2" style="cursor:pointer">
+                                    <input type="radio" name="ada_data_dianalisa" value="1" <?= ($improvement['ada_data_dianalisa'] ?? 0) == 1 ? 'checked' : '' ?>> Ya
+                                </label>
+                                <label class="d-flex align-items-center gap-2" style="cursor:pointer">
+                                    <input type="radio" name="ada_data_dianalisa" value="0" <?= ($improvement['ada_data_dianalisa'] ?? 0) == 0 ? 'checked' : '' ?>> Tidak
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Situasi Terkini</label>
+                        <textarea name="situasi_terkini" class="sap-input" rows="3" placeholder="Deskripsi situasi terkini saat ini..."><?= esc($improvement['situasi_terkini'] ?? '') ?></textarea>
+                    </div>
+                    <div id="dataAnalisaSection" class="row mb-3" <?= ($improvement['ada_data_dianalisa'] ?? 0) == 1 ? '' : 'style="display:none"' ?>>
+                        <div class="col-md-6">
+                            <label class="sap-label">Jenis Data yang Dianalisa</label>
+                            <input type="text" name="jenis_data_analisa" class="sap-input" value="<?= esc($improvement['jenis_data_analisa'] ?? '') ?>" placeholder="e.g., Data Karyawan, Data Penjualan">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="sap-label">Tujuan Analisa Data</label>
+                            <input type="text" name="tujuan_analisa" class="sap-input" value="<?= esc($improvement['tujuan_analisa'] ?? '') ?>" placeholder="e.g., Optimasi proses rekrutmen">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Dampak/Manfaat Project</label>
+                        <textarea name="dampak_manfaat" class="sap-input" rows="3" placeholder="Jelaskan dampak atau manfaat dari improvement ini..."><?= esc($improvement['dampak_manfaat'] ?? '') ?></textarea>
+                    </div>
+                </div>
+
+                <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">
+                    <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
                         <i class="fas fa-calendar-alt me-1"></i> Details
                     </h5>
                     <div class="row mb-3">

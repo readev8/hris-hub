@@ -64,6 +64,16 @@ $(function() {
         width: '100%'
     });
 
+    // Toggle conditional fields for "Ada Data Dianalisa?"
+    $('input[name="ada_data_dianalisa"]').on('change', function() {
+        if ($(this).val() === '1') {
+            $('#dataAnalisaSection').slideDown(200);
+        } else {
+            $('#dataAnalisaSection').slideUp(200);
+            $('#dataAnalisaSection input').val('');
+        }
+    });
+
     $('#dropzone').on('click', function() {
         $(this).find('input[type="file"]').click();
     }).on('dragover', function(e) {

@@ -52,6 +52,32 @@ class Tickets extends BaseController
         return $this->response->setJSON($result['data']['result'] ?? ['data' => [], 'total' => 0]);
     }
 
+    public function chain(): string
+    {
+        if (!$this->guard()) {
+            return redirect()->to('/dashboard');
+        }
+        return $this->view('tickets/chain', [
+            'title' => 'Ticket Chain Tracker',
+        ]);
+    }
+
+    public function ajaxChain()
+    {
+        if (!$this->guard()) {
+            return $this->response->setJSON(['chain' => [], 'children' => []]);
+        }
+
+        $code = $this->request->getGet('code') ?? '';
+        $result = $this->api->get_data('tickets/chain', ['code' => $code]);
+
+        if (!$result || !($result['status'] ?? false)) {
+            return $this->response->setJSON(['chain' => [], 'children' => []]);
+        }
+
+        return $this->response->setJSON($result['data']['result'] ?? ['chain' => [], 'children' => []]);
+    }
+
     public function ajaxList()
     {
         if (!$this->guard()) {

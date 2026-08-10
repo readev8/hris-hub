@@ -1,0 +1,385 @@
+/* ── Ticket Chain Tracker ──────────────────────────────────── */
+
+/* ── Summary Grid ──────────────────────────────────────── */
+.chain-summary-grid {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.chain-summary-item {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--sap-border, #e5e7eb);
+    border-radius: 10px;
+}
+
+.chain-summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--sap-text, #1f2937);
+    line-height: 1;
+}
+
+.chain-summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sap-text-muted, #9ca3af);
+    margin-top: 4px;
+}
+
+/* ── Chain Tree ────────────────────────────────────────── */
+.chain-tree {
+    padding: 24px;
+}
+
+.chain-node {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-bottom: 0;
+}
+
+.chain-node:last-child {
+    margin-bottom: 0;
+}
+
+.chain-node-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--sap-text-muted, #9ca3af);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px var(--sap-text-muted, #9ca3af);
+    position: absolute;
+    left: -8px;
+    top: 20px;
+    z-index: 2;
+}
+
+.chain-node-dot--root {
+    background: var(--sap-success, #16a34a);
+    box-shadow: 0 0 0 2px var(--sap-success, #16a34a);
+}
+
+.chain-node-dot--current {
+    background: var(--sap-brand, #0070f2);
+    box-shadow: 0 0 0 2px var(--sap-brand, #0070f2);
+    width: 20px;
+    height: 20px;
+    left: -10px;
+    top: 18px;
+}
+
+.chain-node-card {
+    margin-left: 20px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--sap-border, #e5e7eb);
+    border-radius: 10px;
+    transition: all 200ms ease;
+}
+
+.chain-node:hover .chain-node-card {
+    border-color: var(--sap-brand, #0070f2);
+    box-shadow: 0 2px 8px rgba(0, 112, 242, 0.1);
+}
+
+.chain-node--current .chain-node-card {
+    border-color: var(--sap-brand, #0070f2);
+    background: rgba(0, 112, 242, 0.02);
+}
+
+.chain-node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.chain-node-code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-text-secondary, #6b7280);
+    background: var(--sap-background, #f9fafb);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--sap-border-light, #f3f4f6);
+}
+
+.chain-node-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sap-text, #1f2937);
+    margin-bottom: 6px;
+}
+
+.chain-node-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--sap-text-muted, #9ca3af);
+    flex-wrap: wrap;
+}
+
+.chain-node-actions {
+    margin-top: 10px;
+}
+
+.chain-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sap-brand, #0070f2);
+    background: transparent;
+    border: 1px solid var(--sap-brand, #0070f2);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 150ms ease;
+}
+
+.chain-view-btn:hover {
+    background: var(--sap-brand, #0070f2);
+    color: #fff;
+}
+
+/* ── Chain Connector ───────────────────────────────────── */
+.chain-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    margin-left: -8px;
+}
+
+.chain-connector-line {
+    width: 2px;
+    height: 24px;
+    background: var(--sap-border, #e5e7eb);
+}
+
+.chain-connector-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sap-text-muted, #9ca3af);
+    background: var(--sap-surface, #f9fafb);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--sap-border-light, #f3f4f6);
+    margin: 4px 0;
+}
+
+/* ── Children List ─────────────────────────────────────── */
+.chain-children-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.chain-child-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--sap-border-light, #f3f4f6);
+    transition: background 150ms ease;
+}
+
+.chain-child-item:hover {
+    background: var(--sap-background, #f9fafb);
+}
+
+.chain-child-item:last-child {
+    border-bottom: none;
+}
+
+.chain-child-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.chain-child-code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sap-text-secondary, #6b7280);
+    background: var(--sap-background, #f9fafb);
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--sap-border-light, #f3f4f6);
+}
+
+.chain-child-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text, #1f2937);
+    margin: 4px 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chain-child-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--sap-text-muted, #9ca3af);
+}
+
+/* ── Status Badges ─────────────────────────────────────── */
+.chain-status {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.chain-status--open { background: #dbeafe; color: #1e40af; }
+.chain-status--approved { background: #dcfce7; color: #166534; }
+.chain-status--in-progress { background: #fef3c7; color: #92400e; }
+.chain-status--resolved { background: #d1fae5; color: #065f46; }
+.chain-status--closed { background: #f3f4f6; color: #6b7280; }
+.chain-status--rejected { background: #fee2e2; color: #991b1b; }
+
+/* ── Priority Dots ─────────────────────────────────────── */
+.chain-priority {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.priority-low { background: #22c55e; }
+.priority-medium { background: #eab308; }
+.priority-high { background: #f97316; }
+.priority-critical { background: #dc2626; }
+
+.chain-type {
+    font-size: 11px;
+    color: var(--sap-text-muted, #9ca3af);
+}
+
+.chain-date {
+    font-size: 11px;
+    color: var(--sap-text-muted, #9ca3af);
+}
+
+/* ── Badge ──────────────────────────────────────────────── */
+.chain-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.chain-badge--root {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.chain-badge--current {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .chain-summary-grid {
+        flex-direction: column;
+    }
+
+    .chain-summary-item {
+        min-width: 100%;
+    }
+
+    .chain-node-card {
+        margin-left: 16px;
+        padding: 12px;
+    }
+
+    .chain-node-dot {
+        left: -8px;
+    }
+
+    .chain-connector {
+        margin-left: -8px;
+    }
+}
+
+/* ── Dark Mode ─────────────────────────────────────────── */
+.dark-mode .chain-summary-item {
+    background: var(--sap-dark-elevated);
+    border-color: var(--sap-dark-border);
+}
+
+.dark-mode .chain-summary-value {
+    color: #e2e8f0;
+}
+
+.dark-mode .chain-node-card {
+    background: var(--sap-dark-elevated);
+    border-color: var(--sap-dark-border);
+}
+
+.dark-mode .chain-node:hover .chain-node-card {
+    border-color: rgba(13, 148, 136, 0.5);
+}
+
+.dark-mode .chain-node--current .chain-node-card {
+    background: rgba(13, 148, 136, 0.05);
+    border-color: rgba(13, 148, 136, 0.3);
+}
+
+.dark-mode .chain-node-code {
+    background: var(--sap-dark-surface);
+    border-color: var(--sap-dark-border);
+    color: #94a3b8;
+}
+
+.dark-mode .chain-node-title {
+    color: #e2e8f0;
+}
+
+.dark-mode .chain-connector-line {
+    background: var(--sap-dark-border);
+}
+
+.dark-mode .chain-connector-label {
+    background: var(--sap-dark-surface);
+    border-color: var(--sap-dark-border);
+    color: #94a3b8;
+}
+
+.dark-mode .chain-child-item {
+    border-color: var(--sap-dark-border);
+}
+
+.dark-mode .chain-child-item:hover {
+    background: rgba(13, 148, 136, 0.05);
+}
+
+.dark-mode .chain-child-code {
+    background: var(--sap-dark-surface);
+    border-color: var(--sap-dark-border);
+    color: #94a3b8;
+}
+
+.dark-mode .chain-child-title {
+    color: #e2e8f0;
+}

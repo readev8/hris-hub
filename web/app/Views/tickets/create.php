@@ -53,7 +53,7 @@
                     <div class="col-md-6">
                         <label class="sap-label">Referral <span style="font-weight:400;color:var(--sap-text-muted)">(optional)</span></label>
                         <div class="input-group">
-                            <input type="text" name="referral" id="referralInput" class="sap-input" placeholder="Click search to select ticket..." maxlength="20" disabled>
+                            <input type="text" name="referral" id="referralInput" class="sap-input" placeholder="Click search to select ticket..." maxlength="20" readonly>
                             <button type="button" id="searchReferralBtn" class="sap-btn sap-btn-secondary search-btn" title="Search referral ticket">
                                 <i class="fas fa-search"></i>
                             </button>

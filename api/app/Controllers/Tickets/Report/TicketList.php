@@ -34,7 +34,10 @@ class TicketList extends BaseApi
             ->where('tickets.active', 0);
 
         if (!empty($search)) {
-            $builder->like('tickets.title', $search);
+            $builder->groupStart()
+                ->like('tickets.title', $search)
+                ->orLike('tickets.tracking_code', $search)
+                ->groupEnd();
         }
         if ($status !== '') {
             $builder->where('tickets.status', (int) $status);
@@ -155,7 +158,10 @@ class TicketList extends BaseApi
             ->where('tickets.assignee_id', $userId);
 
         if (!empty($search)) {
-            $builder->like('tickets.title', $search);
+            $builder->groupStart()
+                ->like('tickets.title', $search)
+                ->orLike('tickets.tracking_code', $search)
+                ->groupEnd();
         }
         if ($status !== '') {
             $builder->where('tickets.status', (int) $status);

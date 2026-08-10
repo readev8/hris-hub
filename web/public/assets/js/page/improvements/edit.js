@@ -30,6 +30,16 @@ $(function() {
         width: '100%'
     });
 
+    // Toggle conditional fields for "Ada Data Dianalisa?"
+    $('input[name="ada_data_dianalisa"]').on('change', function() {
+        if ($(this).val() === '1') {
+            $('#dataAnalisaSection').slideDown(200);
+        } else {
+            $('#dataAnalisaSection').slideUp(200);
+            $('#dataAnalisaSection input').val('');
+        }
+    });
+
     $('[name="name"], [name="description"], [name="business_case"], [name="priority"]').on('input change', function() {
         $(this).removeClass('is-invalid');
         var fieldName = $(this).attr('name');

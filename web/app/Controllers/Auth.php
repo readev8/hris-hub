@@ -31,7 +31,8 @@ class Auth extends BaseController
                 'lon'        => 0,
                 'ipaddress'  => '',
             ]);
-
+            // var_dump($authResult);
+            // die;
             // Null guard — cURL failure or JSON decode error
             if ($authResult === null) {
                 log_message('error', 'Auth result is NULL — cURL or JSON failure. Check myhr/plus server at ' . env('myhr.auth_url'));
@@ -64,7 +65,12 @@ class Auth extends BaseController
             log_message('debug', 'isSuccess result: ' . var_export($isSuccess, true));
 
             if (!$isSuccess) {
-                $msg = $authResult['message'] ?? $authResult['data']['message'] ?? 'Gagal terhubung ke server autentikasi';
+                // Jika data.status = false, ambil message dari data (error message yang sebenarnya)
+                if (isset($authResult['data']['status']) && $authResult['data']['status'] === false) {
+                    $msg = $authResult['data']['message'] ?? 'Username/Password anda salah';
+                } else {
+                    $msg = $authResult['message'] ?? $authResult['data']['message'] ?? 'Gagal terhubung ke server autentikasi';
+                }
                 log_message('error', 'Login failed: ' . $msg . ' | authResult keys: ' . implode(', ', array_keys($authResult)));
                 return $this->view('auth/login', ['error' => $msg]);
             }
@@ -88,7 +94,17 @@ class Auth extends BaseController
                 'token' => $myhrToken,
             ]);
 
-            log_message('debug', 'User detail: ' . json_encode($userDetail));
+            if (ENVIRONMENT === 'development') {
+                log_message('debug', 'User detail: ' . json_encode($userDetail));
+            }
+
+            // Validasi user detail response
+            if (!$userDetail || empty($userDetail['nama'])) {
+                log_message('error', 'Login: user detail failed — no name returned');
+                return $this->view('auth/login', [
+                    'error' => 'Gagal mengambil data user dari server autentikasi',
+                ]);
+            }
 
             $fullName = $userDetail['nama'] ?? $username;
             $email = $userDetail['email'] ?? ($username . '@external.local');

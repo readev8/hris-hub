@@ -39,6 +39,8 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/tickets/ajax/pages-search', 'Tickets::ajaxPagesSearch');
     $routes->get('/my-tickets', 'Tickets::myTickets');
     $routes->get('/my-tickets/ajax-list', 'Tickets::ajaxMyTickets');
+    $routes->get('/tickets/chain', 'Tickets::chain');
+    $routes->get('/tickets/ajax-chain', 'Tickets::ajaxChain');
     $routes->get('/tickets/create', 'Tickets::create');
     $routes->post('/tickets/create', 'Tickets::create');
     $routes->post('/tickets/(:any)/take', 'Tickets::take/$1');
@@ -66,7 +68,6 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/improvements/ajax-list', 'Improvements::ajaxList');
     $routes->get('/improvements/create', 'Improvements::create');
     $routes->post('/improvements/create', 'Improvements::create');
-    $routes->post('/improvements/(:any)/approve-it', 'Improvements::approveIt/$1');
     $routes->post('/improvements/(:any)/approve-dept', 'Improvements::approveDept/$1');
     $routes->post('/improvements/(:any)/reject', 'Improvements::reject/$1');
     $routes->post('/improvements/(:any)/resubmit', 'Improvements::resubmit/$1');

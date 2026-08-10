@@ -32,28 +32,14 @@
                 <?php
                 $st = (int) ($improvement['status'] ?? -1);
                 $steps = [
-                    ['label' => 'Draft',      'key' => 'draft'],
-                    ['label' => 'IT Manager',  'key' => 'it'],
-                    ['label' => 'Dept Head',   'key' => 'dept'],
-                    ['label' => 'Approved',    'key' => 'final'],
+                    ['label' => 'Draft',    'key' => 'draft'],
+                    ['label' => 'Approved', 'key' => 'final'],
                 ];
                 $stepStates = ['draft' => 'completed'];
-                if ($st === 0) { $stepStates['it'] = 'active'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                elseif ($st === 1) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'active'; $stepStates['final'] = ''; }
-                elseif ($st === 2 || $st === 4) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'completed'; $stepStates['final'] = 'active'; }
-                elseif ($st === 3) {
-                    $history = $improvement['approval_history'] ?? [];
-                    $rejectedStage = 0;
-                    foreach ($history as $h) {
-                        if ((int)($h['status'] ?? 0) === 2) {
-                            $rejectedStage = (int)($h['stage_sequence'] ?? 0);
-                            break;
-                        }
-                    }
-                    if ($rejectedStage <= 1) { $stepStates['it'] = 'rejected'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                    else { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'rejected'; $stepStates['final'] = ''; }
-                }
-                $icons = ['draft' => 'fa-pencil-alt', 'it' => 'fa-laptop', 'dept' => 'fa-users', 'final' => 'fa-check-double'];
+                if ($st === 0) { $stepStates['final'] = ''; }
+                elseif ($st === 1 || $st === 2 || $st === 4) { $stepStates['final'] = 'active'; }
+                elseif ($st === 3) { $stepStates['final'] = 'rejected'; }
+                $icons = ['draft' => 'fa-pencil-alt', 'final' => 'fa-check-double'];
                 foreach ($steps as $i => $s):
                     $state = $stepStates[$s['key']] ?? '';
                     $icon = $icons[$s['key']];
@@ -218,6 +204,26 @@
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Target Date</dt>
                         <dd class="col-7"><?= esc($improvement['target_date']) ?></dd>
                         <?php endif; ?>
+                        <?php if (!empty($improvement['frekuensi_penggunaan'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Frekuensi</dt>
+                        <dd class="col-7"><span class="sap-badge info"><?= esc($improvement['frekuensi_penggunaan']) ?></span></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($improvement['situasi_terkini'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Situasi Terkini</dt>
+                        <dd class="col-7" style="white-space:pre-wrap"><?= esc($improvement['situasi_terkini']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($improvement['dampak_manfaat'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Dampak/Manfaat</dt>
+                        <dd class="col-7" style="white-space:pre-wrap"><?= esc($improvement['dampak_manfaat']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($improvement['jenis_data_analisa'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Jenis Data</dt>
+                        <dd class="col-7"><?= esc($improvement['jenis_data_analisa']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($improvement['tujuan_analisa'])): ?>
+                        <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Tujuan Analisa</dt>
+                        <dd class="col-7" style="white-space:pre-wrap"><?= esc($improvement['tujuan_analisa']) ?></dd>
+                        <?php endif; ?>
                         <?php if (!empty($improvement['user_types'])): ?>
                         <dt class="col-5 text-secondary" style="font-weight:500;font-size:13px">Target Pengguna</dt>
                         <dd class="col-7 d-flex flex-wrap gap-1">
@@ -285,11 +291,7 @@
                 <div class="sap-card-body d-flex flex-column gap-2">
                     <?php $st = (int)($improvement['status'] ?? -1); ?>
                     <?php if ($st === 0 && $impCanApprove): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve-it')"><i class="fas fa-check"></i> Approve (IT)</button>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptReject()"><i class="fas fa-times"></i> Reject</button>
-                    <?php endif; ?>
-                    <?php if ($st === 1 && $impCanApprove): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve-dept')"><i class="fas fa-check"></i> Approve (Dept)</button>
+                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="doAction('approve-dept')"><i class="fas fa-check"></i> Approve</button>
                         <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptReject()"><i class="fas fa-times"></i> Reject</button>
                     <?php endif; ?>
                     <?php if ($st === 3 && $impCanCreate): ?>

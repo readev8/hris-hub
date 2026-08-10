@@ -55,6 +55,12 @@ class Projects extends BaseApi
             'approver_id'         => $approverId,
             'page_id'             => $pageId,
             'target_date'         => $targetDate,
+            'frekuensi_penggunaan' => trim($input['frekuensi_penggunaan'] ?? ''),
+            'situasi_terkini'      => trim($input['situasi_terkini'] ?? ''),
+            'ada_data_dianalisa'   => !empty($input['ada_data_dianalisa']) ? 1 : 0,
+            'jenis_data_analisa'   => trim($input['jenis_data_analisa'] ?? ''),
+            'tujuan_analisa'       => trim($input['tujuan_analisa'] ?? ''),
+            'dampak_manfaat'       => trim($input['dampak_manfaat'] ?? ''),
             'status'              => Enums::PROJECT_STATUS_DRAFT,
             'approval_workflow'   => json_encode(['stages' => ['it_manager', 'dept_head']]),
             'created_by'          => $userId,
@@ -120,6 +126,14 @@ class Projects extends BaseApi
             $update['approver_id'] = !empty($input['approver_id']) ? $this->resolveId($input['approver_id']) : null;
         }
         if (isset($input['page_id']))        $update['page_id'] = $this->resolveId($input['page_id']);
+        if (isset($input['frekuensi_penggunaan'])) $update['frekuensi_penggunaan'] = trim($input['frekuensi_penggunaan']);
+        if (isset($input['situasi_terkini']))      $update['situasi_terkini'] = trim($input['situasi_terkini']);
+        if (array_key_exists('ada_data_dianalisa', $input)) {
+            $update['ada_data_dianalisa'] = !empty($input['ada_data_dianalisa']) ? 1 : 0;
+        }
+        if (isset($input['jenis_data_analisa']))    $update['jenis_data_analisa'] = trim($input['jenis_data_analisa']);
+        if (isset($input['tujuan_analisa']))        $update['tujuan_analisa'] = trim($input['tujuan_analisa']);
+        if (isset($input['dampak_manfaat']))        $update['dampak_manfaat'] = trim($input['dampak_manfaat']);
         $update['updated_at'] = date('Y-m-d H:i:s');
 
         if (empty($update)) {
@@ -187,31 +201,7 @@ class Projects extends BaseApi
 
     public function approve_it(string $encryptedId): ResponseInterface
     {
-        if (!$this->checkPermission('improvements', 'can_approve')) {
-            return $this->JSONResponse('Anda tidak memiliki izin untuk approve improvement', null, 403);
-        }
-        return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_IT, function ($project, $userId) {
-            $this->db()->table('projects')->update([
-                'status'     => Enums::PROJECT_STATUS_PENDING,
-                'updated_at' => date('Y-m-d H:i:s'),
-            ], ['id' => $project['id']]);
-
-            $this->db()->table('approval_requests')->insert([
-                'project_id'      => $project['id'],
-                'requester_id'    => $project['created_by'],
-                'approver_id'     => $userId,
-                'stage_sequence'  => Enums::STAGE_PENDING_IT,
-                'status'          => Enums::APPROVAL_APPROVED,
-                'reviewed_at'     => date('Y-m-d H:i:s'),
-                'created_at'      => date('Y-m-d H:i:s'),
-            ]);
-
-            $this->audit->log($userId, 'project', $project['id'], 'approve_it',
-                ['status' => Enums::PROJECT_STATUS_DRAFT],
-                ['status' => Enums::PROJECT_STATUS_PENDING]
-            );
-            return 'IT Manager approval berhasil';
-        });
+        return $this->JSONResponse('Approval IT Manager sudah tidak diperlukan. Gunakan approve-dept.', null, 400);
     }
 
     public function approve_dept(string $encryptedId): ResponseInterface
@@ -236,10 +226,10 @@ class Projects extends BaseApi
             ]);
 
             $this->audit->log($userId, 'project', $project['id'], 'approve_dept',
-                ['status' => Enums::PROJECT_STATUS_PENDING],
+                ['status' => $project['status']],
                 ['status' => Enums::PROJECT_STATUS_APPROVED]
             );
-            return 'Department Head approval berhasil';
+            return 'Approval berhasil';
         });
     }
 
@@ -279,17 +269,11 @@ class Projects extends BaseApi
 
         $projectStatus = (int) $project['status'];
 
-        if ($projectStatus === Enums::PROJECT_STATUS_DRAFT) {
-            if ($role !== Enums::IT_MANAGER && $role !== Enums::ADMIN) {
-                return $this->JSONResponse('Hanya IT Manager yang dapat me-reject pada tahap ini', null, 403);
-            }
-            $stageSeq = Enums::STAGE_PENDING_IT;
-        } else {
-            if ($role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
-                return $this->JSONResponse('Hanya Department Head yang dapat me-reject pada tahap ini', null, 403);
-            }
-            $stageSeq = Enums::STAGE_PENDING_DEPT;
+        if ($projectStatus !== Enums::PROJECT_STATUS_DRAFT) {
+            return $this->JSONResponse('Proyek tidak dapat di-reject pada status ini', null, 400);
         }
+
+        $stageSeq = Enums::STAGE_PENDING_DEPT;
 
         $this->db()->transStart();
         $this->db()->table('projects')->update([
@@ -337,7 +321,7 @@ class Projects extends BaseApi
         }
 
         $update = [
-            'status'     => Enums::PROJECT_STATUS_PENDING,
+            'status'     => Enums::PROJECT_STATUS_DRAFT,
             'updated_at' => date('Y-m-d H:i:s'),
         ];
         if (!empty($description)) $update['description'] = $description;
@@ -345,15 +329,6 @@ class Projects extends BaseApi
 
         $this->db()->transStart();
         $this->db()->table('projects')->update($update, ['id' => $id]);
-
-        $this->db()->table('approval_requests')->insert([
-            'project_id'      => $id,
-            'requester_id'    => $userId,
-            'approver_id'     => null,
-            'stage_sequence'  => Enums::STAGE_PENDING_IT,
-            'status'          => Enums::APPROVAL_PENDING,
-            'created_at'      => date('Y-m-d H:i:s'),
-        ]);
 
         $this->audit->log($userId, 'project', $id, 'resubmit', null, $update);
         $this->db()->transComplete();
@@ -422,12 +397,12 @@ class Projects extends BaseApi
             return $this->JSONResponse('Hanya IT Manager yang dapat approve tahap ini', null, 403);
         }
         if ($expectedStage === Enums::STAGE_PENDING_DEPT && $role !== Enums::DEPT_HEAD && $role !== Enums::ADMIN) {
-            return $this->JSONResponse('Hanya Department Head yang dapat approve tahap ini', null, 403);
+            return $this->JSONResponse('Hanya Department Head atau Admin yang dapat approve', null, 403);
         }
 
         $expectedStatus = $expectedStage === Enums::STAGE_PENDING_IT
             ? Enums::PROJECT_STATUS_DRAFT
-            : Enums::PROJECT_STATUS_PENDING;
+            : Enums::PROJECT_STATUS_DRAFT;
 
         if ((int) $project['status'] !== $expectedStatus) {
             return $this->JSONResponse('Status proyek tidak sesuai untuk tahap approval ini', null, 400);
