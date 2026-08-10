@@ -90,7 +90,7 @@ $(function () {
     });
 
     // Clear field errors on input
-    $('[name="name"], [name="description"]').on('input change', function () {
+    $('[name="name"], [name="description"], [name="actors"], [name="pre_condition"], [name="post_condition"], [name="normal_course"], [name="exception"], [name="frequency"], [name="notes"], [name="issue"]').on('input change', function () {
         $(this).removeClass('is-invalid');
         $('#error-' + $(this).attr('name')).removeClass('visible').text('');
     });

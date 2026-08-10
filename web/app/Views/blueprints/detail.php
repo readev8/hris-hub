@@ -221,6 +221,57 @@
         </div>
 
         <div class="col-md-9">
+            <?php
+            $useCaseFields = ['actors', 'frequency', 'pre_condition', 'post_condition', 'normal_course', 'exception', 'notes', 'issue'];
+            $hasUseCase = false;
+            foreach ($useCaseFields as $f) {
+                if (!empty($blueprint[$f])) { $hasUseCase = true; break; }
+            }
+            ?>
+            <?php if ($hasUseCase): ?>
+            <div class="sap-card mb-3">
+                <div class="sap-card-header">
+                    <i class="fas fa-users"></i> Use Case Details
+                </div>
+                <div class="sap-card-body">
+                    <dl class="row mb-0" style="gap:8px 0">
+                        <?php if (!empty($blueprint['actors'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Actors</dt>
+                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['actors']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($blueprint['frequency'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Frequency</dt>
+                        <dd class="col-sm-9"><span class="sap-badge info"><?= esc($blueprint['frequency']) ?></span></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($blueprint['pre_condition'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Pre Condition</dt>
+                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['pre_condition']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($blueprint['post_condition'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Post Condition</dt>
+                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['post_condition']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($blueprint['normal_course'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Normal Course</dt>
+                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['normal_course']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($blueprint['exception'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Exception</dt>
+                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['exception']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($blueprint['notes'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Notes</dt>
+                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['notes']) ?></dd>
+                        <?php endif; ?>
+                        <?php if (!empty($blueprint['issue'])): ?>
+                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Issue</dt>
+                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['issue']) ?></dd>
+                        <?php endif; ?>
+                    </dl>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <div class="sap-card mb-3">
                 <div class="sap-card-header">
                     <i class="fas fa-folder-open"></i> <span id="currentModuleName">Select a module</span>
@@ -360,6 +411,47 @@
                     <div class="mb-3">
                         <label class="sap-label">Description</label>
                         <textarea name="description" class="sap-input" rows="4" id="scenarioDescInput" placeholder="Describe the business scenario..." style="min-height:100px"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="sap-label">Actors</label>
+                            <textarea name="actors" class="sap-input" rows="2" placeholder="e.g., System Admin, Department Head, User"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="sap-label">Frequency</label>
+                            <select name="frequency" class="sap-select">
+                                <option value="">-- Select --</option>
+                                <option value="Daily">Daily</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="Monthly">Monthly</option>
+                                <option value="Quarterly">Quarterly</option>
+                                <option value="Yearly">Yearly</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Pre Condition</label>
+                        <textarea name="pre_condition" class="sap-input" rows="2" placeholder="Conditions before this scenario starts..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Post Condition</label>
+                        <textarea name="post_condition" class="sap-input" rows="2" placeholder="State after the scenario completes..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Normal Course</label>
+                        <textarea name="normal_course" class="sap-input" rows="3" placeholder="Step-by-step description of the main flow..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Exception</label>
+                        <textarea name="exception" class="sap-input" rows="2" placeholder="Error conditions and how they are handled..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Notes</label>
+                        <textarea name="notes" class="sap-input" rows="2" placeholder="Additional notes..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="sap-label">Issue (Business Rules / Assumptions)</label>
+                        <textarea name="issue" class="sap-input" rows="2" placeholder="Business rules, assumptions..."></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="sap-label">Attachments <span style="font-weight:400;color:var(--sap-text-muted)">(optional, max 5)</span></label>

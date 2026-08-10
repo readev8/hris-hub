@@ -342,9 +342,19 @@ var BlueprintDetail = (function () {
                 });
                 imagesHtml += '</div>';
             }
+            var fieldsHtml = '';
+            if (s.actors) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Actors:</span> ' + escHtml(s.actors) + '</div>';
+            if (s.frequency) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Frequency:</span> <span class="sap-badge info" style="font-size:11px;padding:2px 8px">' + escHtml(s.frequency) + '</span></div>';
+            if (s.pre_condition) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Pre Condition:</span> ' + escHtml(s.pre_condition) + '</div>';
+            if (s.post_condition) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Post Condition:</span> ' + escHtml(s.post_condition) + '</div>';
+            if (s.normal_course) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Normal Course:</span> ' + escHtml(s.normal_course) + '</div>';
+            if (s.exception) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Exception:</span> ' + escHtml(s.exception) + '</div>';
+            if (s.notes) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Notes:</span> ' + escHtml(s.notes) + '</div>';
+            if (s.issue) fieldsHtml += '<div class="scenario-field"><span class="scenario-field-label">Issue:</span> ' + escHtml(s.issue) + '</div>';
             html += '<div class="card-item">' +
                 '<div class="card-item-title">' + escHtml(s.title) + '</div>' +
                 '<div class="card-item-desc">' + GlobalSanitize.sanitizeHtml(s.description || '') + '</div>' +
+                fieldsHtml +
                 imagesHtml +
                 '<div class="card-item-actions">' +
                 (canUpdate ? '<button class="sap-btn sap-btn-secondary sap-btn-sm" onclick="BlueprintDetail.editScenario(\'' + (s.id_encrypted || s.id) + '\')"><i class="fas fa-edit"></i></button>' : '') +
@@ -458,6 +468,14 @@ var BlueprintDetail = (function () {
         $('#scenarioFormId').val('');
         $('#scenarioTitleInput').val('');
         initSummernote('#scenarioDescInput', '');
+        $('[name="actors"]').val('');
+        $('[name="pre_condition"]').val('');
+        $('[name="post_condition"]').val('');
+        $('[name="normal_course"]').val('');
+        $('[name="exception"]').val('');
+        $('[name="frequency"]').val('');
+        $('[name="notes"]').val('');
+        $('[name="issue"]').val('');
         scenarioExistingAttachments = [];
         scenarioDeletedAttachments = [];
         scenarioFiles = [];
@@ -475,6 +493,14 @@ var BlueprintDetail = (function () {
         $('#scenarioFormId').val(scenarioId);
         $('#scenarioTitleInput').val(s.title);
         initSummernote('#scenarioDescInput', s.description);
+        $('[name="actors"]').val(s.actors || '');
+        $('[name="pre_condition"]').val(s.pre_condition || '');
+        $('[name="post_condition"]').val(s.post_condition || '');
+        $('[name="normal_course"]').val(s.normal_course || '');
+        $('[name="exception"]').val(s.exception || '');
+        $('[name="frequency"]').val(s.frequency || '');
+        $('[name="notes"]').val(s.notes || '');
+        $('[name="issue"]').val(s.issue || '');
         scenarioExistingAttachments = (s.attachments || []).map(function (a) { return Object.assign({}, a); });
         scenarioDeletedAttachments = [];
         scenarioFiles = [];

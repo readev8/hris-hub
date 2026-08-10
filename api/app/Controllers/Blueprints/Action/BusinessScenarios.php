@@ -42,12 +42,20 @@ class BusinessScenarios extends BaseApi
 
         $this->db()->transStart();
         $this->db()->table('blueprint_business_scenarios')->insert([
-            'module_id'   => $moduleId,
-            'title'       => $title,
-            'description' => $this->sanitizeRichText($rawInput['description'] ?? ''),
-            'sort_order'  => $maxSort,
-            'created_at'  => date('Y-m-d H:i:s'),
-            'updated_at'  => date('Y-m-d H:i:s'),
+            'module_id'      => $moduleId,
+            'title'          => $title,
+            'description'    => $this->sanitizeRichText($rawInput['description'] ?? ''),
+            'actors'         => trim($input['actors'] ?? ''),
+            'pre_condition'  => trim($input['pre_condition'] ?? ''),
+            'post_condition' => trim($input['post_condition'] ?? ''),
+            'normal_course'  => trim($input['normal_course'] ?? ''),
+            'exception'      => trim($input['exception'] ?? ''),
+            'frequency'      => trim($input['frequency'] ?? ''),
+            'notes'          => trim($input['notes'] ?? ''),
+            'issue'          => trim($input['issue'] ?? ''),
+            'sort_order'     => $maxSort,
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
         ]);
         $scenarioId = $this->db()->insertID();
 
@@ -77,8 +85,16 @@ class BusinessScenarios extends BaseApi
         $rawInput = $this->req->getJSON(true) ?? $this->req->getPost();
         $input = $this->cleanInput($rawInput);
         $update = [];
-        if (isset($input['title']))       $update['title'] = trim($input['title']);
+        if (isset($input['title']))           $update['title'] = trim($input['title']);
         if (isset($rawInput['description'])) $update['description'] = $this->sanitizeRichText($rawInput['description']);
+        if (isset($input['actors']))         $update['actors'] = trim($input['actors']);
+        if (isset($input['pre_condition']))  $update['pre_condition'] = trim($input['pre_condition']);
+        if (isset($input['post_condition'])) $update['post_condition'] = trim($input['post_condition']);
+        if (isset($input['normal_course']))  $update['normal_course'] = trim($input['normal_course']);
+        if (isset($input['exception']))      $update['exception'] = trim($input['exception']);
+        if (isset($input['frequency']))      $update['frequency'] = trim($input['frequency']);
+        if (isset($input['notes']))          $update['notes'] = trim($input['notes']);
+        if (isset($input['issue']))          $update['issue'] = trim($input['issue']);
         $update['updated_at'] = date('Y-m-d H:i:s');
 
         $this->db()->transStart();
