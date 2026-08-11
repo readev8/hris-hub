@@ -221,57 +221,6 @@
         </div>
 
         <div class="col-md-9">
-            <?php
-            $useCaseFields = ['actors', 'frequency', 'pre_condition', 'post_condition', 'normal_course', 'exception', 'notes', 'issue'];
-            $hasUseCase = false;
-            foreach ($useCaseFields as $f) {
-                if (!empty($blueprint[$f])) { $hasUseCase = true; break; }
-            }
-            ?>
-            <?php if ($hasUseCase): ?>
-            <div class="sap-card mb-3">
-                <div class="sap-card-header">
-                    <i class="fas fa-users"></i> Use Case Details
-                </div>
-                <div class="sap-card-body">
-                    <dl class="row mb-0" style="gap:8px 0">
-                        <?php if (!empty($blueprint['actors'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Actors</dt>
-                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['actors']) ?></dd>
-                        <?php endif; ?>
-                        <?php if (!empty($blueprint['frequency'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Frequency</dt>
-                        <dd class="col-sm-9"><span class="sap-badge info"><?= esc($blueprint['frequency']) ?></span></dd>
-                        <?php endif; ?>
-                        <?php if (!empty($blueprint['pre_condition'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Pre Condition</dt>
-                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['pre_condition']) ?></dd>
-                        <?php endif; ?>
-                        <?php if (!empty($blueprint['post_condition'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Post Condition</dt>
-                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['post_condition']) ?></dd>
-                        <?php endif; ?>
-                        <?php if (!empty($blueprint['normal_course'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Normal Course</dt>
-                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['normal_course']) ?></dd>
-                        <?php endif; ?>
-                        <?php if (!empty($blueprint['exception'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Exception</dt>
-                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['exception']) ?></dd>
-                        <?php endif; ?>
-                        <?php if (!empty($blueprint['notes'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Notes</dt>
-                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['notes']) ?></dd>
-                        <?php endif; ?>
-                        <?php if (!empty($blueprint['issue'])): ?>
-                        <dt class="col-sm-3 text-secondary" style="font-weight:600;font-size:13px">Issue</dt>
-                        <dd class="col-sm-9" style="white-space:pre-wrap"><?= esc($blueprint['issue']) ?></dd>
-                        <?php endif; ?>
-                    </dl>
-                </div>
-            </div>
-            <?php endif; ?>
-
             <div class="sap-card mb-3">
                 <div class="sap-card-header">
                     <i class="fas fa-folder-open"></i> <span id="currentModuleName">Select a module</span>

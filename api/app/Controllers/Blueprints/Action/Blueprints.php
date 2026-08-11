@@ -47,14 +47,6 @@ class Blueprints extends BaseApi
             'improvement_id' => $improvementId,
             'name'           => $name,
             'description'    => $description,
-            'actors'         => trim($input['actors'] ?? ''),
-            'pre_condition'  => trim($input['pre_condition'] ?? ''),
-            'post_condition' => trim($input['post_condition'] ?? ''),
-            'normal_course'  => trim($input['normal_course'] ?? ''),
-            'exception'      => trim($input['exception'] ?? ''),
-            'frequency'      => trim($input['frequency'] ?? ''),
-            'notes'          => trim($input['notes'] ?? ''),
-            'issue'          => trim($input['issue'] ?? ''),
             'status'         => Enums::PROJECT_STATUS_DRAFT,
             'created_by'     => $userId,
             'created_at'     => date('Y-m-d H:i:s'),
@@ -91,14 +83,6 @@ class Blueprints extends BaseApi
         $update = [];
         if (isset($input['name']))        $update['name'] = trim($input['name']);
         if (isset($input['description'])) $update['description'] = trim($input['description']);
-        if (isset($input['actors']))         $update['actors'] = trim($input['actors']);
-        if (isset($input['pre_condition']))  $update['pre_condition'] = trim($input['pre_condition']);
-        if (isset($input['post_condition'])) $update['post_condition'] = trim($input['post_condition']);
-        if (isset($input['normal_course']))  $update['normal_course'] = trim($input['normal_course']);
-        if (isset($input['exception']))      $update['exception'] = trim($input['exception']);
-        if (isset($input['frequency']))      $update['frequency'] = trim($input['frequency']);
-        if (isset($input['notes']))          $update['notes'] = trim($input['notes']);
-        if (isset($input['issue']))          $update['issue'] = trim($input['issue']);
         if (array_key_exists('improvement_id', $input)) {
             $newImprovementId = !empty($input['improvement_id']) ? $this->resolveId($input['improvement_id']) : null;
             if ($newImprovementId) {

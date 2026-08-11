@@ -68,59 +68,6 @@
                     </div>
                 </div>
 
-                <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">
-                    <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
-                        <i class="fas fa-users me-1"></i> Use Case Details
-                    </h5>
-                    <div class="row mb-3">
-                        <div class="col-md-8">
-                            <label class="sap-label">Actors</label>
-                            <textarea name="actors" class="sap-input" rows="2" placeholder="e.g., System Admin, Department Head, User"></textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="sap-label">Frequency</label>
-                            <select name="frequency" class="sap-select">
-                                <option value="">-- Select --</option>
-                                <option value="Daily">Daily</option>
-                                <option value="Weekly">Weekly</option>
-                                <option value="Monthly">Monthly</option>
-                                <option value="Quarterly">Quarterly</option>
-                                <option value="Yearly">Yearly</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Pre Condition</label>
-                        <textarea name="pre_condition" class="sap-input" rows="3" placeholder="Conditions that must be true before this use case starts..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Post Condition</label>
-                        <textarea name="post_condition" class="sap-input" rows="3" placeholder="State of the system after the use case completes..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Normal Course</label>
-                        <textarea name="normal_course" class="sap-input" rows="5" placeholder="Step-by-step description of the main flow..." style="min-height:100px"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Exception</label>
-                        <textarea name="exception" class="sap-input" rows="3" placeholder="Error conditions and how they are handled..."></textarea>
-                    </div>
-                </div>
-
-                <div class="mb-4 pb-3" style="border-bottom:1px dashed var(--sap-border)">
-                    <h5 class="mb-3" style="color:var(--sap-text-secondary);font-size:13px;text-transform:uppercase;letter-spacing:0.05em">
-                        <i class="fas fa-sticky-note me-1"></i> Additional Information
-                    </h5>
-                    <div class="mb-3">
-                        <label class="sap-label">Notes</label>
-                        <textarea name="notes" class="sap-input" rows="3" placeholder="Additional notes..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Issue (Business Rules / Assumptions)</label>
-                        <textarea name="issue" class="sap-input" rows="3" placeholder="Business rules, assumptions, and constraints..."></textarea>
-                    </div>
-                </div>
-
                 <div class="d-flex gap-2">
                     <button type="submit" class="sap-btn sap-btn-primary">
                         <i class="fas fa-paper-plane"></i> Create Blueprint
