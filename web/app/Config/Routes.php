@@ -86,10 +86,6 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/blueprints/ajax-list',                'Blueprints::ajaxList');
     $routes->get('/blueprints/create',                   'Blueprints::create');
     $routes->post('/blueprints/create',                  'Blueprints::create');
-    $routes->post('/blueprints/(:any)/approve-it',       'Blueprints::approveIt/$1');
-    $routes->post('/blueprints/(:any)/approve-dept',     'Blueprints::approveDept/$1');
-    $routes->post('/blueprints/(:any)/reject',           'Blueprints::reject/$1');
-    $routes->post('/blueprints/(:any)/resubmit',         'Blueprints::resubmit/$1');
     $routes->post('/blueprints/(:any)/comments',         'Blueprints::addComment/$1');
     $routes->post('/blueprints/(:any)/modules',          'Blueprints::createModule/$1');
     $routes->post('/blueprints/modules/(:any)/update',   'Blueprints::updateModule/$1');

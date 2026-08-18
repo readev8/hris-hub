@@ -28,52 +28,6 @@
         <a href="<?= site_url('blueprints') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
     </div>
 
-    <div class="sap-card mb-4">
-        <div class="sap-card-body">
-            <div class="approval-stepper">
-                <?php
-                $st = (int) ($blueprint['status'] ?? -1);
-                $steps = [
-                    ['label' => 'Draft',      'key' => 'draft'],
-                    ['label' => 'IT Manager',  'key' => 'it'],
-                    ['label' => 'Dept Head',   'key' => 'dept'],
-                    ['label' => 'Approved',    'key' => 'final'],
-                ];
-                $stepStates = ['draft' => 'completed'];
-                if ($st === 0) { $stepStates['it'] = 'active'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                elseif ($st === 1) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'active'; $stepStates['final'] = ''; }
-                elseif ($st === 2 || $st === 4) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'completed'; $stepStates['final'] = 'active'; }
-                elseif ($st === 3) {
-                    $history = $blueprint['approval_history'] ?? [];
-                    $rejectedStage = 0;
-                    foreach ($history as $h) {
-                        if ((int)($h['status'] ?? 0) === 2) {
-                            $rejectedStage = (int)($h['stage_sequence'] ?? 0);
-                            break;
-                        }
-                    }
-                    if ($rejectedStage <= 1) { $stepStates['it'] = 'rejected'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                    else { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'rejected'; $stepStates['final'] = ''; }
-                }
-                $icons = ['draft' => 'fa-pencil-alt', 'it' => 'fa-laptop', 'dept' => 'fa-users', 'final' => 'fa-check-double'];
-                foreach ($steps as $i => $s):
-                    $state = $stepStates[$s['key']] ?? '';
-                    $icon = $icons[$s['key']];
-                ?>
-                <div class="stepper-step <?= esc($state, 'attr') ?>">
-                    <div class="stepper-node">
-                        <?php if ($state === 'completed'): ?><i class="fas fa-check"></i>
-                        <?php elseif ($state === 'rejected'): ?><i class="fas fa-times"></i>
-                        <?php else: ?><?= $i + 1 ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="stepper-label"><?= esc($s['label']) ?></div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-
     <div class="row g-3">
         <div class="col-md-3">
             <div class="sap-card mb-3">
@@ -191,24 +145,10 @@
                 <div id="blueprintActions" class="sap-card-body d-flex flex-column gap-2">
                     <?php
                     $bpPerms = (session('permissions') ?? [])['blueprints'] ?? [];
-                    $bpCanApprove = !empty($bpPerms['can_approve']);
-                    $bpCanCreate  = !empty($bpPerms['can_create']);
                     $bpCanUpdate  = !empty($bpPerms['can_update']);
                     $bpCanDelete  = !empty($bpPerms['can_delete']);
                     ?>
-                    <?php if ($st === 0 && $bpCanApprove): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="BlueprintDetail.doAction('approve-it')"><i class="fas fa-check"></i> Approve (IT)</button>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="BlueprintDetail.promptReject()"><i class="fas fa-times"></i> Reject</button>
-                    <?php endif; ?>
-                    <?php if ($st === 1 && $bpCanApprove): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="BlueprintDetail.doAction('approve-dept')"><i class="fas fa-check"></i> Approve (Dept)</button>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="BlueprintDetail.promptReject()"><i class="fas fa-times"></i> Reject</button>
-                    <?php endif; ?>
-                    <?php if ($st === 3 && $bpCanCreate): ?>
-                        <button class="sap-btn sap-btn-warning sap-btn-sm" onclick="BlueprintDetail.doAction('resubmit')"><i class="fas fa-undo"></i> Resubmit</button>
-                    <?php endif; ?>
-                    <hr class="my-1">
-                    <?php if (($st === -1 || $st === 0) && ($bpCanUpdate || $bpCanDelete)): ?>
+                    <?php if ($bpCanUpdate || $bpCanDelete): ?>
                     <?php if ($bpCanUpdate): ?>
                     <a href="<?= site_url('blueprints/' . $token . '/edit') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>
                     <?php endif; ?>

@@ -176,21 +176,10 @@ class Blueprints extends BaseController
 
         $bpPerms = (session('permissions') ?? [])['blueprints'] ?? [];
         $availableActions = [];
-        if ($st === 0 && !empty($bpPerms['can_approve'])) {
-            $availableActions[] = 'approve-it';
-            $availableActions[] = 'reject';
-        }
-        if ($st === 1 && !empty($bpPerms['can_approve'])) {
-            $availableActions[] = 'approve-dept';
-            $availableActions[] = 'reject';
-        }
-        if ($st === 3 && !empty($bpPerms['can_create'])) {
-            $availableActions[] = 'resubmit';
-        }
-        if (($st === -1 || $st === 0) && !empty($bpPerms['can_update'])) {
+        if (!empty($bpPerms['can_update'])) {
             $availableActions[] = 'edit';
         }
-        if (($st === -1 || $st === 0) && !empty($bpPerms['can_delete'])) {
+        if (!empty($bpPerms['can_delete'])) {
             $availableActions[] = 'delete';
         }
 
@@ -204,7 +193,6 @@ class Blueprints extends BaseController
                 'status' => $st,
                 'status_name' => $blueprint['status_name'] ?? 'Draft',
                 'available_actions' => $availableActions,
-                'approval_history' => $blueprint['approval_history'] ?? [],
             ],
         ]);
     }
@@ -337,69 +325,6 @@ class Blueprints extends BaseController
             ->setHeader('Content-Length', (string) filesize($filePath))
             ->setHeader('Cache-Control', 'private, max-age=3600')
             ->setBody(file_get_contents($filePath));
-    }
-
-    public function approveIt(string $encryptedId)
-    {
-        if (!$this->guard('can_approve')) {
-            return $this->denyResponse();
-        }
-        $result = $this->api->post_data('blueprints/' . $encryptedId . '/approve-it');
-
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints approveIt API failed for ' . $encryptedId . ': ' . json_encode($result));
-        }
-
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-    }
-
-    public function approveDept(string $encryptedId)
-    {
-        if (!$this->guard('can_approve')) {
-            return $this->denyResponse();
-        }
-        $result = $this->api->post_data('blueprints/' . $encryptedId . '/approve-dept');
-
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints approveDept API failed for ' . $encryptedId . ': ' . json_encode($result));
-        }
-
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-    }
-
-    public function reject(string $encryptedId)
-    {
-        if (!$this->guard('can_approve')) {
-            return $this->denyResponse();
-        }
-        $data = $this->request->getPost();
-
-        if (empty($data['notes'])) {
-            return $this->response->setJSON(['status' => false, 'message' => 'Rejection notes are required']);
-        }
-
-        $result = $this->api->post_data('blueprints/' . $encryptedId . '/reject', $data);
-
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints reject API failed for ' . $encryptedId . ': ' . json_encode($result));
-        }
-
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-    }
-
-    public function resubmit(string $encryptedId)
-    {
-        if (!$this->guard('can_create')) {
-            return $this->denyResponse();
-        }
-        $data = $this->request->getPost();
-        $result = $this->api->post_data('blueprints/' . $encryptedId . '/resubmit', $data);
-
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints resubmit API failed for ' . $encryptedId . ': ' . json_encode($result));
-        }
-
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
     }
 
     public function addComment(string $encryptedId)

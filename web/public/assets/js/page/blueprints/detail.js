@@ -209,19 +209,6 @@ var BlueprintDetail = (function () {
         if (!container.length) return;
         var actions = data.available_actions || [];
         var html = '';
-        if (actions.indexOf('approve-it') !== -1) {
-            html += '<button class="sap-btn sap-btn-success sap-btn-sm" onclick="BlueprintDetail.doAction(\'approve-it\')"><i class="fas fa-check"></i> Approve (IT)</button>';
-        }
-        if (actions.indexOf('approve-dept') !== -1) {
-            html += '<button class="sap-btn sap-btn-success sap-btn-sm" onclick="BlueprintDetail.doAction(\'approve-dept\')"><i class="fas fa-check"></i> Approve (Dept)</button>';
-        }
-        if (actions.indexOf('reject') !== -1) {
-            html += '<button class="sap-btn sap-btn-danger sap-btn-sm" onclick="BlueprintDetail.promptReject()"><i class="fas fa-times"></i> Reject</button>';
-        }
-        if (actions.indexOf('resubmit') !== -1) {
-            html += '<button class="sap-btn sap-btn-warning sap-btn-sm" onclick="BlueprintDetail.doAction(\'resubmit\')"><i class="fas fa-undo"></i> Resubmit</button>';
-        }
-        if (html) html += '<hr class="my-1">';
         if (actions.indexOf('edit') !== -1) {
             html += '<a href="' + site_url + '/blueprints/' + token + '/edit" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>';
         }
@@ -790,45 +777,7 @@ var BlueprintDetail = (function () {
         });
     }
 
-    // ── Approval Actions ───────────────────────────────────────
-    function doAction(action) {
-        $.post(site_url + '/blueprints/' + token + '/' + action, {}, function (res) {
-            if (res.status) {
-                toastr.success(res.data.message);
-                refreshBlueprintDetail();
-            } else {
-                toastr.error(res.data.message || 'Action failed');
-            }
-        }).fail(function (xhr) {
-            toastr.error('Action failed (HTTP ' + xhr.status + ')');
-        });
-    }
-
-    function promptReject() {
-        Swal.fire({
-            title: 'Rejection Notes',
-            input: 'textarea',
-            inputPlaceholder: 'Enter reason for rejection...',
-            showCancelButton: true,
-            confirmButtonText: 'Reject',
-            confirmButtonColor: '#AA0808',
-            cancelButtonColor: '#758CA4',
-        }).then(function (result) {
-            if (result.isConfirmed && result.value) {
-                $.post(site_url + '/blueprints/' + token + '/reject', { notes: result.value }, function (res) {
-                    if (res.status) {
-                        toastr.success(res.data.message);
-                        refreshBlueprintDetail();
-                    } else {
-                        toastr.error(res.data.message || 'Failed');
-                    }
-                }).fail(function (xhr) {
-                    toastr.error('Reject failed (HTTP ' + xhr.status + ')');
-                });
-            }
-        });
-    }
-
+    // ── Delete ────────────────────────────────────────────────
     function confirmDelete() {
         Swal.fire({
             title: 'Delete Blueprint?',
@@ -935,8 +884,6 @@ var BlueprintDetail = (function () {
         editDesignPage:      editDesignPage,
         deleteDesignPage:    deleteDesignPage,
         switchTab:           switchTab,
-        doAction:            doAction,
-        promptReject:        promptReject,
         confirmDelete:       confirmDelete,
         refreshBlueprintDetail: refreshBlueprintDetail
     };
