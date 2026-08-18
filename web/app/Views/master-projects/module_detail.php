@@ -371,5 +371,6 @@
     'pageIds'   => array_column($module['pages'] ?? [], 'id'),
     'pages'     => $module['pages'] ?? [],
 ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
+<script src="<?= base_url('public/assets/js/page/master-projects/module_detail-ui.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/assets/js/page/master-projects/module_detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

@@ -1,79 +1,127 @@
 /**
- * Anonymous Ticket List Page
- * @package App\Views\public
- * @file    tickets_list.js
+ * ============================================================================
+ * Public Ticket List
+ * ============================================================================
+ *
+ * Description: Anonymous ticket list with status filter, search, and
+ * client-side pagination.
+ *
+ * Dependencies: jQuery, Toastr
+ * Date: 2026-08-18
  */
-/* global $, site_url, toastr */
 
-(function () {
-    'use strict';
+const TicketPublicList = {
 
-    var pageData = window.PageData || {};
-    var baseUrl  = pageData.ajaxBaseUrl || site_url + '/public/tickets';
-    var allTickets = [];
-    var currentPage = 1;
-    var perPage = 20;
-    var searchTimer = null;
+    // ===========================
+    // STATE
+    // ===========================
 
-    $(function () {
-        loadTickets();
-        bindFilters();
-        bindPagination();
-    });
+    pageData: null,
+    baseUrl: '',
+    allTickets: [],
+    currentPage: 1,
+    perPage: 20,
+    searchTimer: null,
 
-    function loadTickets(page) {
+    // ===========================
+    // INITIALIZATION
+    // ===========================
+
+    init: function () {
+        this.pageData = window.PageData || {};
+        this.baseUrl = this.pageData.ajaxBaseUrl || site_url + '/public/tickets';
+
+        this.loadTickets();
+        this.bindFilters();
+        this.bindPagination();
+    },
+
+    // ===========================
+    // HELPERS
+    // ===========================
+
+    escHtml: function (s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    },
+
+    escAttr: function (s) {
+        return String(s || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    },
+
+    getStatusClass: function (status) {
+        var map = { 0: 'open', 1: 'approved', 2: 'in-progress', 3: 'resolved', 4: 'closed', 5: 'rejected' };
+        return map[status] || 'open';
+    },
+
+    formatDate: function (str) {
+        if (!str) return '';
+        var d = new Date(str);
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    },
+
+    // ===========================
+    // DATA LOADING
+    // ===========================
+
+    loadTickets: function (page) {
+        var self = this;
         page = page || 1;
-        currentPage = page;
+        this.currentPage = page;
 
         var params = {
-            page: currentPage,
-            per_page: perPage,
+            page: this.currentPage,
+            per_page: this.perPage,
             status: $('#statusFilter').val() || '',
             search: $.trim($('#searchInput').val()) || ''
         };
 
-        $.get(baseUrl + '/ajax-list', params, function (res) {
-            allTickets = res.data || [];
-            renderTickets(allTickets);
-            renderPagination(res.total || 0, res.page || 1, res.per_page || perPage);
+        $.get(this.baseUrl + '/ajax-list', params, function (res) {
+            self.allTickets = res.data || [];
+            self.renderTickets(self.allTickets);
+            self.renderPagination(res.total || 0, res.page || 1, res.per_page || self.perPage);
         }).fail(function () {
-            showEmpty();
+            self.showEmpty();
         });
-    }
+    },
 
-    function renderTickets(tickets) {
+    // ===========================
+    // UI RENDERING
+    // ===========================
+
+    renderTickets: function (tickets) {
         if (!tickets.length) {
-            showEmpty();
+            this.showEmpty();
             return;
         }
         $('#emptyState').hide();
         var $list = $('#ticketsList').empty().show();
         for (var i = 0; i < tickets.length; i++) {
-            $list.append(buildCard(tickets[i]));
+            $list.append(this.buildCard(tickets[i]));
         }
-    }
+    },
 
-    function buildCard(t) {
-        var statusCls = getStatusClass(t.status);
-        var html = '<div class="anon-ticket-card" data-code="' + escAttr(t.tracking_code) + '">';
+    buildCard: function (t) {
+        var statusCls = this.getStatusClass(t.status);
+        var html = '<div class="anon-ticket-card" data-code="' + this.escAttr(t.tracking_code) + '">';
         html += '<div class="anon-ticket-card-main">';
-        html += '<div class="anon-ticket-card-tracking">' + escHtml(t.tracking_code) + '</div>';
-        html += '<div class="anon-ticket-card-title">' + escHtml(t.title) + '</div>';
+        html += '<div class="anon-ticket-card-tracking">' + this.escHtml(t.tracking_code) + '</div>';
+        html += '<div class="anon-ticket-card-title">' + this.escHtml(t.title) + '</div>';
         html += '<div class="anon-ticket-card-badges">';
-        html += '<span class="anon-badge anon-badge--' + statusCls + '">' + escHtml(t.status_name) + '</span>';
-        html += '<span class="anon-badge anon-badge--outline">' + escHtml(t.type_name) + '</span>';
-        html += '<span class="anon-badge anon-badge--outline">' + escHtml(t.priority_name) + '</span>';
+        html += '<span class="anon-badge anon-badge--' + statusCls + '">' + this.escHtml(t.status_name) + '</span>';
+        html += '<span class="anon-badge anon-badge--outline">' + this.escHtml(t.type_name) + '</span>';
+        html += '<span class="anon-badge anon-badge--outline">' + this.escHtml(t.priority_name) + '</span>';
         html += '</div>';
-        html += '<div class="anon-ticket-card-meta">' + formatDate(t.created_at) + '</div>';
+        html += '<div class="anon-ticket-card-meta">' + this.formatDate(t.created_at) + '</div>';
         html += '</div>';
         html += '<div class="anon-ticket-card-actions">';
         html += '<a href="' + site_url + '/public/tickets/' + t.tracking_code + '" class="anon-btn anon-btn-primary anon-btn-sm">View <i class="fas fa-arrow-right"></i></a>';
         html += '</div>';
         html += '</div>';
         return html;
-    }
+    },
 
-    function renderPagination(total, page, perPageVal) {
+    renderPagination: function (total, page, perPageVal) {
         var totalPages = Math.ceil(total / perPageVal);
         if (totalPages <= 1) {
             $('#paginationWrap').hide();
@@ -83,48 +131,44 @@
         $('#pageInfo').text(page + ' / ' + totalPages);
         $('#prevPageBtn').prop('disabled', page <= 1);
         $('#nextPageBtn').prop('disabled', page >= totalPages);
-    }
+    },
 
-    function showEmpty() {
+    showEmpty: function () {
         $('#ticketsList').hide();
         $('#emptyState').show();
         $('#paginationWrap').hide();
-    }
+    },
 
-    function bindFilters() {
-        $('#statusFilter').on('change', function () { loadTickets(1); });
+    // ===========================
+    // EVENT HANDLERS
+    // ===========================
+
+    bindFilters: function () {
+        var self = this;
+        $('#statusFilter').on('change', function () { self.loadTickets(1); });
         $('#searchInput').on('keyup', function () {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(function () { loadTickets(1); }, 300);
+            clearTimeout(self.searchTimer);
+            self.searchTimer = setTimeout(function () { self.loadTickets(1); }, 300);
         });
-    }
+    },
 
-    function bindPagination() {
+    bindPagination: function () {
+        var self = this;
         $('#prevPageBtn').on('click', function () {
-            if (currentPage > 1) loadTickets(currentPage - 1);
+            if (self.currentPage > 1) self.loadTickets(self.currentPage - 1);
         });
         $('#nextPageBtn').on('click', function () {
-            loadTickets(currentPage + 1);
+            self.loadTickets(self.currentPage + 1);
         });
     }
+};
 
-    function getStatusClass(status) {
-        var map = { 0: 'open', 1: 'approved', 2: 'in-progress', 3: 'resolved', 4: 'closed', 5: 'rejected' };
-        return map[status] || 'open';
-    }
+// ===========================
+// BOOTSTRAP
+// ===========================
 
-    function formatDate(str) {
-        if (!str) return '';
-        var d = new Date(str);
-        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-    }
+$(function () {
+    TicketPublicList.init();
+});
 
-    function escHtml(s) {
-        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function escAttr(s) {
-        return String(s || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-    }
-})();
+window.TicketPublicList = TicketPublicList;

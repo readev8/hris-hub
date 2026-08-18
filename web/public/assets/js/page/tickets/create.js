@@ -3,9 +3,11 @@
  * Tickets Create
  * ============================================================================
  *
- * Description: Ticket creation form with page search modal, file upload, segmented control
- * Date: 2026-07-16
- * Standard: Mini (<400 lines)
+ * Description: Ticket creation form with page search modal, file upload,
+ * segmented control, and referral search.
+ *
+ * Dependencies: jQuery, Bootstrap, Toastr
+ * Date: 2026-08-18
  */
 
 // ===========================
@@ -15,6 +17,16 @@
 var referralSearchTimer = null;
 var pageSearchTimer = null;
 var selectedPageId = null;
+
+// ===========================
+// CONSTANTS
+// ===========================
+
+var API_ENDPOINTS = {
+    CREATE: site_url + '/tickets/create',
+    PAGE_SEARCH: site_url + '/tickets/ajax/pages-search',
+    TICKET_LIST: site_url + '/tickets/ajax-list'
+};
 
 // ===========================
 // EVENTS
@@ -67,10 +79,6 @@ $(function() {
 
     $(document).on('click', '.btn-select-page', function() {
         selectedPageId = $(this).data('id') || $(this).attr('data-id');
-        console.log('=== PAGE SELECTED ===');
-        console.log('data-id attr:', $(this).attr('data-id'));
-        console.log('data("id"):', $(this).data('id'));
-        console.log('selectedPageId:', selectedPageId);
         $('#pageIdValue').val(selectedPageId);
         $('#pageSelectDisplay').val($(this).data('name') + ' — ' + $(this).data('module') + ' / ' + $(this).data('project'));
         $('#pageSelectDisplay').css('border-color', 'var(--sap-success)');
@@ -138,11 +146,6 @@ $(function() {
         e.preventDefault();
         var type = $('#ticketType').val();
         var pageId = selectedPageId || $('#pageIdValue').val();
-        console.log('=== FORM SUBMIT ===');
-        console.log('type:', type);
-        console.log('selectedPageId:', selectedPageId);
-        console.log('pageIdValue:', $('#pageIdValue').val());
-        console.log('final pageId:', pageId);
         if (['0','3','4','5'].includes(type) && !pageId) {
             toastr.warning('Untuk tipe ini, wajib memilih halaman di bagian Affected Page');
             $('#bugTraceSection').slideDown(200);
@@ -151,9 +154,8 @@ $(function() {
         var btn = $(this).find('[type="submit"]');
         btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Submitting...');
         var formData = new FormData(this);
-        console.log('FormData page_id:', formData.get('page_id'));
         $.ajax({
-            url: site_url + '/tickets/create',
+            url: API_ENDPOINTS.CREATE,
             type: 'POST',
             data: formData,
             processData: false,
@@ -195,11 +197,22 @@ $(function() {
 // HELPERS
 // ===========================
 
+function escHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escAttr(s) {
+    return String(s || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+// ===========================
+// PAGE LIST MODAL
+// ===========================
+
 function loadPageList(page, search) {
     var $list = $('#pageList');
     $list.html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
 
-    $.get(site_url + '/tickets/ajax/pages-search', {
+    $.get(API_ENDPOINTS.PAGE_SEARCH, {
         page: page,
         per_page: 15,
         search: search
@@ -250,11 +263,15 @@ $(document).on('click', '.btn-page-page', function() {
     loadPageList(parseInt($(this).data('page')), $('#pageSearch').val());
 });
 
+// ===========================
+// REFERRAL LIST MODAL
+// ===========================
+
 function loadReferralList(page, search) {
     var $list = $('#referralTicketList');
     $list.html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
 
-    $.get(site_url + '/tickets/ajax-list', {
+    $.get(API_ENDPOINTS.TICKET_LIST, {
         page: page,
         per_page: 10,
         search: search
@@ -301,10 +318,3 @@ $(document).on('click', '.btn-referral-page', function() {
     if ($(this).prop('disabled')) return;
     loadReferralList(parseInt($(this).data('page')), $('#referralSearch').val());
 });
-
-function escHtml(s) {
-    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-function escAttr(s) {
-    return String(s || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-}

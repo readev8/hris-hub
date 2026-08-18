@@ -3,17 +3,23 @@
  * Tickets Main Page
  * ============================================================================
  *
- * Description: DataTable with column search, tracking modal for ticket codes
- * Date: 2026-07-16
- * Standard: Mini (<400 lines)
+ * Description: DataTable with column search, tracking modal for ticket codes,
+ * status/overdue filters with URL param sync.
+ *
+ * Dependencies: jQuery, DataTables, Toastr
+ * Date: 2026-08-18
  */
 
 // ===========================
 // CONSTANTS
 // ===========================
 
-var statusMap = { 0: 'Open', 1: 'Approved', 2: 'In Progress', 3: 'Resolved', 4: 'Closed', 5: 'Rejected' };
-var priorityMap = { 0: 'Low', 1: 'Medium', 2: 'High', 3: 'Critical' };
+var API_ENDPOINTS = {
+    TICKET_LIST: site_url + '/tickets/ajax-list'
+};
+
+var STATUS_MAP = { 0: 'Open', 1: 'Approved', 2: 'In Progress', 3: 'Resolved', 4: 'Closed', 5: 'Rejected' };
+var PRIORITY_MAP = { 0: 'Low', 1: 'Medium', 2: 'High', 3: 'Critical' };
 
 // ===========================
 // TRACKING MODAL
@@ -58,8 +64,7 @@ $(function() {
         if (e.key === 'Escape') closeTrackingModal();
     });
 
-    // ── Status/Overdue filter initialization from URL params ────
-    // NOTE: must run BEFORE DataTable init so the first AJAX fetch is filtered.
+    // Status/Overdue filter initialization from URL params
     var urlParams = new URLSearchParams(window.location.search);
     var initialStatus  = urlParams.get('status');
     var initialOverdue = urlParams.get('overdue');
@@ -82,7 +87,7 @@ $(function() {
             }
         },
         ajax: {
-            url: site_url + '/tickets/ajax-list',
+            url: API_ENDPOINTS.TICKET_LIST,
             data: function (d) {
                 var status = $('#statusFilter').val();
                 var overdue = $('#overdueFilter').is(':checked') ? 1 : '';
@@ -181,6 +186,7 @@ $(function() {
         }
     });
 
+    // Column search headers
     $('#tickets-table thead tr').clone(true).appendTo('#tickets-table thead');
     $('#tickets-table thead tr:last th').each(function(i) {
         if (i === 9) {
@@ -194,6 +200,7 @@ $(function() {
         table.column($(this).data('col')).search(this.value).draw();
     });
 
+    // Row click navigation
     $('#tickets-table tbody').on('click', 'tr', function() {
         var data = table.row(this).data();
         if (data && data.id) {
@@ -201,7 +208,10 @@ $(function() {
         }
     });
 
-    // ── Status/Overdue filter event handlers ───────────────────
+    // ===========================
+    // FILTERS
+    // ===========================
+
     $('#statusFilter, #overdueFilter').on('change', function () {
         table.ajax.reload();
         updateFilterUrl();

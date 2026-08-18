@@ -1,22 +1,6 @@
 // FILE INI DIGUNAKAN UNTUK MENAMPUNG GLOBAL FUNCTION UNTUK PENGAKSESAN DATA KE ROUTES SERTA STANDARISASI NOTIFIKASI
+// NOTE: toastr.options dikonfigurasi di global/toastr.js (satu sumber)
 
-toastr.options = {
-  closeButton: true,
-  debug: false,
-  newestOnTop: false,
-  progressBar: true,
-  positionClass: "toast-top-right", // Other option: "toast-top-right"
-  preventDuplicates: false,
-  onclick: null,
-  showDuration: "300",
-  hideDuration: "1000",
-  timeOut: "3000",
-  extendedTimeOut: "1000",
-  showEasing: "swing",
-  hideEasing: "linear",
-  showMethod: "fadeIn",
-  hideMethod: "fadeOut",
-};
 $.post = function (url, data, response, sender = null) {
   var sender_text = null;
   if (sender != null) {

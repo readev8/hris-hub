@@ -1,109 +1,110 @@
 /**
- * Master Projects Module Detail Page
+ * ============================================================================
+ * Module Detail
+ * ============================================================================
  *
- * @package    App\Views\master-projects
- * @file       module_detail.js
- * @version    1.0.0
+ * Module detail page with page CRUD, module CRUD, kanban board, ticket
+ * drawer, design page assignment, and design page import.
+ *
+ * Dependencies: jQuery, Bootstrap, Toastr, SweetAlert2, Sortable
+ * Date: 2026-08-18
  */
 
-/* global $, site_url, toastr, Swal, Sortable, bootstrap */
+// ===========================
+// INITIALIZATION
+// ===========================
 
-var ModuleDetail = (function () {
-    'use strict';
+const ModuleDetail = {
 
-    // ── Page Data ──────────────────────────────────────────────
-    var pageData  = window.PageData || {};
-    var projectId = pageData.projectId || '';
-    var moduleId  = pageData.moduleId || '';
-    var pageIds   = pageData.pageIds || [];
+    // ===========================
+    // CONSTANTS
+    // ===========================
 
-    // ── Kanban State ───────────────────────────────────────────
-    var kanbanData      = {};
-    var kanbanSortables = [];
+    _KANBAN_STATUS_MAP: { open: 0, in_progress: 2, resolved: 3, closed: 4 },
+    _KANBAN_STATUS_LABELS: { 0: 'Open', 1: 'Approved', 2: 'In Progress', 3: 'Resolved', 4: 'Closed' },
 
-    var KANBAN_STATUS_MAP    = { open: 0, in_progress: 2, resolved: 3, closed: 4 };
-    var KANBAN_STATUS_LABELS = { 0: 'Open', 1: 'Approved', 2: 'In Progress', 3: 'Resolved', 4: 'Closed' };
+    // ===========================
+    // STATE
+    // ===========================
 
-    // ── Modal State ────────────────────────────────────────────
-    var pageModalInstance      = null;
-    var moduleModalInstance    = null;
-    var bugListModalInstance   = null;
-    var designPageModalInstance = null;
+    _projectId: '',
+    _moduleId: '',
+    _pageIds: [],
+    _kanbanData: {},
+    _kanbanSortables: [],
+    _pageModalInstance: null,
+    _moduleModalInstance: null,
+    _bugListModalInstance: null,
+    _designPageModalInstance: null,
+    _drawerTicketId: null,
+    _filterPage: '',
+    _filterType: '',
 
-    // ── Drawer State ───────────────────────────────────────────
-    var drawerTicketId = null;
+    // ===========================
+    // HELPERS
+    // ===========================
 
-    // ── Filter State ───────────────────────────────────────────
-    var filterPage = '';
-    var filterType = '';
-
-    // ── DOM Ready ──────────────────────────────────────────────
-    $(function () {
-        bindPageForm();
-        bindModuleForm();
-        bindModalDismiss();
-        bindKanbanCardClick();
-        bindDrawerEvents();
-        bindFilterEvents();
-        bindImportEvents();
-    });
-
-    // ── Helpers ────────────────────────────────────────────────
-    function escHtml(s) {
+    escHtml: function (s) {
         return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
+    },
 
-    function escAttr(s) {
+    escAttr: function (s) {
         return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    }
+    },
 
-    // ── Tab Switching ──────────────────────────────────────────
-    function switchDetailTab(tab) {
+    // ===========================
+    // TAB SWITCHING
+    // ===========================
+
+    switchDetailTab: function (tab) {
         $('#detailTabs .sap-tab').removeClass('active');
         $('#detailTabs .sap-tab[data-tab="' + tab + '"]').addClass('active');
         $('.tab-content').hide();
         $('#tab-' + tab).show();
-        if (tab === 'kanban') loadKanban();
-    }
+        if (tab === 'kanban') ModuleDetail._loadKanban();
+    },
 
-    // ── Page Modal ─────────────────────────────────────────────
-    function getPageModal() {
-        if (!pageModalInstance) {
-            pageModalInstance = new bootstrap.Modal(document.getElementById('pageModal'), {
+    // ===========================
+    // PAGE MODAL
+    // ===========================
+
+    _getPageModal: function () {
+        if (!ModuleDetail._pageModalInstance) {
+            ModuleDetail._pageModalInstance = new bootstrap.Modal(document.getElementById('pageModal'), {
                 backdrop: 'static',
                 keyboard: false
             });
         }
-        return pageModalInstance;
-    }
+        return ModuleDetail._pageModalInstance;
+    },
 
-    function openPageModal() {
-        $('#pageModuleId').val(moduleId);
+    openPageModal: function () {
+        $('#pageModuleId').val(ModuleDetail._moduleId);
         $('#pageEditId').val('');
         $('#pageName').val('');
         $('#pageUrl').val('');
         $('#pageDesc').val('');
         $('#pageModalTitle').text('Add Page');
-        getPageModal().show();
-    }
+        ModuleDetail._getPageModal().show();
+    },
 
-    function editPage(id, moduleIdVal, name, urlPath, description) {
+    editPage: function (id, moduleIdVal, name, urlPath, description) {
         $('#pageModuleId').val(moduleIdVal);
         $('#pageEditId').val(id);
         $('#pageName').val(name);
         $('#pageUrl').val(urlPath);
         $('#pageDesc').val(description || '');
         $('#pageModalTitle').text('Edit Page');
-        getPageModal().show();
-    }
+        ModuleDetail._getPageModal().show();
+    },
 
-    function bindPageForm() {
+    _bindPageForm: function () {
         $('#pageForm').on('submit', function (e) {
             e.preventDefault();
             var editId = $('#pageEditId').val();
             var url = editId
                 ? site_url + '/pages/' + editId + '/update'
-                : site_url + '/modules/' + moduleId + '/pages';
+                : site_url + '/modules/' + ModuleDetail._moduleId + '/pages';
             var data = $(this).serialize();
             $.post(url, data, function (res) {
                 if (res.status) {
@@ -117,9 +118,9 @@ var ModuleDetail = (function () {
                 toastr.error('Failed to save page (HTTP ' + xhr.status + ')');
             });
         });
-    }
+    },
 
-    function deletePage(id) {
+    deletePage: function (id) {
         Swal.fire({
             title: 'Delete this page?',
             text: 'Linked bug tickets will remain but page reference will be removed.',
@@ -142,27 +143,30 @@ var ModuleDetail = (function () {
                 });
             }
         });
-    }
+    },
 
-    // ── Module Modal ───────────────────────────────────────────
-    function getModuleModal() {
-        if (!moduleModalInstance) {
-            moduleModalInstance = new bootstrap.Modal(document.getElementById('moduleModal'), {
+    // ===========================
+    // MODULE MODAL
+    // ===========================
+
+    _getModuleModal: function () {
+        if (!ModuleDetail._moduleModalInstance) {
+            ModuleDetail._moduleModalInstance = new bootstrap.Modal(document.getElementById('moduleModal'), {
                 backdrop: 'static',
                 keyboard: false
             });
         }
-        return moduleModalInstance;
-    }
+        return ModuleDetail._moduleModalInstance;
+    },
 
-    function editModule(id, name, desc) {
+    editModule: function (id, name, desc) {
         $('#moduleEditId').val(id);
         $('#moduleName').val(name);
         $('#moduleDesc').val(desc);
-        getModuleModal().show();
-    }
+        ModuleDetail._getModuleModal().show();
+    },
 
-    function bindModuleForm() {
+    _bindModuleForm: function () {
         $('#moduleForm').on('submit', function (e) {
             e.preventDefault();
             var editId = $('#moduleEditId').val();
@@ -180,9 +184,10 @@ var ModuleDetail = (function () {
                 toastr.error('Failed to save module (HTTP ' + xhr.status + ')');
             });
         });
-    }
+    },
 
-    function deleteModule(id) {
+    deleteModule: function (id) {
+        var self = ModuleDetail;
         Swal.fire({
             title: 'Delete this module?',
             text: 'All pages within will also be deleted. You will be redirected to the project page.',
@@ -196,7 +201,7 @@ var ModuleDetail = (function () {
                 $.post(site_url + '/modules/' + id + '/delete', function (res) {
                     if (res.status) {
                         toastr.success('Module deleted');
-                        window.location.href = site_url + '/master-projects/' + projectId;
+                        window.location.href = site_url + '/master-projects/' + self._projectId;
                     } else {
                         toastr.error(res.data && res.data.message ? res.data.message : 'Failed');
                     }
@@ -205,110 +210,83 @@ var ModuleDetail = (function () {
                 });
             }
         });
-    }
+    },
 
-    // ── Bug List Modal ─────────────────────────────────────────
-    function getBugListModal() {
-        if (!bugListModalInstance) {
-            bugListModalInstance = new bootstrap.Modal(document.getElementById('bugListModal'), {
+    // ===========================
+    // BUG LIST MODAL
+    // ===========================
+
+    _getBugListModal: function () {
+        if (!ModuleDetail._bugListModalInstance) {
+            ModuleDetail._bugListModalInstance = new bootstrap.Modal(document.getElementById('bugListModal'), {
                 backdrop: 'static',
                 keyboard: false
             });
         }
-        return bugListModalInstance;
-    }
+        return ModuleDetail._bugListModalInstance;
+    },
 
-    function showBugList(pageId, pageName) {
+    showBugList: function (pageId, pageName) {
         $('#bugPageName').text(pageName);
-        var modal = getBugListModal();
+        var modal = ModuleDetail._getBugListModal();
         $('#bugListBody').html('<div class="text-center p-4"><span class="sap-spinner"></span></div>');
         modal.show();
         $.get(site_url + '/pages/' + pageId + '/bugs', function (res) {
-            if (!res || !res.length) {
-                $('#bugListBody').html('<div class="sap-empty" style="padding:32px"><i class="fas fa-check-circle"></i><h4>No bugs</h4><p>No bugs reported for this page.</p></div>');
-                return;
-            }
-            var html = '<table class="sap-table sap-table-compact mb-0"><thead><tr><th style="min-width:200px">Title</th><th style="width:120px">Status</th><th style="width:100px">Priority</th><th style="width:130px">Created</th></tr></thead><tbody>';
-            for (var i = 0; i < res.length; i++) {
-                var b = res[i];
-                var statusCls = b.status_name === 'Open' ? 'sap-badge open' : b.status_name === 'Resolved' ? 'sap-badge resolved' : 'sap-badge closed';
-                var priorityDot = 'priority-dot ' + (b.priority_name ? b.priority_name.toLowerCase() : 'medium');
-                html += '<tr><td><a href="' + site_url + '/tickets/' + b.id + '" target="_blank" class="fw-medium" style="color:var(--sap-brand);text-decoration:none">' + b.title + '</a></td>'
-                     + '<td><span class="' + statusCls + '"><span class="badge-dot"></span>' + b.status_name + '</span></td>'
-                     + '<td><span class="' + priorityDot + '"></span> ' + b.priority_name + '</td>'
-                     + '<td><span class="text-muted">' + b.created_at + '</span></td></tr>';
-            }
-            html += '</tbody></table>';
-            $('#bugListBody').html(html);
+            $('#bugListBody').html(ModuleDetailUI.buildBugListHTML(res));
         }).fail(function (xhr) {
             $('#bugListBody').html('<div class="sap-empty" style="padding:32px"><i class="fas fa-exclamation-triangle"></i><h4>Failed to load bug data</h4><p>HTTP ' + xhr.status + '</p></div>');
             toastr.error('Failed to load bug data');
         });
-    }
+    },
 
-    function bindModalDismiss() {
+    _bindModalDismiss: function () {
         $('#pageModal, #bugListModal, #moduleModal, #designPageModal, #importDesignPagesModal').on('hidden.bs.modal', function () {
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open').css('padding-right', '');
         });
-    }
+    },
 
-    // ── Blueprint Design Page Assignment ───────────────────────
-    function getDesignPageModal() {
-        if (!designPageModalInstance) {
-            designPageModalInstance = new bootstrap.Modal(document.getElementById('designPageModal'), {
+    // ===========================
+    // BLUEPRINT DESIGN PAGE ASSIGNMENT
+    // ===========================
+
+    _getDesignPageModal: function () {
+        if (!ModuleDetail._designPageModalInstance) {
+            ModuleDetail._designPageModalInstance = new bootstrap.Modal(document.getElementById('designPageModal'), {
                 backdrop: 'static',
                 keyboard: false
             });
         }
-        return designPageModalInstance;
-    }
+        return ModuleDetail._designPageModalInstance;
+    },
 
-    function openAssignDesignPageModal(pageId) {
+    openAssignDesignPageModal: function (pageId) {
+        var self = ModuleDetail;
         $('#assignDesignPageTargetId').val(pageId);
         $('#designPagesLoading').show();
         $('#designPagesEmpty').hide();
         $('#designPagesList').html('');
-        getDesignPageModal().show();
+        self._getDesignPageModal().show();
 
-        $.get(site_url + '/design-pages/available?module_id=' + moduleId, function (res) {
+        $.get(site_url + '/design-pages/available?module_id=' + self._moduleId, function (res) {
             $('#designPagesLoading').hide();
             if (!res || !res.length) {
                 $('#designPagesEmpty').show();
                 return;
             }
-            var html = '';
-            for (var g = 0; g < res.length; g++) {
-                var group = res[g];
-                html += '<div class="design-page-group">';
-                html += '<div class="design-page-group-header"><i class="fas fa-drafting-compass"></i> ' + escHtml(group.blueprint_name) + ' → ' + escHtml(group.blueprint_module_name) + '</div>';
-                for (var k = 0; k < group.design_pages.length; k++) {
-                    var dp = group.design_pages[k];
-                    html += '<div class="design-page-row" data-id="' + dp.id + '">';
-                    html += '<div class="design-page-row-info">';
-                    html += '<span class="design-page-row-name">' + escHtml(dp.title) + '</span>';
-                    if (dp.description) {
-                        html += '<span class="design-page-row-meta">' + escHtml(dp.description) + '</span>';
-                    }
-                    html += '</div>';
-                    html += '<span class="design-page-spec-count">' + dp.spec_count + ' specs</span>';
-                    html += '<button type="button" class="design-page-row-action"><i class="fas fa-check"></i></button>';
-                    html += '</div>';
-                }
-                html += '</div>';
-            }
+            var html = ModuleDetailUI.buildDesignPageListHTML(res);
             $('#designPagesList').html(html);
             $('#designPagesList .design-page-row').on('click', function () {
                 var dpId = $(this).data('id');
-                assignBlueprintDesignPage(dpId);
+                self._assignBlueprintDesignPage(dpId);
             });
         }).fail(function () {
             $('#designPagesLoading').hide();
             toastr.error('Failed to load design pages');
         });
-    }
+    },
 
-    function assignBlueprintDesignPage(designPageId) {
+    _assignBlueprintDesignPage: function (designPageId) {
         var pageId = $('#assignDesignPageTargetId').val();
         $.post(site_url + '/pages/' + pageId + '/assign-design-page', { blueprint_design_page_id: designPageId }, function (res) {
             if (res.status) {
@@ -321,9 +299,9 @@ var ModuleDetail = (function () {
         }).fail(function (xhr) {
             toastr.error('Failed to assign design page (HTTP ' + xhr.status + ')');
         });
-    }
+    },
 
-    function unassignBlueprintDesignPage(pageId) {
+    unassignBlueprintDesignPage: function (pageId) {
         Swal.fire({
             title: 'Remove design page assignment?',
             text: 'This page will no longer be linked to a blueprint design page.',
@@ -346,81 +324,47 @@ var ModuleDetail = (function () {
                 });
             }
         });
-    }
+    },
 
-    // ── Page Row Navigation ─────────────────────────────────────
-    function navigateToPage(pageId) {
-        window.location.href = site_url + '/master-projects/' + projectId + '/modules/' + moduleId + '/pages/' + pageId;
-    }
+    // ===========================
+    // PAGE ROW NAVIGATION
+    // ===========================
 
-    // ── Kanban Board ───────────────────────────────────────────
-    function loadKanban() {
+    navigateToPage: function (pageId) {
+        var self = ModuleDetail;
+        window.location.href = site_url + '/master-projects/' + self._projectId + '/modules/' + self._moduleId + '/pages/' + pageId;
+    },
+
+    // ===========================
+    // KANBAN BOARD
+    // ===========================
+
+    _loadKanban: function () {
+        var self = ModuleDetail;
         $('#kanbanBoard .kanban-cards').html('<div class="kanban-empty"><i class="fas fa-spinner fa-spin"></i>Loading...</div>');
         $.ajax({
-            url: site_url + '/master-projects/' + projectId + '/kanban?moduleId=' + moduleId,
+            url: site_url + '/master-projects/' + self._projectId + '/kanban?moduleId=' + self._moduleId,
             method: 'GET',
             timeout: 15000,
         })
         .done(function (res) {
-            kanbanData = res || { open: [], in_progress: [], resolved: [], closed: [] };
-            populatePageFilter();
-            renderKanban();
-            initKanbanSortables();
+            self._kanbanData = res || { open: [], in_progress: [], resolved: [], closed: [] };
+            self._populatePageFilter();
+            ModuleDetailUI.renderKanban(self._kanbanData, self._filterType);
+            self._initKanbanSortables();
         })
-        .fail(function (xhr, status, error) {
+        .fail(function () {
             toastr.error('Failed to load kanban board');
             $('#kanbanBoard .kanban-cards').html('<div class="kanban-empty"><i class="fas fa-exclamation-triangle"></i>Failed to load kanban. Please refresh the page.</div>');
         });
-    }
+    },
 
-    function renderKanban() {
-        var columns = ['open', 'in_progress', 'resolved', 'closed'];
-        for (var c = 0; c < columns.length; c++) {
-            var key = columns[c];
-            var tickets = kanbanData[key] || [];
-            var $col = $('#kanban-col-' + key);
-            $('#kanban-count-' + key).text(tickets.length);
-
-            if (!tickets.length) {
-                $col.html('<div class="kanban-empty"><i class="fas fa-inbox"></i>No tickets</div>');
-                continue;
-            }
-
-            var html = '';
-            for (var i = 0; i < tickets.length; i++) {
-                html += buildKanbanCard(tickets[i]);
-            }
-            $col.html(html);
+    _initKanbanSortables: function () {
+        var self = ModuleDetail;
+        for (var s = 0; s < self._kanbanSortables.length; s++) {
+            self._kanbanSortables[s].destroy();
         }
-    }
-
-    function buildKanbanCard(t) {
-        var typeCls = t.type === 0 ? 'bug' : t.type === 1 ? 'issue' : t.type === 3 ? 'change-request' : 'task';
-        var prioCls = t.priority_name ? t.priority_name.toLowerCase() : 'medium';
-
-        var html = '<div class="kanban-card" data-id="' + t.id + '" data-status="' + t.status + '">';
-        html += '<div class="kanban-card-header">';
-        html += '<span class="kanban-priority-dot ' + prioCls + '" title="' + escHtml(t.priority_name) + '"></span>';
-        html += '<span class="kanban-type-badge ' + typeCls + '">' + escHtml(t.type_name) + '</span>';
-        html += '</div>';
-        html += '<div class="kanban-card-title"><a href="' + site_url + '/tickets/' + t.id + '" target="_blank">' + escHtml(t.title) + '</a></div>';
-        html += '<div class="kanban-card-meta">';
-        if (t.assignee_name) {
-            html += '<span class="kanban-card-assignee"><i class="fas fa-user-check"></i> ' + escHtml(t.assignee_name) + '</span>';
-        }
-        if (t.page_name) {
-            html += '<span class="kanban-card-page" title="' + escHtml(t.page_name) + '"><i class="fas fa-file-alt"></i> ' + escHtml(t.page_name) + '</span>';
-        }
-        html += '</div>';
-        html += '</div>';
-        return html;
-    }
-
-    function initKanbanSortables() {
-        for (var s = 0; s < kanbanSortables.length; s++) {
-            kanbanSortables[s].destroy();
-        }
-        kanbanSortables = [];
+        self._kanbanSortables = [];
 
         var columns = ['open', 'in_progress', 'resolved', 'closed'];
         for (var c = 0; c < columns.length; c++) {
@@ -440,27 +384,27 @@ var ModuleDetail = (function () {
                     $(evt.item).css('transition', '');
                     var ticketId = evt.item.getAttribute('data-id');
                     var newColumn = evt.to.id.replace('kanban-col-', '');
-                    var newStatus = KANBAN_STATUS_MAP[newColumn];
+                    var newStatus = self._KANBAN_STATUS_MAP[newColumn];
                     var oldStatus = parseInt(evt.item.getAttribute('data-status'));
 
                     if (newStatus === oldStatus) return;
 
-                    var allowed = getAllowedTransitions(oldStatus);
+                    var allowed = self._getAllowedTransitions(oldStatus);
                     if (allowed.indexOf(newStatus) === -1) {
                         toastr.warning('Transition not allowed');
-                        renderKanban();
-                        initKanbanSortables();
+                        ModuleDetailUI.renderKanban(self._kanbanData, self._filterType);
+                        self._initKanbanSortables();
                         return;
                     }
 
-                    moveTicket(ticketId, newStatus, oldStatus, evt.item);
+                    self._moveTicket(ticketId, newStatus, oldStatus, evt.item);
                 }
             });
-            kanbanSortables.push(sortable);
+            self._kanbanSortables.push(sortable);
         }
-    }
+    },
 
-    function getAllowedTransitions(currentStatus) {
+    _getAllowedTransitions: function (currentStatus) {
         switch (currentStatus) {
             case 0: return [2, 4];
             case 1: return [2];
@@ -468,56 +412,58 @@ var ModuleDetail = (function () {
             case 3: return [0, 4];
             default: return [];
         }
-    }
+    },
 
-    function moveTicket(ticketId, newStatus, oldStatus, cardEl) {
+    _moveTicket: function (ticketId, newStatus, oldStatus, cardEl) {
+        var self = ModuleDetail;
         var $card = $(cardEl);
         var originalBg = $card.css('background');
         $card.css('background', 'var(--sap-brand-hover)').css('opacity', '0.7');
 
-        $.ajax({
-            url: site_url + '/tickets/' + ticketId + '/move',
-            method: 'POST',
-            data: { new_status: newStatus },
-            success: function (res) {
-                if (res.status) {
-                    $card.attr('data-status', newStatus);
-                    $card.css('background', '').css('opacity', '');
-                    toastr.success('Ticket moved to ' + KANBAN_STATUS_LABELS[newStatus]);
-                } else {
-                    $card.css('background', '').css('opacity', '');
-                    toastr.error(res.data && res.data.message ? res.data.message : 'Failed to move ticket');
-                    renderKanban();
-                    initKanbanSortables();
-                }
-            },
-            error: function (xhr) {
-                var res = null;
-                try { res = JSON.parse(xhr.responseText); } catch (e) { /* ignore */ }
-                if (res && res.redirect) {
-                    window.location.href = res.redirect;
-                    return;
-                }
+        $.post(site_url + '/tickets/' + ticketId + '/move', { new_status: newStatus }, function (res) {
+            if (res.status) {
+                $card.attr('data-status', newStatus);
                 $card.css('background', '').css('opacity', '');
-                toastr.error('Failed to move ticket');
-                renderKanban();
-                initKanbanSortables();
+                toastr.success('Ticket moved to ' + self._KANBAN_STATUS_LABELS[newStatus]);
+            } else {
+                $card.css('background', '').css('opacity', '');
+                toastr.error(res.data && res.data.message ? res.data.message : 'Failed to move ticket');
+                ModuleDetailUI.renderKanban(self._kanbanData, self._filterType);
+                self._initKanbanSortables();
             }
+        }).fail(function (xhr) {
+            var res = null;
+            try { res = JSON.parse(xhr.responseText); } catch (e) { /* ignore */ }
+            if (res && res.redirect) {
+                window.location.href = res.redirect;
+                return;
+            }
+            $card.css('background', '').css('opacity', '');
+            toastr.error('Failed to move ticket');
+            ModuleDetailUI.renderKanban(self._kanbanData, self._filterType);
+            self._initKanbanSortables();
         });
-    }
+    },
 
-    // ── Kanban Card Click → Drawer ───────────────────────────
-    function bindKanbanCardClick() {
+    // ===========================
+    // KANBAN CARD CLICK
+    // ===========================
+
+    _bindKanbanCardClick: function () {
         $(document).on('click', '.kanban-card', function (e) {
             if ($(e.target).closest('a').length) return;
             var cardId = $(this).data('id');
-            openTicketDrawer(cardId);
+            ModuleDetail._openTicketDrawer(cardId);
         });
-    }
+    },
 
-    // ── Ticket Detail Drawer ───────────────────────────────────
-    function openTicketDrawer(ticketId) {
-        drawerTicketId = ticketId;
+    // ===========================
+    // TICKET DETAIL DRAWER
+    // ===========================
+
+    _openTicketDrawer: function (ticketId) {
+        var self = ModuleDetail;
+        self._drawerTicketId = ticketId;
         var $scrim = $('#ticketDrawerScrim');
         var $drawer = $('#ticketDrawer');
         var $body = $('#ticketDrawerBody');
@@ -547,101 +493,36 @@ var ModuleDetail = (function () {
                 $body.html('<div class="sap-empty" style="padding:32px 20px"><i class="fas fa-exclamation-triangle"></i><h4>Ticket not found</h4></div>');
                 return;
             }
-            renderTicketDetail(ticket);
+            ModuleDetailUI.renderTicketDetail(ticket, self._drawerTicketId);
         })
         .fail(function (xhr) {
             $body.html('<div class="sap-empty" style="padding:32px 20px"><i class="fas fa-exclamation-triangle"></i><h4>Failed to load ticket</h4><p>HTTP ' + xhr.status + '</p></div>');
         });
-    }
+    },
 
-    function closeDrawer() {
+    _closeDrawer: function () {
         $('#ticketDrawerScrim').removeClass('open');
         $('#ticketDrawer').removeClass('open');
         $('body').css('overflow', '');
-        drawerTicketId = null;
-    }
+        ModuleDetail._drawerTicketId = null;
+    },
 
-    function renderTicketDetail(t) {
-        var statusCls = 'sap-badge open';
-        if (t.status_name === 'In Progress') statusCls = 'sap-badge in-progress';
-        else if (t.status_name === 'Resolved') statusCls = 'sap-badge resolved';
-        else if (t.status_name === 'Closed') statusCls = 'sap-badge closed';
-
-        var prioCls = t.priority_name ? t.priority_name.toLowerCase() : 'medium';
-        var typeCls = t.type === 0 ? 'bug' : t.type === 1 ? 'issue' : t.type === 3 ? 'change-request' : 'task';
-
-        var html = '';
-        html += '<div class="drawer-detail-section">';
-        html += '<div class="drawer-detail-badges">';
-        html += '<span class="' + statusCls + '"><span class="badge-dot"></span>' + escHtml(t.status_name) + '</span>';
-        html += '<span class="drawer-priority-dot ' + prioCls + '"></span>';
-        html += '<span class="kanban-type-badge ' + typeCls + '">' + escHtml(t.type_name) + '</span>';
-        html += '</div>';
-        html += '</div>';
-
-        html += '<div class="drawer-detail-section">';
-        html += '<div class="drawer-detail-meta">';
-        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Assignee</span><span class="drawer-meta-value">' + escHtml(t.assignee_name || '-') + '</span></div>';
-        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Creator</span><span class="drawer-meta-value">' + escHtml(t.creator_name || '-') + '</span></div>';
-        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Page</span><span class="drawer-meta-value">' + escHtml(t.page_name || '-') + '</span></div>';
-        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Module</span><span class="drawer-meta-value">' + escHtml(t.module_name || '-') + '</span></div>';
-        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Project</span><span class="drawer-meta-value">' + escHtml(t.project_name || '-') + '</span></div>';
-        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Created</span><span class="drawer-meta-value">' + escHtml(t.created_at || '-') + '</span></div>';
-        html += '<div class="drawer-meta-item"><span class="drawer-meta-label">Updated</span><span class="drawer-meta-value">' + escHtml(t.updated_at || '-') + '</span></div>';
-        html += '</div>';
-        html += '</div>';
-
-        if (t.description) {
-            html += '<div class="drawer-detail-section">';
-            html += '<div class="drawer-detail-desc-header">Description</div>';
-            html += '<div class="drawer-detail-desc">' + (typeof GlobalSanitize !== 'undefined' ? GlobalSanitize.sanitizeHtml(t.description) : escHtml(t.description)) + '</div>';
-            html += '</div>';
-        }
-
-        if (t.comments && t.comments.length) {
-            html += '<div class="drawer-detail-section">';
-            html += '<div class="drawer-detail-desc-header"><i class="fas fa-comments"></i> Comments (' + t.comments.length + ')</div>';
-            for (var i = 0; i < t.comments.length; i++) {
-                var c = t.comments[i];
-                html += '<div class="drawer-comment">';
-                html += '<div class="drawer-comment-header"><span class="drawer-comment-author">' + escHtml(c.author_name || 'Unknown') + '</span><span class="drawer-comment-date">' + escHtml(c.created_at || '') + '</span></div>';
-                html += '<div class="drawer-comment-body">' + (typeof GlobalSanitize !== 'undefined' ? GlobalSanitize.sanitizeHtml(c.content) : escHtml(c.content)) + '</div>';
-                html += '</div>';
-            }
-            html += '</div>';
-        }
-
-        if (t.attachments && t.attachments.length) {
-            html += '<div class="drawer-detail-section">';
-            html += '<div class="drawer-detail-desc-header"><i class="fas fa-paperclip"></i> Attachments (' + t.attachments.length + ')</div>';
-            html += '<div class="drawer-attachments">';
-            for (var j = 0; j < t.attachments.length; j++) {
-                var att = t.attachments[j];
-                html += '<a href="' + site_url + '/uploads/tickets/' + att.stored_name + '" target="_blank" class="drawer-attachment-item">';
-                html += '<i class="fas fa-file"></i> ' + escHtml(att.filename || att.stored_name);
-                html += '</a>';
-            }
-            html += '</div>';
-            html += '</div>';
-        }
-
-        $('#ticketDrawerBody').html(html);
-        $('#drawerOpenFullPage').attr('href', site_url + '/tickets/' + drawerTicketId);
-    }
-
-    function bindDrawerEvents() {
-        $('#ticketDrawerClose').on('click', closeDrawer);
-        $('#ticketDrawerScrim').on('click', closeDrawer);
+    _bindDrawerEvents: function () {
+        $('#ticketDrawerClose').on('click', ModuleDetail._closeDrawer);
+        $('#ticketDrawerScrim').on('click', ModuleDetail._closeDrawer);
         $(document).on('keydown', function (e) {
-            if (e.key === 'Escape' && drawerTicketId) {
-                closeDrawer();
+            if (e.key === 'Escape' && ModuleDetail._drawerTicketId) {
+                ModuleDetail._closeDrawer();
             }
         });
-    }
+    },
 
-    // ── Kanban Filters ─────────────────────────────────────────
-    function populatePageFilter() {
-        var pages = pageData.pages || [];
+    // ===========================
+    // KANBAN FILTERS
+    // ===========================
+
+    _populatePageFilter: function () {
+        var pages = (window.PageData || {}).pages || [];
         var $sel = $('#kanbanPageFilter');
         $sel.find('option:gt(0)').remove();
         var seen = {};
@@ -649,81 +530,61 @@ var ModuleDetail = (function () {
             var pg = pages[i];
             if (pg.name && !seen[pg.id]) {
                 seen[pg.id] = true;
-                $sel.append('<option value="' + pg.id + '">' + escHtml(pg.name) + '</option>');
+                $sel.append('<option value="' + pg.id + '">' + ModuleDetail.escHtml(pg.name) + '</option>');
             }
         }
-    }
+    },
 
-    function applyKanbanFilters() {
-        filterPage = $('#kanbanPageFilter').val() || '';
-        filterType = $('#kanbanTypeFilter .kanban-filter-type-btn.active').data('type') || '';
+    _applyKanbanFilters: function () {
+        var self = ModuleDetail;
+        self._filterPage = $('#kanbanPageFilter').val() || '';
+        self._filterType = $('#kanbanTypeFilter .kanban-filter-type-btn.active').data('type') || '';
 
-        var hasFilter = filterPage || filterType;
+        var hasFilter = self._filterPage || self._filterType;
         $('#kanbanFilterResetWrap').toggle(hasFilter);
 
         var columns = ['open', 'in_progress', 'resolved', 'closed'];
         for (var c = 0; c < columns.length; c++) {
             var key = columns[c];
-            var tickets = kanbanData[key] || [];
+            var tickets = self._kanbanData[key] || [];
             var filtered = [];
             for (var i = 0; i < tickets.length; i++) {
                 var t = tickets[i];
-                if (filterPage && t.page_id != filterPage) continue;
-                if (filterType && String(t.type) !== String(filterType)) continue;
+                if (self._filterPage && t.page_id != self._filterPage) continue;
+                if (self._filterType && String(t.type) !== String(self._filterType)) continue;
                 filtered.push(t);
             }
-            renderFilteredColumn(key, filtered);
+            ModuleDetailUI.renderFilteredColumn(key, filtered);
+            $('#kanban-count-' + key).text(filtered.length);
         }
+    },
 
-        for (var j = 0; j < columns.length; j++) {
-            var key2 = columns[j];
-            var allTickets = kanbanData[key2] || [];
-            var filtered2 = [];
-            for (var k = 0; k < allTickets.length; k++) {
-                var t2 = allTickets[k];
-                if (filterPage && t2.page_id != filterPage) continue;
-                if (filterType && String(t2.type) !== String(filterType)) continue;
-                filtered2.push(t2);
-            }
-            $('#kanban-count-' + key2).text(filtered2.length);
-        }
-    }
-
-    function renderFilteredColumn(key, tickets) {
-        var $col = $('#kanban-col-' + key);
-        if (!tickets.length) {
-            $col.html('<div class="kanban-empty"><i class="fas fa-inbox"></i>No tickets</div>');
-            return;
-        }
-        var html = '';
-        for (var i = 0; i < tickets.length; i++) {
-            html += buildKanbanCard(tickets[i]);
-        }
-        $col.html(html);
-    }
-
-    function resetKanbanFilters() {
+    resetKanbanFilters: function () {
+        var self = ModuleDetail;
         $('#kanbanPageFilter').val('');
         $('#kanbanTypeFilter .kanban-filter-type-btn').removeClass('active');
         $('#kanbanTypeFilter .kanban-filter-type-btn[data-type=""]').addClass('active');
-        filterPage = '';
-        filterType = '';
+        self._filterPage = '';
+        self._filterType = '';
         $('#kanbanFilterResetWrap').hide();
-        renderKanban();
-    }
+        ModuleDetailUI.renderKanban(self._kanbanData, self._filterType);
+    },
 
-    function bindFilterEvents() {
-        $('#kanbanPageFilter').on('change', applyKanbanFilters);
+    _bindFilterEvents: function () {
+        var self = ModuleDetail;
+        $('#kanbanPageFilter').on('change', function () { self._applyKanbanFilters(); });
         $('#kanbanTypeFilter').on('click', '.kanban-filter-type-btn', function () {
             $('#kanbanTypeFilter .kanban-filter-type-btn').removeClass('active');
             $(this).addClass('active');
-            applyKanbanFilters();
+            self._applyKanbanFilters();
         });
-    }
+    },
 
-    // ── Import Events ───────────────────────────────────────────
-    function bindImportEvents() {
-        // Search
+    // ===========================
+    // IMPORT DESIGN PAGES
+    // ===========================
+
+    _bindImportEvents: function () {
         $('#importSearchInput').on('keyup', function () {
             var search = $(this).val().toLowerCase();
             $('.import-design-item').each(function () {
@@ -733,22 +594,19 @@ var ModuleDetail = (function () {
             });
         });
 
-        // Select All
         $('#importSelectAll').on('change', function () {
             var checked = $(this).is(':checked');
             $('.import-design-cb:not(:disabled)').prop('checked', checked);
-            updateImportCount();
+            ModuleDetail._updateImportCount();
         });
 
-        // Individual checkbox
         $(document).on('change', '.import-design-cb', function () {
-            updateImportCount();
+            ModuleDetail._updateImportCount();
         });
-    }
+    },
 
-    // ── Import Design Pages ─────────────────────────────────────
-    function showImportModal() {
-        loadAvailableDesignPages();
+    showImportModal: function () {
+        ModuleDetail._loadAvailableDesignPages();
         $('#importSearchInput').val('');
         $('#importSelectAll').prop('checked', false);
         $('#importCountBadge').text('0 selected');
@@ -756,9 +614,10 @@ var ModuleDetail = (function () {
         $('#importBtn').prop('disabled', true);
         var modal = new bootstrap.Modal(document.getElementById('importDesignPagesModal'));
         modal.show();
-    }
+    },
 
-    function loadAvailableDesignPages() {
+    _loadAvailableDesignPages: function () {
+        var self = ModuleDetail;
         var $list = $('#importDesignPagesList');
         var $loading = $('#importDesignPagesLoading');
         var $empty = $('#importDesignPagesEmpty');
@@ -771,7 +630,7 @@ var ModuleDetail = (function () {
         $selectWrap.hide();
         $list.html('');
 
-        $.get(site_url + '/design-pages/available?module_id=' + moduleId, function (res) {
+        $.get(site_url + '/design-pages/available?module_id=' + self._moduleId, function (res) {
             $loading.hide();
             var groups = res || [];
             if (!groups.length) {
@@ -780,77 +639,30 @@ var ModuleDetail = (function () {
                 return;
             }
 
-            // Collect already imported design page IDs
             var importedIds = {};
-            var pages = pageData.pages || [];
+            var pages = (window.PageData || {}).pages || [];
             for (var p = 0; p < pages.length; p++) {
                 if (pages[p].blueprint_design_page_id) {
                     importedIds[pages[p].blueprint_design_page_id] = true;
                 }
             }
 
-            var html = '';
-            var skippedCount = 0;
-            var availableCount = 0;
-            for (var g = 0; g < groups.length; g++) {
-                var group = groups[g];
-                var hasAvailable = false;
-                for (var k = 0; k < group.design_pages.length; k++) {
-                    if (!importedIds[group.design_pages[k].id]) {
-                        hasAvailable = true;
-                        availableCount++;
-                    }
-                }
-                if (!hasAvailable) {
-                    skippedCount += group.design_pages.length;
-                    continue;
-                }
+            var result = ModuleDetailUI.buildImportDesignPagesHTML(groups, importedIds);
+            $list.html(result.html);
 
-                html += '<div class="import-design-group">';
-                html += '<div class="import-design-group-header">';
-                html += '<i class="fas fa-drafting-compass"></i> ';
-                html += '<strong>' + escHtml(group.blueprint_name) + '</strong>';
-                html += ' <span style="color:var(--sap-text-muted);margin:0 4px">→</span> ';
-                html += '<span style="color:var(--sap-text-muted);font-weight:400;text-transform:none;letter-spacing:normal">' + escHtml(group.blueprint_module_name) + '</span>';
-                html += '</div>';
-
-                for (var k2 = 0; k2 < group.design_pages.length; k2++) {
-                    var dp = group.design_pages[k2];
-                    var isImported = importedIds[dp.id];
-
-                    html += '<div class="import-design-item' + (isImported ? ' imported' : '') + '">';
-                    html += '<input type="checkbox" class="form-check-input import-design-cb" value="' + dp.id + '"' + (isImported ? ' disabled checked' : '') + '>';
-                    html += '<div class="import-design-info">';
-                    html += '<span class="import-design-name">' + escHtml(dp.title) + '</span>';
-                    html += '<span class="import-design-meta">' + escHtml(group.blueprint_module_name) + ' · ' + (dp.spec_count || 0) + ' specifications</span>';
-                    html += '</div>';
-                    if (isImported) {
-                        html += '<span class="import-design-status imported"><i class="fas fa-check"></i> Imported</span>';
-                    } else {
-                        html += '<span class="import-design-status available">Available</span>';
-                    }
-                    html += '</div>';
-                }
-                html += '</div>';
-            }
-
-            $list.html(html);
-
-            // Update subtitle
-            var subtitle = availableCount + ' available';
-            if (skippedCount > 0) {
-                subtitle += ' · ' + skippedCount + ' already imported';
+            var subtitle = result.availableCount + ' available';
+            if (result.skippedCount > 0) {
+                subtitle += ' \u00b7 ' + result.skippedCount + ' already imported';
             }
             $('#importModalSubtitle').text(subtitle);
 
-            // Show select all if there are available items
-            if (availableCount > 0) {
+            if (result.availableCount > 0) {
                 $selectWrap.show();
-                $('#importSelectAllText').text('Select All (' + availableCount + ' available)');
+                $('#importSelectAllText').text('Select All (' + result.availableCount + ' available)');
             }
 
-            if (skippedCount > 0) {
-                $skipped.text(skippedCount + ' page(s) already imported (skipped)').show();
+            if (result.skippedCount > 0) {
+                $skipped.text(result.skippedCount + ' page(s) already imported (skipped)').show();
             }
         }).fail(function () {
             $loading.hide();
@@ -858,40 +670,36 @@ var ModuleDetail = (function () {
             $('#importModalSubtitle').text('Failed to load');
             toastr.error('Failed to load design pages');
         });
-    }
+    },
 
-    function updateImportCount() {
+    _updateImportCount: function () {
         var total = $('.import-design-cb:not(:disabled)').length;
         var checked = $('.import-design-cb:checked:not(:disabled)').length;
         $('#importCountBadge').text(checked + ' selected');
         $('#importSelectedInfo').text(checked + ' page(s) selected');
         $('#importBtn').prop('disabled', checked === 0);
         $('#importSelectAll').prop('checked', total > 0 && total === checked);
-    }
+    },
 
-    function importSelectedDesignPages() {
+    importSelectedDesignPages: function () {
         var selected = [];
-        $('.import-design-cb:checked:not(:disabled)').each(function () {
-            selected.push($(this).val());
-        });
-
-        if (!selected.length) {
-            toastr.warning('Pilih minimal satu design page');
-            return;
-        }
-
-        // Build list of selected names for confirmation
         var names = [];
         $('.import-design-cb:checked:not(:disabled)').each(function () {
+            selected.push($(this).val());
             var $item = $(this).closest('.import-design-item');
             names.push($item.find('.import-design-name').text());
         });
+
+        if (!selected.length) {
+            toastr.warning('Select at least one design page');
+            return;
+        }
 
         var confirmHtml = '<div style="text-align:left">';
         confirmHtml += '<p>Import ' + selected.length + ' design page(s)?</p>';
         confirmHtml += '<ul style="margin:8px 0 0 16px;font-size:13px">';
         for (var i = 0; i < names.length; i++) {
-            confirmHtml += '<li>' + escHtml(names[i]) + '</li>';
+            confirmHtml += '<li>' + ModuleDetail.escHtml(names[i]) + '</li>';
         }
         confirmHtml += '</ul>';
         confirmHtml += '<p class="text-muted" style="margin-top:8px;font-size:12px">Pages will be created with links to original blueprint design pages.</p>';
@@ -907,55 +715,65 @@ var ModuleDetail = (function () {
             confirmButtonText: 'Yes, Import',
         }).then(function (result) {
             if (result.isConfirmed) {
-                doImportDesignPages(selected);
+                ModuleDetail._doImportDesignPages(selected);
             }
         });
-    }
+    },
 
-    function doImportDesignPages(selected) {
+    _doImportDesignPages: function (selected) {
         var $btn = $('#importBtn');
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Importing...');
 
-        $.ajax({
-            url: site_url + '/modules/' + moduleId + '/import-design-pages',
-            type: 'POST',
-            data: { design_page_ids: selected },
-            success: function (res) {
-                if (res.status) {
-                    var msg = 'Successfully imported ' + (res.imported || 0) + ' design page(s)';
-                    if (res.skipped && res.skipped > 0) {
-                        msg += ' (' + res.skipped + ' skipped)';
-                    }
-                    toastr.success(msg);
-                    bootstrap.Modal.getInstance(document.getElementById('importDesignPagesModal')).hide();
-                    window.location.reload();
-                } else {
-                    toastr.error(res.message || 'Import failed');
-                    $btn.prop('disabled', false).html('<i class="fas fa-file-import"></i> Import Selected');
+        $.post(site_url + '/modules/' + ModuleDetail._moduleId + '/import-design-pages', { design_page_ids: selected }, function (res) {
+            if (res.status) {
+                var msg = 'Successfully imported ' + (res.imported || 0) + ' design page(s)';
+                if (res.skipped && res.skipped > 0) {
+                    msg += ' (' + res.skipped + ' skipped)';
                 }
-            },
-            error: function (xhr) {
-                toastr.error('Import failed (HTTP ' + xhr.status + ')');
+                toastr.success(msg);
+                bootstrap.Modal.getInstance(document.getElementById('importDesignPagesModal')).hide();
+                window.location.reload();
+            } else {
+                toastr.error(res.message || 'Import failed');
                 $btn.prop('disabled', false).html('<i class="fas fa-file-import"></i> Import Selected');
             }
+        }).fail(function (xhr) {
+            toastr.error('Import failed (HTTP ' + xhr.status + ')');
+            $btn.prop('disabled', false).html('<i class="fas fa-file-import"></i> Import Selected');
         });
-    }
+    },
 
-    // ── Public API ─────────────────────────────────────────────
-    return {
-        switchDetailTab:              switchDetailTab,
-        openPageModal:                openPageModal,
-        editPage:                     editPage,
-        deletePage:                   deletePage,
-        editModule:                   editModule,
-        deleteModule:                 deleteModule,
-        showBugList:                  showBugList,
-        openAssignDesignPageModal:    openAssignDesignPageModal,
-        assignBlueprintDesignPage:    assignBlueprintDesignPage,
-        unassignBlueprintDesignPage:  unassignBlueprintDesignPage,
-        navigateToPage:               navigateToPage,
-        resetKanbanFilters:           resetKanbanFilters,
-        showImportModal:              showImportModal,
-        importSelectedDesignPages:    importSelectedDesignPages
-    };
-})();
+    // ===========================
+    // PUBLIC API
+    // ===========================
+
+    init: function () {
+        var self = ModuleDetail;
+        var pageData = window.PageData || {};
+        self._projectId = pageData.projectId || '';
+        self._moduleId = pageData.moduleId || '';
+        self._pageIds = pageData.pageIds || [];
+
+        self._bindPageForm();
+        self._bindModuleForm();
+        self._bindModalDismiss();
+        self._bindKanbanCardClick();
+        self._bindDrawerEvents();
+        self._bindFilterEvents();
+        self._bindImportEvents();
+    }
+};
+
+// ===========================
+// AUTO-INITIALIZATION
+// ===========================
+
+$(function () {
+    ModuleDetail.init();
+});
+
+// ===========================
+// EXPORTS
+// ===========================
+
+window.ModuleDetail = ModuleDetail;

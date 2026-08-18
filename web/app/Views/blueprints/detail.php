@@ -285,6 +285,9 @@
     'currentModuleId'  => $blueprint['modules'][0]['id'] ?? null,
     'modules'          => $blueprint['modules'] ?? [],
 ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
+<script src="<?= base_url('public/assets/js/page/blueprints/detail-ui.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/assets/js/page/blueprints/detail-dropzones.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/assets/js/page/blueprints/detail-crud.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/assets/js/page/blueprints/detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/vendor/summernote/0.9.1/summernote-bs5.min.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

@@ -3,16 +3,20 @@
  * Shared Badge Helpers
  * ============================================================================
  *
- * Description: Reusable badge and status rendering helpers
- * Date: 2026-07-16
- * Used by: approvals, improvements, blueprints, tickets
+ * Reusable badge and status rendering helpers for approvals, improvements,
+ * blueprints, tickets, and other modules.
+ *
+ * Dependencies: None (pure utility functions)
+ * Date: 2026-08-18
  */
+
+/* global GlobalSanitize */
 
 // ===========================
 // CONSTANTS
 // ===========================
 
-var BADGE_CLASS_MAP = {
+const BADGE_CLASS_MAP = {
     'Open': 'open',
     'Approved': 'approved',
     'In Progress': 'in-progress',
@@ -24,7 +28,7 @@ var BADGE_CLASS_MAP = {
     'Pending Dept Approval': 'pending'
 };
 
-var PRIORITY_CLASS_MAP = {
+const PRIORITY_CLASS_MAP = {
     'Critical': 'critical',
     'High': 'high',
     'Medium': 'medium',
@@ -36,13 +40,13 @@ var PRIORITY_CLASS_MAP = {
 // ===========================
 
 function sapBadge(name) {
-    var cls = BADGE_CLASS_MAP[name] || 'closed';
+    const cls = BADGE_CLASS_MAP[name] || 'closed';
     return '<span class="sap-badge ' + cls + '"><span class="badge-dot"></span>' + name + '</span>';
 }
 
 function priorityDot(name) {
-    var cls = PRIORITY_CLASS_MAP[name] || 'medium';
-    return '<span class="priority-dot ' + cls + '" title="' + name + '"></span>';
+    const cls = PRIORITY_CLASS_MAP[name] || 'medium';
+    return '<span class="priority-dot ' + cls + '" title="' + escHtml(name) + '"></span>';
 }
 
 function escHtml(s) {
@@ -52,3 +56,14 @@ function escHtml(s) {
 function escAttr(s) {
     return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
+
+// ===========================
+// WINDOW EXPORTS
+// ===========================
+
+window.sapBadge = sapBadge;
+window.priorityDot = priorityDot;
+window.escHtml = escHtml;
+window.escAttr = escAttr;
+window.BADGE_CLASS_MAP = BADGE_CLASS_MAP;
+window.PRIORITY_CLASS_MAP = PRIORITY_CLASS_MAP;
