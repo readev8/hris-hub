@@ -106,6 +106,40 @@
     margin-left: auto;
 }
 
+/* Scenario Modal — Compact 2-column grid */
+.scenario-grid .row > [class*="col-"] {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.scenario-grid .mb-3 {
+    margin-bottom: 12px !important;
+}
+
+.scenario-grid .sap-label {
+    font-size: 12px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.scenario-grid .sap-input,
+.scenario-grid .sap-select,
+.scenario-grid textarea {
+    font-size: 13px;
+    padding: 6px 10px;
+    min-height: auto;
+}
+
+.scenario-grid textarea {
+    resize: vertical;
+}
+
+.scenario-grid .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 20px 24px;
+}
+
 /* Dropzone styles for file uploads */
 .dropzone-area {
     border: 2px dashed var(--sap-border);
