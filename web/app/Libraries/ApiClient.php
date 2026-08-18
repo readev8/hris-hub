@@ -10,7 +10,7 @@ class ApiClient
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(env('api.base_url', 'http://localhost:8080/'), '/');
+        $this->baseUrl = rtrim(env('api.base_url', 'http://localhost:8888/'), '/');
         $this->apiKey  = env('api.service_key', '');
     }
 
