@@ -21,8 +21,11 @@
 <?= $this->section('content') ?>
 <div class="d-flex flex-column" style="height: calc(100vh - 56px); padding: 12px;">
     <div class="flow-toolbar">
-        <button type="button" class="btn btn-primary btn-sm" id="btnAddModule">
+        <button type="button" class="btn btn-primary btn-sm" id="btnOpenAddModule">
             <i class="fas fa-plus me-1"></i> Add Module
+        </button>
+        <button type="button" class="btn btn-outline-danger btn-sm" id="btnRemoveNode">
+            <i class="fas fa-trash"></i>
         </button>
 
         <div class="toolbar-separator"></div>
@@ -45,7 +48,7 @@
             <button type="button" class="btn btn-outline-secondary btn-sm" id="btnFitView" title="Fit to View">
                 <i class="fas fa-expand"></i>
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnResetZoom" title="Reset Zoom">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnZoomReset" title="Reset Zoom">
                 <i class="fas fa-undo"></i>
             </button>
         </div>

@@ -4,16 +4,22 @@
  * ============================================================================
  *
  * Kanvas interaktif visualisasi flow antar modul lintas project.
- * Menggunakan Drawflow (jerosoler/Drawflow) sebagai engine koneksi.
+ * Menggunakan Drawflow 0.0.59 (vanilla JS).
  *
  * Fitur:
  * - Add module dari daftar existing, drag-drop posisi
  * - Connect modules dengan panah arah
- * - Remove connector (klik + konfirmasi)
- * - Remove node (konfirmasi, cascade hapus koneksi)
+ * - Remove connector (klik → konfirmasi SweetAlert2)
+ * - Remove node (toolbar → konfirmasi cascade)
  * - Autosave posisi saat drag (debounce 800ms)
- * - Filter project (dim/highlight)
+ * - Filter project (dim non-selected)
  * - Zoom +/−/fit/reset
+ * - Intercept keyboard Delete → konfirmasi (bypass native delete Drawflow)
+ *
+ * Arsitekstur state: mapping sendiri, tidak akses internal Drawflow
+ *   _encIdToDfId: { encryptedModuleId → numericDfId }
+ *   _dfIdToEncId: { numericDfId → encryptedModuleId }
+ *   _connKeyToEncId: { 'fromDfId>toDfId' → encryptedConnectionId }
  *
  * Dependencies: Drawflow 0.0.59, jQuery, SweetAlert2, Toastr, Select2, GlobalSanitize
  * Date: 2026-08-18
@@ -25,7 +31,7 @@ const ModuleFlowsCanvas = (function () {
     // ===========================
     // API ENDPOINTS
     // ===========================
-    const ENDPOINTS = {
+    var ENDPOINTS = {
         LOAD_CANVAS:       site_url + '/module-flows/ajax-canvas',
         ADD_MODULE:        site_url + '/module-flows/ajax-add-module',
         UPDATE_POSITION:   site_url + '/module-flows/ajax-update-position/',
@@ -37,28 +43,27 @@ const ModuleFlowsCanvas = (function () {
     // ===========================
     // PROJECT COLORS
     // ===========================
-    const PROJECT_COLORS = [
-        '#3b82f6', // blue
-        '#10b981', // green
-        '#f59e0b', // amber
-        '#ef4444', // red
-        '#8b5cf6', // violet
-        '#06b6d4', // cyan
-    ];
+    var PROJECT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
     // ===========================
     // STATE
     // ===========================
-    let editor = null;
-    let _canvasNodes = [];
-    let _canvasConnections = [];
-    let _availableModules = [];
-    let _projectIndex = {};
-    let _projectColorMap = {};
-    let _activeFilter = null;
-    let _pendingSaves = new Set();
-    let _selectedConnectionId = null;
-    let _select2Instance = null;
+    var editor = null;
+    var _canvasNodes = [];
+    var _canvasConnections = [];
+    var _availableModules = [];
+    var _projectIndex = {};
+    var _projectColorMap = {};
+    var _activeFilter = null;
+    var _select2Instance = null;
+
+    // Mappings (Drawflow numeric IDs ↔ encrypted IDs)
+    var _dfIdToEncId = {};
+    var _encIdToDfId = {};
+    var _connKeyToEncId = {};
+
+    // Connection pending selection (for keyboard Delete intercept)
+    var _selectedConnInfo = null;
 
     // ===========================
     // INITIALIZATION
@@ -79,57 +84,79 @@ const ModuleFlowsCanvas = (function () {
         editor.reroute = false;
         editor.reroute_fix_curvature = false;
         editor.force_first_input = false;
-        editor.line_path = 5;
+        editor.curvature = 0.5;
         editor.editor_mode = 'edit';
         editor.start();
 
-        // Connection events
         editor.on('connectionCreated', _onConnectionCreated);
-        editor.on('connectionRemoved', _onConnectionRemoved);
 
-        // Connection selection for delete
-        _initConnectionSelect();
+        // Mouseup on canvas → save positions
+        container.addEventListener('mouseup', _saveAllPositions);
+        container.addEventListener('touchend', _saveAllPositions);
 
-        // Position save: listen to mouseup on canvas
-        container.addEventListener('mouseup', _onCanvasMouseUp);
-        container.addEventListener('touchend', _onCanvasMouseUp);
-
-        // Keyboard delete
-        document.addEventListener('keydown', function (e) {
-            if ((e.key === 'Delete' || e.key === 'Backspace') && _selectedConnectionId) {
-                _confirmDeleteConnection(_selectedConnectionId);
-            }
-        });
+        // Intercept Delete key in CAPTURE phase → bypass native Drawflow delete
+        document.addEventListener('keydown', _onKeyDownCapture, true);
     }
 
-    function _onCanvasMouseUp() {
-        _saveAllPositions();
+    // ===========================
+    // KEYBOARD DELETE INTERCEPT
+    // ===========================
+    function _onKeyDownCapture(e) {
+        if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+        if (!editor || editor.editor_mode !== 'edit') return;
+
+        var active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+
+        // Check connection selected
+        var connEl = container().querySelector('.connection.selected');
+        if (connEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            _confirmDeleteConnectionByElement(connEl);
+            return;
+        }
+
+        // Check node selected
+        var nodeEl = editor.node_selected;
+        if (nodeEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            _confirmRemoveNode();
+            return;
+        }
+    }
+
+    function container() {
+        return document.getElementById('drawflow-container');
     }
 
     // ===========================
     // DATA LOADING
     // ===========================
     function _loadCanvas() {
-        _showSavingStatus('loading');
+        _showStatus('loading');
         $.get(ENDPOINTS.LOAD_CANVAS, function (res) {
             if (!res || !res.status) {
                 toastr.error(res?.message || 'Gagal memuat data canvas');
-                _showSavingStatus('error');
+                _showStatus('error');
                 return;
             }
-
             var data = res.data.result || res.result || res.data;
             _canvasNodes = data.nodes || [];
             _canvasConnections = data.connections || [];
             _availableModules = data.available || [];
 
             _buildProjectIndex();
+            editor.clear();
             _renderCanvas();
             _populateProjectFilter();
             _showSavedStatus();
         }).fail(function () {
             toastr.error('Gagal terhubung ke server');
-            _showSavingStatus('error');
+            _showStatus('error');
         });
     }
 
@@ -137,64 +164,63 @@ const ModuleFlowsCanvas = (function () {
         _projectIndex = {};
         _projectColorMap = {};
         var colorIdx = 0;
-
-        // From nodes
-        _canvasNodes.forEach(function (n) {
-            if (n.project_id && !_projectIndex[n.project_id]) {
-                _projectIndex[n.project_id] = n.project_name;
-                _projectColorMap[n.project_id] = PROJECT_COLORS[colorIdx % PROJECT_COLORS.length];
-                colorIdx++;
-            }
-        });
-
-        // From available modules
-        _availableModules.forEach(function (m) {
-            if (m.project_id && !_projectIndex[m.project_id]) {
-                _projectIndex[m.project_id] = m.project_name;
-                _projectColorMap[m.project_id] = PROJECT_COLORS[colorIdx % PROJECT_COLORS.length];
+        var all = _canvasNodes.concat(_availableModules.map(function (m) {
+            return { project_id: m.project_id, project_name: m.project_name };
+        }));
+        all.forEach(function (item) {
+            if (item.project_id && !_projectIndex[item.project_id]) {
+                _projectIndex[item.project_id] = item.project_name;
+                _projectColorMap[item.project_id] = PROJECT_COLORS[colorIdx % PROJECT_COLORS.length];
                 colorIdx++;
             }
         });
     }
 
     // ===========================
-    // RENDER CANVAS
+    // RENDER CANVAS (correct addNode signature)
     // ===========================
     function _renderCanvas() {
-        // Clear
-        editor.clear();
+        // Reset mappings
+        _dfIdToEncId = {};
+        _encIdToDfId = {};
+        _connKeyToEncId = {};
 
-        // Add nodes
-        var nodeMap = {}; // encrypted_id → drawflow_node_id
-
+        // Add nodes — correct 8-param signature: name, inputs, outputs, x, y, class, data, html
         _canvasNodes.forEach(function (node) {
             var colorClass = _getProjectColorClass(node.project_id);
-            var html = '<div class="flow-module ' + colorClass + '" title="' + _escHtml(node.project_name || '') + '">'
+            var html = '<div class="flow-module ' + colorClass + '">'
                 + '<div class="flow-module-name">' + _escHtml(node.name) + '</div>'
                 + '<div class="flow-module-project">' + _escHtml(node.project_name || '') + '</div>'
                 + '</div>';
 
-            var nodeId = editor.addNode(
-                'module', 1, 1,
-                node.pos_x, node.pos_y,
-                node.module_id, // name/title
-                html,
-                {}, // data
-                {}, // classes
-                { min_inputs: 1, max_inputs: 1, min_outputs: 1, max_outputs: 1 }
+            var dfId = editor.addNode(
+                node.module_id,   // name: store encrypted id
+                1, 1,             // inputs, outputs
+                node.pos_x || 0,  // pos_x
+                node.pos_y || 0,  // pos_y
+                'module',         // CSS class
+                {},               // data
+                html,             // html (string)
+                false             // typenode: false = render as HTML string
             );
 
-            nodeMap[node.module_id] = nodeId;
+            // Map bidirectional
+            _dfIdToEncId[dfId] = node.module_id;
+            _encIdToDfId[node.module_id] = dfId;
         });
 
         // Add connections
         _canvasConnections.forEach(function (conn) {
-            var fromNodeId = nodeMap[conn.from];
-            var toNodeId = nodeMap[conn.to];
-            if (fromNodeId && toNodeId) {
-                editor.addConnection(fromNodeId, toNodeId, 'output_1', 'input_1', conn.id);
+            var fromDfId = _encIdToDfId[conn.from];
+            var toDfId = _encIdToDfId[conn.to];
+            if (fromDfId && toDfId) {
+                editor.addConnection(fromDfId, toDfId, 'output_1', 'input_1');
+                _connKeyToEncId[fromDfId + '>' + toDfId] = conn.id;
             }
         });
+
+        // Reset position state
+        _lastPositionState = {};
     }
 
     function _getProjectColorClass(projectId) {
@@ -205,145 +231,176 @@ const ModuleFlowsCanvas = (function () {
     }
 
     // ===========================
-    // CONNECTION EVENTS
+    // CONNECTION CREATED (user drew a line)
     // ===========================
     function _onConnectionCreated(info) {
-        var fromId = info.output_id;   // encrypted module_id stored in name
-        var toId = info.input_id;      // encrypted module_id stored in name
+        // info: { output_id (fromDfId string), input_id (toDfId string),
+        //         output_class ('output_1'), input_class ('input_1') }
+        var fromDfId = parseInt(info.output_id);
+        var toDfId = parseInt(info.input_id);
 
-        // Drawflow internal IDs — need to get from name attribute
-        var fromName = editor.getNodeModule(info.output_id) || '';
-        var toName = editor.getNodeModule(info.input_id) || '';
+        var fromEnc = _dfIdToEncId[fromDfId];
+        var toEnc = _dfIdToEncId[toDfId];
 
-        // Actually fromName/toName are the module names in Drawflow (we stored module_id as name)
-        // info.output_id and info.input_id are the DRAWFLOW numeric IDs
-        // We need to get the 'name' (encrypted module_id) from the Drawflow node
-        var fromData = editor.drawflow.MODULES.data[info.output_id];
-        var toData = editor.drawflow.MODULES.data[info.input_id];
-        var fromEncId = fromData ? fromData.name : null;
-        var toEncId = toData ? toData.name : null;
-
-        if (!fromEncId || !toEncId || fromEncId === toEncId) {
-            editor.removeSingleConnection(info.output_id, info.input_id, 'output_1', 'input_1');
-            if (fromEncId === toEncId) {
-                toastr.warning('Tidak dapat menghubungkan modul ke dirinya sendiri');
-            }
+        // Validation
+        if (!fromEnc || !toEnc) {
+            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+            return;
+        }
+        if (fromEnc === toEnc) {
+            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+            toastr.warning('Tidak dapat menghubungkan modul ke dirinya sendiri');
+            return;
+        }
+        if (_connKeyToEncId[fromDfId + '>' + toDfId]) {
+            toastr.info('Koneksi ini sudah ada');
             return;
         }
 
-        _showSavingStatus('saving');
-        $.post(ENDPOINTS.ADD_CONNECTION, {
-            from: fromEncId,
-            to: toEncId
-        }, function (res) {
+        _showStatus('saving');
+        $.post(ENDPOINTS.ADD_CONNECTION, { from: fromEnc, to: toEnc }, function (res) {
             if (!res || !res.status) {
                 toastr.error(res?.message || 'Gagal membuat koneksi');
-                editor.removeSingleConnection(info.output_id, info.input_id, 'output_1', 'input_1');
-                _showSavingStatus('error');
+                editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+                _showStatus('error');
                 return;
             }
+            _connKeyToEncId[fromDfId + '>' + toDfId] = res.data?.result?.id || res.data?.id || '';
             _showSavedStatus();
-            _refreshCanvas();
         }).fail(function () {
             toastr.error('Gagal terhubung ke server');
-            editor.removeSingleConnection(info.output_id, info.input_id, 'output_1', 'input_1');
-            _showSavingStatus('error');
+            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+            _showStatus('error');
         });
-    }
-
-    function _onConnectionRemoved(info) {
-        // Drawflow auto-removes on keyboard Delete or when removeSingleConnection is called
-        // Don't trigger for connections we're removing ourselves (handled in confirm flow)
     }
 
     // ===========================
-    // CONNECTION SELECTION + DELETE
+    // CONNECTION DELETE (click → confirm)
     // ===========================
-    function _initConnectionSelect() {
-        editor.on('connectionSelected', function (info) {
-            _selectedConnectionId = info.connection.id;
-        });
-        editor.on('connectionUnselected', function () {
-            _selectedConnectionId = null;
-        });
-    }
+    function _confirmDeleteConnectionByElement(connEl) {
+        if (!connEl) return;
 
-    function _confirmDeleteConnection(connectionId) {
-        if (!connectionId) return;
+        // Get node IDs from class attribute: "connection node_in_node-X node_out_node-Y ..."
+        var classes = connEl.className.baseVal || connEl.className;
+        var fromMatch = classes.match(/node_out_node-(\d+)/);
+        var toMatch = classes.match(/node_in_node-(\d+)/);
+        if (!fromMatch || !toMatch) return;
 
-        // Find connection in our data
-        var conn = _canvasConnections.find(function (c) {
-            return connectionId.indexOf(c.id) !== -1 || connectionId === c.id;
-        });
+        var fromDfId = parseInt(fromMatch[1]);
+        var toDfId = parseInt(toMatch[1]);
+        var fromEnc = _dfIdToEncId[fromDfId];
+        var toEnc = _dfIdToEncId[toDfId];
+        var connEncId = _connKeyToEncId[fromDfId + '>' + toDfId];
 
-        // Also check if connectionId matches the Drawflow format
-        // Drawflow connection IDs look like: "input_1-{toId}-output_1-{fromId}"
-        if (!conn) {
-            // Try to find by parsing Drawflow connection ID format
-            var parts = connectionId.split('-');
-            if (parts.length >= 4) {
-                var toNodeId = parseInt(parts[1]);
-                var fromNodeId = parseInt(parts[3]);
-                var toNode = editor.drawflow.MODULES.data[toNodeId];
-                var fromNode = editor.drawflow.MODULES.data[fromNodeId];
-                if (toNode && fromNode) {
-                    conn = { from: fromNode.name, to: toNode.name, id: connectionId };
-                }
-            }
-        }
+        if (!fromEnc || !toEnc || !connEncId) return;
 
-        if (!conn) return;
+        var fromName = _getNodeLabel(fromDfId);
+        var toName = _getNodeLabel(toDfId);
 
         Swal.fire({
             title: 'Hapus koneksi?',
-            text: 'Koneksi ini akan dihapus permanen',
+            text: fromName + ' → ' + toName,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Hapus',
             confirmButtonColor: '#dc2626',
             cancelButtonColor: '#6b7280',
         }).then(function (result) {
-            if (result.isConfirmed) {
-                // Remove from Drawflow
-                var fromNode = editor.drawflow.MODULES.data[parts ? parseInt(parts[3]) : 0];
-                var toNode = editor.drawflow.MODULES.data[parts ? parseInt(parts[1]) : 0];
-                if (fromNode && toNode) {
-                    editor.removeSingleConnection(
-                        parts ? parseInt(parts[3]) : 0,
-                        parts ? parseInt(parts[1]) : 0,
-                        'output_1',
-                        'input_1'
-                    );
-                }
+            if (!result.isConfirmed) return;
 
-                // Delete from API
-                _showSavingStatus('saving');
-                $.post(ENDPOINTS.DELETE_CONNECTION + conn.id, {}, function (res) {
-                    if (res && res.status) {
-                        _showSavedStatus();
-                        _refreshCanvas();
-                    } else {
-                        toastr.error(res?.message || 'Gagal menghapus koneksi');
-                        _showSavedStatus('error');
-                    }
-                }).fail(function () {
-                    toastr.error('Gagal terhubung ke server');
-                    _showSavingStatus('error');
-                });
-            }
-            _selectedConnectionId = null;
+            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+
+            _showStatus('saving');
+            $.post(ENDPOINTS.DELETE_CONNECTION + connEncId, {}, function (res) {
+                if (res && res.status) {
+                    delete _connKeyToEncId[fromDfId + '>' + toDfId];
+                    _showSavedStatus();
+                    toastr.success('Koneksi dihapus');
+                } else {
+                    _refreshCanvas();
+                    toastr.error(res?.message || 'Gagal menghapus koneksi');
+                    _showStatus('error');
+                }
+            }).fail(function () {
+                _refreshCanvas();
+                toastr.error('Gagal terhubung ke server');
+                _showStatus('error');
+            });
         });
     }
 
     // ===========================
-    // ADD MODULE
+    // NODE DELETE (toolbar button → confirm)
+    // ===========================
+    function _confirmRemoveNode() {
+        var nodeEl = editor.node_selected;
+        if (!nodeEl) {
+            toastr.info('Pilih modul terlebih dahulu (klik node di kanvas)');
+            return;
+        }
+
+        var dfId = parseInt(nodeEl.id.replace('node-', ''));
+        var encId = _dfIdToEncId[dfId];
+        if (!encId) return;
+
+        var moduleName = _getNodeLabel(dfId);
+
+        // Count affected connections
+        var affected = [];
+        Object.keys(_connKeyToEncId).forEach(function (key) {
+            var parts = key.split('>');
+            if (parseInt(parts[0]) === dfId || parseInt(parts[1]) === dfId) {
+                affected.push(_connKeyToEncId[key]);
+            }
+        });
+
+        var text = 'Menghapus "' + moduleName + '"';
+        if (affected.length) {
+            text += ' akan menghapus ' + affected.length + ' koneksi terkait.';
+        }
+
+        Swal.fire({
+            title: 'Hapus modul dari kanvas?',
+            text: text,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Hapus',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            _showStatus('saving');
+            $.post(ENDPOINTS.REMOVE_MODULE + encId, {}, function (res) {
+                if (res && res.status) {
+                    toastr.success('Modul dihapus dari kanvas');
+                    _refreshCanvas();
+                } else {
+                    toastr.error(res?.message || 'Gagal menghapus modul');
+                    _showStatus('error');
+                }
+            }).fail(function () {
+                toastr.error('Gagal terhubung ke server');
+                _showStatus('error');
+            });
+        });
+    }
+
+    function _getNodeLabel(dfId) {
+        var nodeData = editor.getNodeFromId(dfId);
+        if (!nodeData) return '';
+        var match = (nodeData.html || '').match(/flow-module-name[^>]*>([^<]+)/);
+        return match ? match[1].trim() : '';
+    }
+
+    // ===========================
+    // ADD MODULE (via modal Select2)
     // ===========================
     function _openAddModuleModal() {
         if (!_availableModules.length) {
             Swal.fire('Info', 'Semua modul sudah ada di kanvas', 'info');
             return;
         }
-
         _populateSelect2();
         $('#selectedModuleInfo').hide();
         $('#btnAddModule').prop('disabled', true);
@@ -351,7 +408,6 @@ const ModuleFlowsCanvas = (function () {
     }
 
     function _populateSelect2() {
-        // Group by project
         var grouped = {};
         _availableModules.forEach(function (m) {
             var projName = m.project_name || 'Unknown Project';
@@ -359,31 +415,26 @@ const ModuleFlowsCanvas = (function () {
             grouped[projName].push(m);
         });
 
-        var options = '<option value="">Search and select a module...</option>';
+        var opts = '<option value="">Search and select a module...</option>';
         for (var projName in grouped) {
-            options += '<optgroup label="' + _escHtml(projName) + '">';
+            opts += '<optgroup label="' + _escHtml(projName) + '">';
             grouped[projName].forEach(function (m) {
-                options += '<option value="' + m.module_id + '">' + _escHtml(m.name) + '</option>';
+                opts += '<option value="' + m.module_id + '">' + _escHtml(m.name) + '</option>';
             });
-            options += '</optgroup>';
+            opts += '</optgroup>';
         }
 
         if (_select2Instance) {
             _select2Instance.select2('destroy');
         }
-
-        $('#moduleSelect').html(options);
-        _select2Instance = $('#moduleSelect').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: 'Search and select a module...',
-        });
+        $('#moduleSelect').html(opts);
+        _select2Instance = $('#moduleSelect').select2({ theme: 'bootstrap-5', width: '100%', placeholder: 'Search...' });
 
         _select2Instance.on('select2:select', function (e) {
             var module = _availableModules.find(function (m) { return m.module_id === e.params.data.id; });
             if (module) {
                 $('#selectedModuleName').text(module.name);
-                $('#selectedModuleProject').text(module.project_name || 'Unknown Project');
+                $('#selectedModuleProject').text(module.project_name || '');
                 $('#selectedModuleInfo').show();
                 $('#btnAddModule').prop('disabled', false);
             }
@@ -394,12 +445,11 @@ const ModuleFlowsCanvas = (function () {
         var moduleId = $('#moduleSelect').val();
         if (!moduleId) return;
 
-        // Calculate center position
-        var container = document.getElementById('drawflow-container');
-        var centerX = (container.scrollLeft + container.clientWidth / 2) / editor.zoom;
-        var centerY = (container.scrollTop + container.clientHeight / 2) / editor.zoom;
+        var c = container();
+        var centerX = (c.scrollLeft + c.clientWidth / 2) / editor.zoom;
+        var centerY = (c.scrollTop + c.clientHeight / 2) / editor.zoom;
 
-        _showSavingStatus('saving');
+        _showStatus('saving');
         $('#btnAddModule').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Adding...');
 
         $.post(ENDPOINTS.ADD_MODULE, {
@@ -409,123 +459,62 @@ const ModuleFlowsCanvas = (function () {
         }, function (res) {
             if (!res || !res.status) {
                 toastr.error(res?.message || 'Gagal menambahkan modul');
-                _showSavingStatus('error');
+                _showStatus('error');
                 $('#btnAddModule').prop('disabled', false).html('<i class="fas fa-plus"></i> Add to Canvas');
                 return;
             }
-
             toastr.success('Modul ditambahkan ke kanvas');
             $('#addModuleModal').modal('hide');
-            _showSavedStatus();
             _refreshCanvas();
         }).fail(function () {
             toastr.error('Gagal terhubung ke server');
-            _showSavingStatus('error');
+            _showStatus('error');
             $('#btnAddModule').prop('disabled', false).html('<i class="fas fa-plus"></i> Add to Canvas');
         });
-    }
-
-    // ===========================
-    // REMOVE NODE
-    // ===========================
-    function _removeSelectedNode() {
-        var selectedId = editor.node_selected;
-        if (!selectedId) {
-            toastr.info('Pilih modul terlebih dahulu');
-            return;
-        }
-
-        var nodeData = editor.drawflow.MODULES.data[selectedId];
-        if (!nodeData) return;
-
-        var encryptedId = nodeData.name; // we stored encrypted module_id as name
-        var moduleName = _getModuleName(selectedId);
-
-        // Count connections
-        var connCount = 0;
-        Object.values(editor.drawflow.MODULES.data).forEach(function (n) {
-            Object.values(n.outputs || {}).forEach(function (output) {
-                Object.values(output.connections || {}).forEach(function (c) {
-                    if (c.node === selectedId || n.id === selectedId) connCount++;
-                });
-            });
-        });
-
-        var confirmText = 'Menghapus modul "' + moduleName + '"';
-        if (connCount > 0) {
-            confirmText += ' akan menghapus ' + connCount + ' koneksi terkait';
-        }
-        confirmText += '.';
-
-        Swal.fire({
-            title: 'Hapus modul dari kanvas?',
-            text: confirmText,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Hapus',
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6b7280',
-        }).then(function (result) {
-            if (!result.isConfirmed) return;
-
-            _showSavingStatus('saving');
-            $.post(ENDPOINTS.REMOVE_MODULE + encryptedId, {}, function (res) {
-                if (res && res.status) {
-                    toastr.success('Modul dihapus dari kanvas');
-                    _showSavedStatus();
-                    _refreshCanvas();
-                } else {
-                    toastr.error(res?.message || 'Gagal menghapus modul');
-                    _showSavingStatus('error');
-                }
-            }).fail(function () {
-                toastr.error('Gagal terhubung ke server');
-                _showSavingStatus('error');
-            });
-        });
-    }
-
-    function _getModuleName(nodeId) {
-        var nodeData = editor.drawflow.MODULES.data[nodeId];
-        if (!nodeData) return '';
-        var nameEl = nodeData.html ? nodeData.html.match(/flow-module-name[^>]*>([^<]+)/) : null;
-        return nameEl ? nameEl[1].trim() : '';
     }
 
     // ===========================
     // AUTOSAVE POSITIONS
     // ===========================
     var _lastPositionState = {};
+    var _positionSaveTimer = null;
 
     function _saveAllPositions() {
         if (!editor) return;
-        var data = editor.export();
-        var moduleData = (data.drawflow && data.drawflow.MODULES) ? data.drawflow.MODULES.data : {};
-        var changed = false;
 
-        for (var dfId in moduleData) {
-            var node = moduleData[dfId];
-            var encId = node.name;
-            if (!encId) continue;
+        // Debounce: wait 800ms after last mouseup
+        clearTimeout(_positionSaveTimer);
+        _positionSaveTimer = setTimeout(function () {
+            var exportData = editor.export();
+            var homeData = (exportData.drawflow && exportData.drawflow.Home)
+                ? exportData.drawflow.Home.data : {};
+            var changed = [];
 
-            var prev = _lastPositionState[encId];
-            var newX = Math.round(node.pos_x);
-            var newY = Math.round(node.pos_y);
+            Object.keys(homeData).forEach(function (dfId) {
+                var node = homeData[dfId];
+                var encId = node.name; // encrypted module id stored as 'name'
+                if (!encId) return;
 
-            if (!prev || prev.x !== newX || prev.y !== newY) {
-                _lastPositionState[encId] = { x: newX, y: newY };
-                changed = true;
-                _sendPositionUpdate(encId, newX, newY);
-            }
-        }
-    }
+                var prev = _lastPositionState[encId];
+                var newX = Math.round(node.pos_x);
+                var newY = Math.round(node.pos_y);
 
-    function _sendPositionUpdate(encId, x, y) {
-        $.post(ENDPOINTS.UPDATE_POSITION + encId, { pos_x: x, pos_y: y }, function () {
-            _showSavedStatus();
-        }).fail(function () {
-            _showSavingStatus('error');
-        });
+                if (!prev || prev.x !== newX || prev.y !== newY) {
+                    _lastPositionState[encId] = { x: newX, y: newY };
+                    changed.push({ encId: encId, x: newX, y: newY });
+                }
+            });
+
+            // Send all position updates
+            changed.forEach(function (item) {
+                $.post(ENDPOINTS.UPDATE_POSITION + item.encId, {
+                    pos_x: item.x,
+                    pos_y: item.y
+                });
+            });
+
+            if (changed.length) _showSavedStatus();
+        }, 800);
     }
 
     // ===========================
@@ -540,10 +529,10 @@ const ModuleFlowsCanvas = (function () {
             _availableModules = data.available || [];
 
             _buildProjectIndex();
+            editor.clear();
             _renderCanvas();
             _applyFilter();
             _populateProjectFilter();
-            _lastPositionState = {};
         });
     }
 
@@ -559,33 +548,29 @@ const ModuleFlowsCanvas = (function () {
         if (_select2Instance) {
             $filter.select2('destroy');
         }
-        $filter.select2({ theme: 'bootstrap-5', width: 'auto', minimumResultsForSearch: Infinity });
+        $filter.select2({ theme: 'bootstrap-5', width: '200', minimumResultsForSearch: Infinity });
     }
 
     function _applyFilter() {
         if (!editor) return;
-        var moduleData = editor.drawflow.MODULES ? editor.drawflow.MODULES.data : {};
         var filterId = _activeFilter;
 
-        for (var dfId in moduleData) {
-            var node = moduleData[dfId];
-            var el = document.querySelector('.drawflow-node[data-node-id="' + dfId + '"]');
-            if (!el) continue;
+        // Dim/show nodes
+        Object.keys(_dfIdToEncId).forEach(function (dfId) {
+            var el = document.getElementById('node-' + dfId);
+            if (!el) return;
 
-            if (!filterId || node.name === filterId || _getNodeProjectId(node) === filterId) {
+            if (!filterId || _dfIdToEncId[dfId] === filterId || _getNodeProjectId(_dfIdToEncId[dfId]) === filterId) {
                 el.classList.remove('dimmed');
             } else {
                 el.classList.add('dimmed');
             }
-        }
+        });
     }
 
-    function _getNodeProjectId(nodeData) {
-        // Find project_id from canvasNodes by matching encrypted name
+    function _getNodeProjectId(encId) {
         for (var i = 0; i < _canvasNodes.length; i++) {
-            if (_canvasNodes[i].module_id === nodeData.name) {
-                return _canvasNodes[i].project_id;
-            }
+            if (_canvasNodes[i].module_id === encId) return _canvasNodes[i].project_id;
         }
         return null;
     }
@@ -597,9 +582,9 @@ const ModuleFlowsCanvas = (function () {
         $('#btnZoomIn').on('click', function () { editor.zoom_in(); });
         $('#btnZoomOut').on('click', function () { editor.zoom_out(); });
         $('#btnFitView').on('click', function () { editor.zoom_reset(); });
-        $('#btnZoomReset').on('click', function () { editor.zoom_reset(); });
+        $('#btnZoomReset').on('click', function () { editor.zoom_refresh(); });
         $('#btnRefresh').on('click', function () { _refreshCanvas(); });
-        $('#btnRemoveNode').on('click', function () { _removeSelectedNode(); });
+        $('#btnRemoveNode').on('click', function () { _confirmRemoveNode(); });
     }
 
     function _bindModalEvents() {
@@ -617,24 +602,21 @@ const ModuleFlowsCanvas = (function () {
     // ===========================
     // SAVE STATUS INDICATOR
     // ===========================
-    function _showSavingStatus(state) {
+    function _showStatus(state) {
         var $el = $('#saveStatus');
         if (!$el.length) return;
-
         if (state === 'saving' || state === 'loading') {
             $el.removeClass('saved error').addClass('saving')
-                .text(state === 'loading' ? 'Memuat...' : 'Menyimpan...');
+                .text(state === 'loading' ? 'Memuat...' : 'Menyimpan...').show();
         } else if (state === 'error') {
-            $el.removeClass('saving saved').addClass('error')
-                .text('Error').show();
+            $el.removeClass('saving saved').addClass('error').text('Error').show();
         }
     }
 
     function _showSavedStatus() {
         var $el = $('#saveStatus');
         if (!$el.length) return;
-        $el.removeClass('saving error').addClass('saved')
-            .text('✓ Tersimpan').show();
+        $el.removeClass('saving error').addClass('saved').text('\u2713 Tersimpan').show();
         setTimeout(function () { $el.fadeOut(300); }, 2000);
     }
 
