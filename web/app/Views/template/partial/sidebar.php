@@ -1,4 +1,7 @@
 <?php
+/**
+ * SIDEBAR — Navigasi samping dengan menu berbasis permission user.
+ */
 $perms = session('permissions') ?? [];
 $canDashboard      = !empty($perms['dashboard']['can_view']);
 $canTickets        = !empty($perms['tickets']['can_view']);

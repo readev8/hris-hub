@@ -1,3 +1,12 @@
+<?php
+/**
+ * ============================================================================
+ * TEMPLATE SHELL
+ * ============================================================================
+ *
+ * Layout global shell HTML. Render sections: styles, content, modals, scripts.
+ */
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

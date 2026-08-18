@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * Master Projects - Edit
+ * ============================================================================
+ *
+ * Description: Edit existing master project form
+ *
+ * Required: $project
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="container" style="max-width:600px">
@@ -33,5 +46,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- MOVE to page JS file -->
 <script src="<?= base_url('public/assets/js/page/master-projects/edit.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

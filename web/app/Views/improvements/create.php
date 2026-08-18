@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * Improvements - Create
+ * ============================================================================
+ *
+ * Description: Create new improvement proposal form
+ *
+ * Required: $users, $userTypes
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
@@ -173,5 +186,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- MOVE to page JS file -->
 <script src="<?= base_url('public/assets/js/page/improvements/create.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

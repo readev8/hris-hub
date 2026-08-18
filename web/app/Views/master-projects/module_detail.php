@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * Master Projects - Module Detail
+ * ============================================================================
+ *
+ * Description: Module detail view with pages, kanban board, and spec coverage
+ *
+ * Required: $project, $module
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/master-projects/module_detail.css') ?>?v=<?= config('App')->assetVersion ?>">
@@ -343,167 +356,20 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
-<!-- Page Modal -->
-<div class="modal fade sap-modal" id="pageModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="pageModalTitle">Add Page</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="pageForm">
-                <input type="hidden" name="module_id" id="pageModuleId" value="<?= $module['id'] ?>">
-                <input type="hidden" name="edit_id" id="pageEditId">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="sap-label">Page Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="pageName" class="sap-input" required placeholder="e.g., Login Page">
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">URL Path</label>
-                        <input type="text" name="url_path" id="pageUrl" class="sap-input" placeholder="e.g., /auth/login">
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Description</label>
-                        <textarea name="description" id="pageDesc" class="sap-input" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-check"></i> Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Bug List Modal -->
-<div class="modal fade sap-modal" id="bugListModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Bugs for <span id="bugPageName"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0" id="bugListBody">
-                <div class="text-center p-4"><span class="sap-spinner"></span></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Module Modal (edit only) -->
-<div class="modal fade sap-modal" id="moduleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Module</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="moduleForm">
-                <input type="hidden" name="edit_id" id="moduleEditId">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="sap-label">Module Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="moduleName" class="sap-input" required placeholder="e.g., Authentication">
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Description</label>
-                        <textarea name="description" id="moduleDesc" class="sap-input" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-check"></i> Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Design Page Modal -->
-<div class="modal fade sap-modal" id="designPageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-link me-2"></i>Assign Blueprint Design Page</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <input type="hidden" id="assignDesignPageTargetId">
-                <div id="designPagesLoading" class="text-center p-4">
-                    <i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--sap-brand)"></i>
-                    <p class="mt-2 mb-0 text-secondary" style="font-size:13px">Loading design pages...</p>
-                </div>
-                <div id="designPagesEmpty" class="text-center p-4" style="display:none">
-                    <i class="fas fa-inbox" style="font-size:36px;color:var(--sap-text-muted)"></i>
-                    <h5 class="mt-2">No design pages found</h5>
-                    <p class="mb-0 text-secondary" style="font-size:13px">Create design pages in a blueprint module first.</p>
-                </div>
-                <div id="designPagesList" style="max-height:60vh;overflow-y:auto"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Import Design Pages Modal -->
-<div class="modal fade sap-modal" id="importDesignPagesModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h5 class="modal-title"><i class="fas fa-file-import me-2"></i>Import Design Pages</h5>
-                    <small class="text-muted" id="importModalSubtitle">Loading available design pages...</small>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="import-search-wrap">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="importSearchInput" class="import-search-input" placeholder="Search by page name, module, or blueprint...">
-                </div>
-                <div id="importSelectAllWrap" class="import-select-all-wrap" style="display:none">
-                    <label class="import-select-all-label">
-                        <input type="checkbox" id="importSelectAll" class="form-check-input">
-                        <span id="importSelectAllText">Select All</span>
-                    </label>
-                    <span class="import-count-badge" id="importCountBadge">0 selected</span>
-                </div>
-                <div id="importDesignPagesLoading" class="text-center py-4">
-                    <i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--sap-brand)"></i>
-                    <p class="mt-2 mb-0 text-secondary" style="font-size:13px">Loading available design pages...</p>
-                </div>
-                <div id="importDesignPagesEmpty" class="text-center py-4" style="display:none">
-                    <i class="fas fa-inbox" style="font-size:36px;color:var(--sap-text-muted)"></i>
-                    <h5 class="mt-2">No design pages available</h5>
-                    <p class="mb-0 text-secondary" style="font-size:13px">Assign blueprint modules to this module first, then create design pages.</p>
-                </div>
-                <div id="importDesignPagesList" class="import-design-list" style="max-height:45vh;overflow-y:auto"></div>
-                <div id="importDesignPagesSkipped" class="import-skipped-info" style="display:none"></div>
-            </div>
-            <div class="modal-footer">
-                <span class="import-selected-info" id="importSelectedInfo">0 pages selected</span>
-                <div class="d-flex gap-2">
-                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="sap-btn sap-btn-primary" id="importBtn" onclick="ModuleDetail.importSelectedDesignPages()" disabled>
-                        <i class="fas fa-file-import"></i> Import Selected
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<?= $this->include('master-projects/_modal_add_page') ?>
+<?= $this->include('master-projects/_modal_bug_list') ?>
+<?= $this->include('master-projects/_modal_edit_module') ?>
+<?= $this->include('master-projects/_modal_assign_design_page') ?>
+<?= $this->include('master-projects/_modal_import_design_pages') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- MOVE to page JS file -->
 <script>window.PageData = <?= json_encode([
     'projectId' => $project['id'] ?? '',
     'moduleId'  => $module['id'] ?? '',
     'pageIds'   => array_column($module['pages'] ?? [], 'id'),
     'pages'     => $module['pages'] ?? [],
-]) ?>;</script>
+], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
 <script src="<?= base_url('public/assets/js/page/master-projects/module_detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

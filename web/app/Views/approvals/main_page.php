@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * APPROVALS — MAIN PAGE
+ * ============================================================================
+ *
+ * Description: Halaman approval center untuk review dan approve request.
+ *
+ * Required: $title
+ * Optional: (none)
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="d-flex justify-content-between align-items-center mb-4">

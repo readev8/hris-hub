@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * TICKETS - CHAIN TRACKER
+ * ============================================================================
+ *
+ * Description: Trace referral chains between related tickets
+ *
+ * Required: none
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="container" style="max-width:900px">

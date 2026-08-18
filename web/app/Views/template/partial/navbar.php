@@ -1,3 +1,8 @@
+<?php
+/**
+ * NAVBAR — Top navigation bar dengan profile dropdown dan dark mode toggle.
+ */
+?>
 <nav class="shell-bar">
     <div class="shell-bar-start">
         <button class="d-md-none shell-btn" data-toggle="sidebar" aria-label="Toggle menu">

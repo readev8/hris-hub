@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * Roles & Permissions - Permissions Matrix
+ * ============================================================================
+ *
+ * Description: Permission matrix editor for a single role
+ *
+ * Required: $role, $modules
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="container">
@@ -73,6 +86,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>window.PageData = <?= json_encode(['role' => $role ?? [], 'modules' => $modules ?? []]) ?>;</script>
+<!-- MOVE to page JS file -->
+<script>window.PageData = <?= json_encode(['role' => $role ?? [], 'modules' => $modules ?? []], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
 <script src="<?= base_url('public/assets/js/page/roles/permissions.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

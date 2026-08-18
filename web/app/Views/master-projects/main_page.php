@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * MASTER PROJECTS — MAIN PAGE
+ * ============================================================================
+ *
+ * Description: Halaman utama daftar master projects dengan DataTables.
+ *
+ * Required: $title, $js
+ * Optional: (none)
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -31,7 +44,7 @@
 
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/_shared/column-search.css?v=' . config('App')->assetVersion) ?>">
-<style>.bug-stats{display:inline-flex;gap:4px;flex-wrap:wrap}.bug-stats .sap-badge{font-size:11px;padding:2px 6px}</style>
+<link rel="stylesheet" href="<?= base_url('public/assets/css/page/master-projects/main_page.css?v=' . config('App')->assetVersion) ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
