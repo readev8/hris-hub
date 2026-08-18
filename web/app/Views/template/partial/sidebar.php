@@ -11,6 +11,7 @@ $canUsers          = !empty($perms['users']['can_view']);
 $canMasterProjects = !empty($perms['master_projects']['can_view']);
 $canRoles          = !empty($perms['roles']['can_view']);
 $canBlueprints     = !empty($perms['blueprints']['can_view']);
+$canModuleFlows   = !empty($perms['module_flows']['can_view']);
 ?>
 <aside class="sidebar">
     <?php if ($canDashboard || $canTickets || $canImprovements || $canBlueprints): ?>
@@ -83,6 +84,14 @@ $canBlueprints     = !empty($perms['blueprints']['can_view']);
             <a href="<?= site_url('master-projects') ?>">
                 <i class="fas fa-folder-tree"></i>
                 <span>Projects</span>
+            </a>
+        </li>
+    <?php endif; ?>
+    <?php if ($canModuleFlows): ?>
+        <li>
+            <a href="<?= site_url('module-flows') ?>">
+                <i class="fas fa-diagram-project"></i>
+                <span>Module Flows</span>
             </a>
         </li>
     <?php endif; ?>

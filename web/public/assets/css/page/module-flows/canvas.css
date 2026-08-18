@@ -1,0 +1,140 @@
+/* ============================================================================
+ * MODULE FLOWS — CANVAS STYLES
+ * ============================================================================
+ * Theme: --sap-* design tokens
+ * Dark mode: .dark-mode support
+ * Accessibility: prefers-reduced-motion, touch targets ≥44px
+ */
+
+/* ── Canvas Container ─────────────────────────────────── */
+#drawflow-container {
+    width: 100%;
+    height: calc(100vh - 120px);
+    background: var(--sap-background, #f5f6f7);
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    margin-top: 12px;
+}
+
+.dark-mode #drawflow-container {
+    background: var(--sap-dark-bg, #121212);
+    border-color: var(--sap-dark-border, #333);
+}
+
+/* ── Toolbar ──────────────────────────────────────────── */
+.flow-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--sap-card-bg, #fff);
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    min-height: 48px;
+}
+
+.flow-toolbar .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.flow-toolbar .toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--sap-border, #d9d9d9);
+    margin: 0 4px;
+}
+
+/* ── Module Node ──────────────────────────────────────── */
+.drawflow-node.module {
+    min-width: 180px;
+    background: var(--sap-card-bg, #fff);
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.drawflow-node.module:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.drawflow-node.module.selected {
+    box-shadow: 0 0 0 2px var(--sap-brand, #0D9488);
+}
+
+.drawflow-node.module.dimmed {
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+.dark-mode .drawflow-node.module {
+    background: var(--sap-dark-card, #1e293b);
+    border-color: var(--sap-dark-border, #333);
+}
+
+.flow-module {
+    padding: 12px;
+}
+
+.flow-module-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text, #32363a);
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+.flow-module-project {
+    font-size: 11px;
+    color: var(--sap-text-secondary, #6a6d70);
+}
+
+.dark-mode .flow-module-name { color: var(--sap-dark-text, #e2e8f0); }
+.dark-mode .flow-module-project { color: var(--sap-dark-text-secondary, #94a3b8); }
+
+/* ── Project Color Borders ────────────────────────────── */
+.project-color-1 { border-left: 4px solid #3b82f6; }
+.project-color-2 { border-left: 4px solid #10b981; }
+.project-color-3 { border-left: 4px solid #f59e0b; }
+.project-color-4 { border-left: 4px solid #ef4444; }
+.project-color-5 { border-left: 4px solid #8b5cf6; }
+.project-color-6 { border-left: 4px solid #06b6d4; }
+
+/* ── Drawflow Ports ───────────────────────────────────── */
+.drawflow-node .drawflow_content_node { padding: 0; }
+
+/* Connection lines */
+.drawflow .drawflow-node .outputs .output_1 { background: var(--sap-brand, #0D9488); }
+.drawflow .drawflow-node .inputs .input_1 { background: var(--sap-brand, #0D9488); }
+
+/* ── Save Status Indicator ────────────────────────────── */
+.save-status {
+    font-size: 12px;
+    color: var(--sap-text-secondary, #6a6d70);
+    margin-left: auto;
+    transition: opacity 0.3s ease;
+    min-width: 80px;
+    text-align: right;
+}
+
+.save-status.saving { color: var(--sap-text-secondary, #6a6d70); }
+.save-status.saved { color: var(--sap-success, #10b981); }
+.save-status.error { color: var(--sap-error, #ef4444); }
+
+/* ── Dark Mode Overrides ──────────────────────────────── */
+.dark-mode .flow-toolbar {
+    background: var(--sap-dark-card, #1e293b);
+    border-color: var(--sap-dark-border, #333);
+}
+
+.dark-mode .flow-toolbar .toolbar-separator {
+    background: var(--sap-dark-border, #333);
+}
+
+/* ── Reduced Motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .drawflow-node.module { transition: none; }
+    .save-status { transition: none; }
+}

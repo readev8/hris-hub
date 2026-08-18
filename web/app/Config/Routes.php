@@ -164,4 +164,13 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/roles/(:any)/permissions',     'Roles::permissions/$1');
     $routes->post('/roles/(:any)/permissions',    'Roles::savePermissions/$1');
     $routes->post('/roles/(:any)/toggle',         'Roles::toggleActive/$1');
+
+    // Module Flows
+    $routes->get('/module-flows',                                    'ModuleFlows::index');
+    $routes->get('/module-flows/ajax-canvas',                        'ModuleFlows::ajaxGetCanvas');
+    $routes->post('/module-flows/ajax-add-module',                   'ModuleFlows::ajaxAddModule');
+    $routes->post('/module-flows/ajax-update-position/(:any)',       'ModuleFlows::ajaxUpdatePosition/$1');
+    $routes->post('/module-flows/ajax-remove-module/(:any)',         'ModuleFlows::ajaxRemoveModule/$1');
+    $routes->post('/module-flows/ajax-add-connection',               'ModuleFlows::ajaxAddConnection');
+    $routes->post('/module-flows/ajax-delete-connection/(:any)',     'ModuleFlows::ajaxDeleteConnection/$1');
 });
