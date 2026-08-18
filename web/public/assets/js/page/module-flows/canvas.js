@@ -90,6 +90,9 @@ const ModuleFlowsCanvas = (function () {
 
         editor.on('connectionCreated', _onConnectionCreated);
 
+        // Inject SVG marker defs for arrowheads
+        _injectArrowMarker(container);
+
         // Mouseup on canvas → save positions
         container.addEventListener('mouseup', _saveAllPositions);
         container.addEventListener('touchend', _saveAllPositions);
@@ -153,6 +156,7 @@ const ModuleFlowsCanvas = (function () {
             editor.clear();
             _renderCanvas();
             _populateProjectFilter();
+            _renderLegend();
             _showSavedStatus();
         }).fail(function () {
             toastr.error('Gagal terhubung ke server');
@@ -187,10 +191,13 @@ const ModuleFlowsCanvas = (function () {
 
         // Add nodes — correct 8-param signature: name, inputs, outputs, x, y, class, data, html
         _canvasNodes.forEach(function (node) {
-            var colorClass = _getProjectColorClass(node.project_id);
-            var html = '<div class="flow-module ' + colorClass + '">'
-                + '<div class="flow-module-name">' + _escHtml(node.name) + '</div>'
-                + '<div class="flow-module-project">' + _escHtml(node.project_name || '') + '</div>'
+            var color = _projectColorMap[node.project_id] || '#94a3b8';
+            var html = '<div class="flow-module" style="border-left:4px solid ' + color + '">'
+                + '<div class="flow-module-header">'
+                + '<span class="flow-project-dot" style="background:' + color + '"></span>'
+                + '<span class="flow-module-name">' + _escHtml(node.name) + '</span>'
+                + '</div>'
+                + '<div class="flow-module-project">' + _escHtml(node.project_name || '—') + '</div>'
                 + '</div>';
 
             var dfId = editor.addNode(
@@ -533,6 +540,7 @@ const ModuleFlowsCanvas = (function () {
             _renderCanvas();
             _applyFilter();
             _populateProjectFilter();
+            _renderLegend();
         });
     }
 
@@ -581,10 +589,25 @@ const ModuleFlowsCanvas = (function () {
     function _bindToolbarEvents() {
         $('#btnZoomIn').on('click', function () { editor.zoom_in(); });
         $('#btnZoomOut').on('click', function () { editor.zoom_out(); });
-        $('#btnFitView').on('click', function () { editor.zoom_reset(); });
+        $('#btnFitView').on('click', function () { _fitView(); });
         $('#btnZoomReset').on('click', function () { editor.zoom_refresh(); });
         $('#btnRefresh').on('click', function () { _refreshCanvas(); });
         $('#btnRemoveNode').on('click', function () { _confirmRemoveNode(); });
+    }
+
+    function _renderLegend() {
+        var $legend = $('#projectLegend');
+        if (!$legend.length) return;
+        $legend.empty();
+        for (var pid in _projectIndex) {
+            var color = _projectColorMap[pid] || '#94a3b8';
+            $legend.append(
+                '<span class="project-legend-item">'
+                + '<span class="project-legend-dot" style="background:' + color + '"></span>'
+                + _escHtml(_projectIndex[pid])
+                + '</span>'
+            );
+        }
     }
 
     function _bindModalEvents() {
@@ -625,6 +648,60 @@ const ModuleFlowsCanvas = (function () {
     // ===========================
     function _escHtml(str) {
         return $('<div>').text(str || '').html();
+    }
+
+    function _injectArrowMarker(rootEl) {
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var defs = document.createElementNS(svgNS, 'defs');
+        var marker = document.createElementNS(svgNS, 'marker');
+        marker.setAttribute('id', 'flow-arrow');
+        marker.setAttribute('viewBox', '0 0 10 10');
+        marker.setAttribute('refX', '9');
+        marker.setAttribute('refY', '5');
+        marker.setAttribute('markerWidth', '5');
+        marker.setAttribute('markerHeight', '5');
+        marker.setAttribute('orient', 'auto');
+        var path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+        path.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--sap-brand').trim() || '#0D9488');
+        marker.appendChild(path);
+        defs.appendChild(marker);
+        rootEl.appendChild(defs);
+    }
+
+    function _fitView() {
+        if (!editor) return;
+        var exportData = editor.export();
+        var homeData = exportData.drawflow ? exportData.drawflow.Home.data : {};
+        var nodes = Object.keys(homeData);
+        if (!nodes.length) { editor.zoom_refresh(); return; }
+
+        var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        nodes.forEach(function (id) {
+            var n = homeData[id];
+            var nodeEl = document.getElementById('node-' + id);
+            var w = nodeEl ? nodeEl.offsetWidth : 200;
+            var h = nodeEl ? nodeEl.offsetHeight : 80;
+            minX = Math.min(minX, n.pos_x);
+            maxX = Math.max(maxX, n.pos_x + w);
+            minY = Math.min(minY, n.pos_y);
+            maxY = Math.max(maxY, n.pos_y + h);
+        });
+
+        var containerEl = container();
+        var canvasW = containerEl.clientWidth;
+        var canvasH = containerEl.clientHeight;
+        var padding = 80;
+        var scaleX = (canvasW - padding * 2) / (maxX - minX || 1);
+        var scaleY = (canvasH - padding * 2) / (maxY - minY || 1);
+        var zoom = Math.min(scaleX, scaleY, 1.5);
+        zoom = Math.max(zoom, 0.3);
+
+        editor.zoom = zoom;
+        var tx = (canvasW / 2) - ((minX + maxX) / 2) * zoom;
+        var ty = (canvasH / 2) - ((minY + maxY) / 2) * zoom;
+        editor.precanvas.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + zoom + ')';
+        editor.zoom_refresh = editor.zoom_refresh || function () {};
     }
 
     // ===========================

@@ -19,12 +19,19 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="d-flex flex-column" style="height: calc(100vh - 56px); padding: 12px;">
+<div class="flow-page-wrap">
+    <div class="flow-page-header">
+        <div>
+            <h1>Module Flows</h1>
+            <p>Visualisasikan koneksi antar modul dari berbagai project</p>
+        </div>
+    </div>
+
     <div class="flow-toolbar">
-        <button type="button" class="btn btn-primary btn-sm" id="btnOpenAddModule">
+        <button type="button" class="sap-btn sap-btn-primary sap-btn-sm" id="btnOpenAddModule">
             <i class="fas fa-plus me-1"></i> Add Module
         </button>
-        <button type="button" class="btn btn-outline-danger btn-sm" id="btnRemoveNode">
+        <button type="button" class="sap-btn sap-btn-danger sap-btn-sm" id="btnRemoveNode">
             <i class="fas fa-trash"></i>
         </button>
 
@@ -39,22 +46,24 @@
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group btn-group" role="group">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnZoomIn" title="Zoom In">
+            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnZoomIn" title="Zoom In">
                 <i class="fas fa-search-plus"></i>
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnZoomOut" title="Zoom Out">
+            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnZoomOut" title="Zoom Out">
                 <i class="fas fa-search-minus"></i>
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnFitView" title="Fit to View">
+            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnFitView" title="Fit to View">
                 <i class="fas fa-expand"></i>
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnZoomReset" title="Reset Zoom">
+            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnZoomReset" title="Reset Zoom">
                 <i class="fas fa-undo"></i>
             </button>
         </div>
 
         <span id="saveStatus" class="save-status"></span>
     </div>
+
+    <div id="projectLegend" class="project-legend"></div>
 
     <div id="drawflow-container"></div>
 </div>

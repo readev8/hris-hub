@@ -1,24 +1,35 @@
 /* ============================================================================
  * MODULE FLOWS — CANVAS STYLES
  * ============================================================================
- * Theme: --sap-* design tokens
- * Dark mode: .dark-mode support
+ * Override Drawflow default CSS (specificity 0,3,0 ≥ vendor 0,2,0)
+ * Theme: --sap-* design tokens | Dark mode: .dark-mode
  * Accessibility: prefers-reduced-motion, touch targets ≥44px
  */
 
-/* ── Canvas Container ─────────────────────────────────── */
-#drawflow-container {
-    width: 100%;
-    height: calc(100vh - 120px);
-    background: var(--sap-background, #f5f6f7);
-    border: 1px solid var(--sap-border, #d9d9d9);
-    border-radius: var(--sap-radius, 8px);
-    margin-top: 12px;
+/* ── Page Layout ─────────────────────────────────────── */
+.flow-page-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-.dark-mode #drawflow-container {
-    background: var(--sap-dark-bg, #121212);
-    border-color: var(--sap-dark-border, #333);
+.flow-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.flow-page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--sap-text, #32363a);
+    margin-bottom: 2px;
+}
+
+.flow-page-header p {
+    font-size: 13px;
+    color: var(--sap-text-secondary, #6a6d70);
+    margin-bottom: 0;
 }
 
 /* ── Toolbar ──────────────────────────────────────────── */
@@ -31,6 +42,7 @@
     border: 1px solid var(--sap-border, #d9d9d9);
     border-radius: var(--sap-radius, 8px);
     min-height: 48px;
+    flex-wrap: wrap;
 }
 
 .flow-toolbar .toolbar-group {
@@ -46,36 +58,73 @@
     margin: 0 4px;
 }
 
-/* ── Module Node ──────────────────────────────────────── */
-.drawflow-node.module {
-    min-width: 180px;
-    background: var(--sap-card-bg, #fff);
+/* ── Canvas Container (override vendor .drawflow) ────── */
+/* specificity: .drawflow .drawflow-node.module = 0,3,0 > vendor 0,2,0 */
+#drawflow-container {
+    width: 100%;
+    height: calc(100vh - 170px);
+    background: var(--sap-background, #f5f6f7);
     border: 1px solid var(--sap-border, #d9d9d9);
     border-radius: var(--sap-radius, 8px);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    margin-top: 8px;
+    background-image: radial-gradient(circle, var(--sap-border, #d9d9d9) 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 
-.drawflow-node.module:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
-
-.drawflow-node.module.selected {
-    box-shadow: 0 0 0 2px var(--sap-brand, #0D9488);
-}
-
-.drawflow-node.module.dimmed {
-    opacity: 0.25;
-    pointer-events: none;
-}
-
-.dark-mode .drawflow-node.module {
-    background: var(--sap-dark-card, #1e293b);
+.dark-mode #drawflow-container {
+    background-color: var(--sap-dark-bg, #121212);
+    background-image: radial-gradient(circle, var(--sap-dark-border, #333) 1px, transparent 1px);
     border-color: var(--sap-dark-border, #333);
 }
 
+/* ── Drawflow Node Override (0,3,0 beats vendor 0,2,0) ─ */
+.drawflow .drawflow-node.module {
+    width: auto;
+    min-width: 180px;
+    max-width: 240px;
+    padding: 0;
+    background: var(--sap-card-bg, #fff);
+    border: 1.5px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    color: var(--sap-text, #32363a);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.drawflow .drawflow-node.module:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--sap-brand, #0D9488);
+}
+
+.drawflow .drawflow-node.module.selected {
+    background: var(--sap-card-bg, #fff);
+    border-color: var(--sap-brand, #0D9488);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+}
+
+.drawflow .drawflow-node.module.dimmed {
+    opacity: 0.2;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+/* ── Module Node Content ──────────────────────────────── */
 .flow-module {
-    padding: 12px;
+    padding: 10px 14px;
+}
+
+.flow-module-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.flow-project-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .flow-module-name {
@@ -83,31 +132,102 @@
     font-weight: 600;
     color: var(--sap-text, #32363a);
     line-height: 1.3;
-    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .flow-module-project {
     font-size: 11px;
     color: var(--sap-text-secondary, #6a6d70);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 14px;
 }
 
-.dark-mode .flow-module-name { color: var(--sap-dark-text, #e2e8f0); }
-.dark-mode .flow-module-project { color: var(--sap-dark-text-secondary, #94a3b8); }
+/* ── Drawflow Ports Override ──────────────────────────── */
+.drawflow .drawflow-node.module .input,
+.drawflow .drawflow-node.module .output {
+    width: 14px;
+    height: 14px;
+    background: var(--sap-card-bg, #fff);
+    border: 2px solid var(--sap-brand, #0D9488);
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
 
-/* ── Project Color Borders ────────────────────────────── */
-.project-color-1 { border-left: 4px solid #3b82f6; }
-.project-color-2 { border-left: 4px solid #10b981; }
-.project-color-3 { border-left: 4px solid #f59e0b; }
-.project-color-4 { border-left: 4px solid #ef4444; }
-.project-color-5 { border-left: 4px solid #8b5cf6; }
-.project-color-6 { border-left: 4px solid #06b6d4; }
+.drawflow .drawflow-node.module .input:hover,
+.drawflow .drawflow-node.module .output:hover {
+    transform: scale(1.3);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.3);
+}
 
-/* ── Drawflow Ports ───────────────────────────────────── */
-.drawflow-node .drawflow_content_node { padding: 0; }
+.drawflow .drawflow-node.module .input {
+    left: -28px;
+    top: 50%;
+    transform: translateY(-50%);
+}
 
-/* Connection lines */
-.drawflow .drawflow-node .outputs .output_1 { background: var(--sap-brand, #0D9488); }
-.drawflow .drawflow-node .inputs .input_1 { background: var(--sap-brand, #0D9488); }
+.drawflow .drawflow-node.module .output {
+    right: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.drawflow .drawflow-node.module .input:hover,
+.drawflow .drawflow-node.module .output:hover {
+    transform: translateY(-50%) scale(1.3);
+}
+
+/* ── Connection Lines Override ────────────────────────── */
+.drawflow .connection .main-path {
+    stroke: var(--sap-brand, #0D9488);
+    stroke-width: 2px;
+    fill: none;
+    stroke-linecap: round;
+}
+
+.drawflow .connection .main-path:hover {
+    stroke: var(--sap-brand-dark, #0f766e);
+    stroke-width: 3px;
+    cursor: pointer;
+}
+
+.drawflow .connection .main-path.selected {
+    stroke: var(--sap-error, #ef4444);
+    stroke-width: 2.5px;
+    stroke-dasharray: none;
+}
+
+/* Arrowhead via SVG marker (marker defined in canvas.js) */
+.drawflow .connection .main-path {
+    marker-end: url(#flow-arrow);
+}
+
+/* ── Project Legend ────────────────────────────────────── */
+.project-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--sap-text-secondary, #6a6d70);
+}
+
+.project-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.project-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
 
 /* ── Save Status Indicator ────────────────────────────── */
 .save-status {
@@ -117,13 +237,26 @@
     transition: opacity 0.3s ease;
     min-width: 80px;
     text-align: right;
+    white-space: nowrap;
 }
 
 .save-status.saving { color: var(--sap-text-secondary, #6a6d70); }
 .save-status.saved { color: var(--sap-success, #10b981); }
 .save-status.error { color: var(--sap-error, #ef4444); }
 
+/* ── Select2 Dropdown Above Modal ─────────────────────── */
+.select2-dropdown {
+    z-index: 10070 !important;
+}
+
+.select2-container--open {
+    z-index: 10070 !important;
+}
+
 /* ── Dark Mode Overrides ──────────────────────────────── */
+.dark-mode .flow-page-header h1 { color: var(--sap-dark-text, #e2e8f0); }
+.dark-mode .flow-page-header p { color: var(--sap-dark-text-secondary, #94a3b8); }
+
 .dark-mode .flow-toolbar {
     background: var(--sap-dark-card, #1e293b);
     border-color: var(--sap-dark-border, #333);
@@ -133,8 +266,26 @@
     background: var(--sap-dark-border, #333);
 }
 
+.dark-mode .drawflow .drawflow-node.module {
+    background: var(--sap-dark-card, #1e293b);
+    border-color: var(--sap-dark-border, #333);
+}
+
+.dark-mode .drawflow .drawflow-node.module:hover {
+    border-color: var(--sap-brand, #0D9488);
+}
+
+.dark-mode .flow-module-name { color: var(--sap-dark-text, #e2e8f0); }
+.dark-mode .flow-module-project { color: var(--sap-dark-text-secondary, #94a3b8); }
+
+.dark-mode .drawflow .connection .main-path { stroke: var(--sap-brand, #0D9488); }
+
+.dark-mode .project-legend { color: var(--sap-dark-text-secondary, #94a3b8); }
+
 /* ── Reduced Motion ───────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-    .drawflow-node.module { transition: none; }
+    .drawflow .drawflow-node.module,
+    .drawflow .drawflow-node.module .input,
+    .drawflow .drawflow-node.module .output,
     .save-status { transition: none; }
 }
