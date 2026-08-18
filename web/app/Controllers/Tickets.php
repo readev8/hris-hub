@@ -4,6 +4,23 @@ namespace App\Controllers;
 
 use CodeIgniter\HTTP\Files\UploadedFile;
 
+/**
+ * ============================================================================
+ * TICKETS CONTROLLER
+ * ============================================================================
+ *
+ * Description: Manage internal tickets end-to-end (listing, creation, status
+ * transitions, approvals, comments, and file attachments).
+ *
+ * Responsibilities:
+ * - Render ticket pages (main list, my tickets, chain tracker, create, edit, detail)
+ * - Serve ticket list, detail, chain, and page search data to AJAX endpoints
+ * - Create, update, and delete tickets with validation and file attachments
+ * - Handle status transitions (take, resolve, close, reopen, move)
+ * - Handle approvals (approve, approve-it, approve-dept, reject-approval, resubmit)
+ * - Manage ticket comments and attachments (upload, serve, delete)
+ * - Enforce permission guards on every endpoint
+ */
 class Tickets extends BaseController
 {
     private function guard(string $action = 'can_view'): bool
@@ -382,52 +399,57 @@ class Tickets extends BaseController
             return $this->denyResponse();
         }
 
-        $resolutionNote = $this->request->getPost('resolution_note');
+        try {
+            $resolutionNote = $this->request->getPost('resolution_note');
 
-        if (empty(trim($resolutionNote ?? ''))) {
-            return $this->response->setJSON(['status' => false, 'message' => 'Resolution summary wajib diisi']);
-        }
-
-        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-        });
-
-        $savedFiles = [];
-        if (!empty($files)) {
-            $error = $this->validateUploadedFiles($files);
-            if ($error) {
-                return $this->response->setJSON(['status' => false, 'message' => $error]);
+            if (empty(trim($resolutionNote ?? ''))) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Resolution summary wajib diisi']);
             }
-            $savedFiles = $this->saveUploadedFiles($files);
-        }
 
-        $data = ['resolution_note' => $resolutionNote];
-        $result = $this->api->post_data('tickets/' . $encryptedId . '/resolve', $data);
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
 
-        if ($result && ($result['status'] ?? false)) {
-            if (!empty($savedFiles)) {
-                foreach ($savedFiles as $sf) {
-                    $attResult = $this->api->post_data('tickets/' . $encryptedId . '/attachments', $sf);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Ticket resolve attachment save failed for ' . $encryptedId);
-                        return $this->response->setJSON([
-                            'status'  => false,
-                            'message' => 'Gagal menyimpan lampiran',
-                        ]);
+            $savedFiles = [];
+            if (!empty($files)) {
+                $error = $this->validateUploadedFiles($files);
+                if ($error) {
+                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                }
+                $savedFiles = $this->saveUploadedFiles($files);
+            }
+
+            $data = ['resolution_note' => $resolutionNote];
+            $result = $this->api->post_data('tickets/' . $encryptedId . '/resolve', $data);
+
+            if ($result && ($result['status'] ?? false)) {
+                if (!empty($savedFiles)) {
+                    foreach ($savedFiles as $sf) {
+                        $attResult = $this->api->post_data('tickets/' . $encryptedId . '/attachments', $sf);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Ticket resolve attachment save failed for ' . $encryptedId);
+                            return $this->response->setJSON([
+                                'status'  => false,
+                                'message' => 'Gagal menyimpan lampiran',
+                            ]);
+                        }
                     }
                 }
+
+                return $this->response->setJSON($result);
             }
 
-            return $this->response->setJSON($result);
-        }
+            if (!empty($savedFiles)) {
+                $this->deleteUploadedFiles($savedFiles);
+            }
 
-        if (!empty($savedFiles)) {
-            $this->deleteUploadedFiles($savedFiles);
+            log_message('error', 'Tickets resolve API failed for ' . $encryptedId . ': ' . json_encode($result));
+            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+        } catch (\Throwable $e) {
+            log_message('error', 'Tickets resolve exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
         }
-
-        log_message('error', 'Tickets resolve API failed for ' . $encryptedId . ': ' . json_encode($result));
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
     }
 
     public function close(string $encryptedId)
@@ -503,55 +525,61 @@ class Tickets extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $content = $this->request->getPost('content');
 
-        if (empty(trim($content ?? ''))) {
-            return $this->response->setJSON(['status' => false, 'message' => 'Comment content is required']);
-        }
+        try {
+            $content = $this->request->getPost('content');
 
-        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-        });
-
-        $savedFiles = [];
-        if (!empty($files)) {
-            $error = $this->validateUploadedFiles($files);
-            if ($error) {
-                return $this->response->setJSON(['status' => false, 'message' => $error]);
+            if (empty(trim($content ?? ''))) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Comment content is required']);
             }
-            $savedFiles = $this->saveUploadedFiles($files);
-        }
 
-        $data = ['content' => $content];
-        $result = $this->api->post_data('tickets/' . $encryptedId . '/comments', $data);
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
 
-        if ($result && ($result['status'] ?? false)) {
-            $commentId = $result['data']['result']['id'] ?? null;
+            $savedFiles = [];
+            if (!empty($files)) {
+                $error = $this->validateUploadedFiles($files);
+                if ($error) {
+                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                }
+                $savedFiles = $this->saveUploadedFiles($files);
+            }
 
-            if ($commentId && !empty($savedFiles)) {
-                foreach ($savedFiles as $sf) {
-                    $sf['comment_id'] = $commentId;
-                    $attResult = $this->api->post_data('tickets/' . $encryptedId . '/attachments', $sf);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Ticket comment attachment save failed for comment ' . $commentId);
-                        return $this->response->setJSON([
-                            'status'  => false,
-                            'message' => 'Gagal menyimpan metadata lampiran',
-                        ]);
+            $data = ['content' => $content];
+            $result = $this->api->post_data('tickets/' . $encryptedId . '/comments', $data);
+
+            if ($result && ($result['status'] ?? false)) {
+                $commentId = $result['data']['result']['id'] ?? null;
+
+                if ($commentId && !empty($savedFiles)) {
+                    foreach ($savedFiles as $sf) {
+                        $sf['comment_id'] = $commentId;
+                        $attResult = $this->api->post_data('tickets/' . $encryptedId . '/attachments', $sf);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Ticket comment attachment save failed for comment ' . $commentId);
+                            return $this->response->setJSON([
+                                'status'  => false,
+                                'message' => 'Gagal menyimpan metadata lampiran',
+                            ]);
+                        }
                     }
                 }
+
+                return $this->response->setJSON($result);
             }
 
-            return $this->response->setJSON($result);
-        }
+            if (!empty($savedFiles)) {
+                $this->deleteUploadedFiles($savedFiles);
+            }
 
-        if (!empty($savedFiles)) {
-            $this->deleteUploadedFiles($savedFiles);
+            log_message('error', 'Tickets addComment API failed for ' . $encryptedId . ': ' . json_encode($result));
+            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+        } catch (\Throwable $e) {
+            log_message('error', 'Tickets addComment exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
         }
-
-        log_message('error', 'Tickets addComment API failed for ' . $encryptedId . ': ' . json_encode($result));
-        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
     }
 
     public function uploadAttachment(string $encryptedId)
@@ -559,38 +587,44 @@ class Tickets extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-        });
-        if (empty($files)) {
-            return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
-        }
 
-        $error = $this->validateUploadedFiles($files);
-        if ($error) {
-            return $this->response->setJSON(['status' => false, 'message' => $error]);
-        }
-
-        $savedFiles = $this->saveUploadedFiles($files);
-        $attachmentIds = [];
-
-        foreach ($savedFiles as $sf) {
-            $attResult = $this->api->post_data('tickets/' . $encryptedId . '/attachments', $sf);
-            if ($attResult && ($attResult['status'] ?? false)) {
-                $attachmentIds[] = $attResult['data']['result']['id'] ?? null;
-            } else {
-                $this->deleteUploadedFiles($savedFiles);
-                return $this->response->setJSON([
-                    'status'  => false,
-                    'message' => 'Gagal menyimpan metadata lampiran',
-                ]);
+        try {
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
+            if (empty($files)) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
             }
-        }
 
-        return $this->response->setJSON([
-            'status' => true,
-            'data'   => ['ids' => $attachmentIds, 'files' => $savedFiles],
-        ]);
+            $error = $this->validateUploadedFiles($files);
+            if ($error) {
+                return $this->response->setJSON(['status' => false, 'message' => $error]);
+            }
+
+            $savedFiles = $this->saveUploadedFiles($files);
+            $attachmentIds = [];
+
+            foreach ($savedFiles as $sf) {
+                $attResult = $this->api->post_data('tickets/' . $encryptedId . '/attachments', $sf);
+                if ($attResult && ($attResult['status'] ?? false)) {
+                    $attachmentIds[] = $attResult['data']['result']['id'] ?? null;
+                } else {
+                    $this->deleteUploadedFiles($savedFiles);
+                    return $this->response->setJSON([
+                        'status'  => false,
+                        'message' => 'Gagal menyimpan metadata lampiran',
+                    ]);
+                }
+            }
+
+            return $this->response->setJSON([
+                'status' => true,
+                'data'   => ['ids' => $attachmentIds, 'files' => $savedFiles],
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Tickets uploadAttachment exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
+        }
     }
 
     public function serveFile(string $filename)

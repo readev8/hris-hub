@@ -2,6 +2,18 @@
 
 namespace App\Controllers;
 
+/**
+ * ============================================================================
+ * TRACKING CONTROLLER
+ * ============================================================================
+ *
+ * Description: Halaman publik untuk melacak status tiket berdasarkan
+ *   tracking code.
+ *
+ * Responsibilities:
+ * - Render form pencarian tracking code
+ * - Proxy lookup tiket via API berdasarkan kode
+ */
 class Tracking extends BaseController
 {
     public function index()

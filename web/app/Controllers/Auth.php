@@ -2,6 +2,19 @@
 
 namespace App\Controllers;
 
+/**
+ * ============================================================================
+ * AUTH CONTROLLER
+ * ============================================================================
+ *
+ * Description: Handles user authentication against myhr/plus and session management.
+ *
+ * Responsibilities:
+ * - Authenticate users via the myhr/plus auth API with encrypted credentials
+ * - Find or create the local user and load role permissions into the session
+ * - Provide login page, logout, and permission refresh endpoints
+ */
+
 class Auth extends BaseController
 {
     public function login()
@@ -31,8 +44,6 @@ class Auth extends BaseController
                 'lon'        => 0,
                 'ipaddress'  => '',
             ]);
-            // var_dump($authResult);
-            // die;
             // Null guard — cURL failure or JSON decode error
             if ($authResult === null) {
                 log_message('error', 'Auth result is NULL — cURL or JSON failure. Check myhr/plus server at ' . env('myhr.auth_url'));

@@ -4,6 +4,21 @@ namespace App\Controllers;
 
 use CodeIgniter\HTTP\Files\UploadedFile;
 
+/**
+ * ============================================================================
+ * BLUEPRINTS CONTROLLER
+ * ============================================================================
+ *
+ * Description: Manages application blueprints with modules, business scenarios,
+ * design pages, page specifications, comments, and attachments.
+ *
+ * Responsibilities:
+ * - List, create, show detail, edit, update, and delete blueprints via API
+ * - Manage blueprint modules, business scenarios, design pages, and page specifications
+ * - Validate, save, serve, and clean up uploaded attachments and UX images
+ * - Handle blueprint comments and AJAX detail refresh
+ */
+
 class Blueprints extends BaseController
 {
     private function guard(string $action = 'can_view'): bool
@@ -273,38 +288,43 @@ class Blueprints extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-        });
-        if (empty($files)) {
-            return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
-        }
-
-        $error = $this->validateUploadedFiles($files, 'attachments');
-        if ($error) {
-            return $this->response->setJSON(['status' => false, 'message' => $error]);
-        }
-
-        $savedFiles = $this->saveUploadedFiles($files);
-        $attachmentIds = [];
-
-        foreach ($savedFiles as $sf) {
-            $attResult = $this->api->post_data('blueprints/' . $encryptedId . '/attachments', $sf);
-            if ($attResult && ($attResult['status'] ?? false)) {
-                $attachmentIds[] = $attResult['data']['result']['id'] ?? null;
-            } else {
-                $this->deleteUploadedFiles($savedFiles);
-                return $this->response->setJSON([
-                    'status'  => false,
-                    'message' => 'Gagal menyimpan metadata lampiran',
-                ]);
+        try {
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
+            if (empty($files)) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
             }
-        }
 
-        return $this->response->setJSON([
-            'status' => true,
-            'data'   => ['ids' => $attachmentIds, 'files' => $savedFiles],
-        ]);
+            $error = $this->validateUploadedFiles($files, 'attachments');
+            if ($error) {
+                return $this->response->setJSON(['status' => false, 'message' => $error]);
+            }
+
+            $savedFiles = $this->saveUploadedFiles($files);
+            $attachmentIds = [];
+
+            foreach ($savedFiles as $sf) {
+                $attResult = $this->api->post_data('blueprints/' . $encryptedId . '/attachments', $sf);
+                if ($attResult && ($attResult['status'] ?? false)) {
+                    $attachmentIds[] = $attResult['data']['result']['id'] ?? null;
+                } else {
+                    $this->deleteUploadedFiles($savedFiles);
+                    return $this->response->setJSON([
+                        'status'  => false,
+                        'message' => 'Gagal menyimpan metadata lampiran',
+                    ]);
+                }
+            }
+
+            return $this->response->setJSON([
+                'status' => true,
+                'data'   => ['ids' => $attachmentIds, 'files' => $savedFiles],
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Blueprints uploadAttachment exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
+        }
     }
 
     public function serveFile(string $filename)
@@ -353,6 +373,11 @@ class Blueprints extends BaseController
             return $this->denyResponse();
         }
         $data = $this->request->getPost();
+
+        if (empty(trim($data['name'] ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Field name wajib diisi']);
+        }
+
         $result = $this->api->post_data('blueprints/' . $encryptedId . '/modules', $data);
 
         if (!$result || !($result['status'] ?? false)) {
@@ -396,44 +421,54 @@ class Blueprints extends BaseController
         if (!$this->guard('can_create')) {
             return $this->denyResponse();
         }
-        $data = $this->request->getPost();
-        $blueprintToken = $data['blueprint_token'] ?? null;
-        unset($data['blueprint_token']);
+        try {
+            $data = $this->request->getPost();
 
-        $result = $this->api->post_data('blueprints/modules/' . $moduleId . '/business-scenarios', $data);
+            if (empty(trim($data['title'] ?? ''))) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Field title wajib diisi']);
+            }
 
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints createBusinessScenario API failed for ' . $moduleId . ': ' . json_encode($result));
-            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-        }
+            $blueprintToken = $data['blueprint_token'] ?? null;
+            unset($data['blueprint_token']);
 
-        $scenarioId = $result['data']['result']['id'] ?? null;
-        if ($scenarioId && $blueprintToken) {
-            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-            });
-            if (!empty($files)) {
-                $error = $this->validateUploadedFiles($files, 'design_pages');
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
-                }
-                $savedFiles = $this->saveUploadedFiles($files);
-                foreach ($savedFiles as $sf) {
-                    $attData = $sf;
-                    $attData['section_type'] = 'business_scenario';
-                    $attData['section_id'] = $scenarioId;
-                    $attData['module_id'] = $moduleId;
-                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Blueprint scenario attachment save failed for scenario ' . $scenarioId);
-                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+            $result = $this->api->post_data('blueprints/modules/' . $moduleId . '/business-scenarios', $data);
+
+            if (!$result || !($result['status'] ?? false)) {
+                log_message('error', 'Blueprints createBusinessScenario API failed for ' . $moduleId . ': ' . json_encode($result));
+                return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+            }
+
+            $scenarioId = $result['data']['result']['id'] ?? null;
+            if ($scenarioId && $blueprintToken) {
+                $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
+                if (!empty($files)) {
+                    $error = $this->validateUploadedFiles($files, 'design_pages');
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                    foreach ($savedFiles as $sf) {
+                        $attData = $sf;
+                        $attData['section_type'] = 'business_scenario';
+                        $attData['section_id'] = $scenarioId;
+                        $attData['module_id'] = $moduleId;
+                        $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Blueprint scenario attachment save failed for scenario ' . $scenarioId);
+                            return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+                        }
                     }
                 }
             }
-        }
 
-        return $this->response->setJSON($result);
+            return $this->response->setJSON($result);
+        } catch (\Throwable $e) {
+            log_message('error', 'Blueprints createBusinessScenario exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
+        }
     }
 
     public function updateBusinessScenario(string $encryptedId)
@@ -441,64 +476,69 @@ class Blueprints extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $data = $this->request->getPost();
-        $blueprintToken = $data['blueprint_token'] ?? null;
-        unset($data['blueprint_token']);
+        try {
+            $data = $this->request->getPost();
+            $blueprintToken = $data['blueprint_token'] ?? null;
+            unset($data['blueprint_token']);
 
-        $deletedAttachments = $data['deleted_attachments'] ?? '';
-        unset($data['deleted_attachments']);
+            $deletedAttachments = $data['deleted_attachments'] ?? '';
+            unset($data['deleted_attachments']);
 
-        $result = $this->api->post_data('blueprints/business-scenarios/' . $encryptedId . '/update', $data);
+            $result = $this->api->post_data('blueprints/business-scenarios/' . $encryptedId . '/update', $data);
 
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints updateBusinessScenario API failed for ' . $encryptedId . ': ' . json_encode($result));
-            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-        }
+            if (!$result || !($result['status'] ?? false)) {
+                log_message('error', 'Blueprints updateBusinessScenario API failed for ' . $encryptedId . ': ' . json_encode($result));
+                return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+            }
 
-        if ($blueprintToken) {
-            if ($deletedAttachments) {
-                $deletedIds = json_decode($deletedAttachments, true);
-                if (is_array($deletedIds)) {
-                    $uploadPath = WRITEPATH . 'uploads/blueprints/';
-                    foreach ($deletedIds as $encAttId) {
-                        $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $encAttId);
-                        if ($attResult && ($attResult['status'] ?? false)) {
-                            $storedName = $attResult['data']['result']['stored_name'] ?? '';
-                            if ($storedName) {
-                                $filePath = $uploadPath . $storedName;
-                                if (is_file($filePath)) { unlink($filePath); }
+            if ($blueprintToken) {
+                if ($deletedAttachments) {
+                    $deletedIds = json_decode($deletedAttachments, true);
+                    if (is_array($deletedIds)) {
+                        $uploadPath = WRITEPATH . 'uploads/blueprints/';
+                        foreach ($deletedIds as $encAttId) {
+                            $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $encAttId);
+                            if ($attResult && ($attResult['status'] ?? false)) {
+                                $storedName = $attResult['data']['result']['stored_name'] ?? '';
+                                if ($storedName) {
+                                    $filePath = $uploadPath . $storedName;
+                                    if (is_file($filePath)) { unlink($filePath); }
+                                }
+                            } else {
+                                log_message('error', 'Blueprints: Failed to delete attachment ' . $encAttId . ': ' . json_encode($attResult));
                             }
-                        } else {
-                            log_message('error', 'Blueprints: Failed to delete attachment ' . $encAttId . ': ' . json_encode($attResult));
+                        }
+                    }
+                }
+
+                $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
+                if (!empty($files)) {
+                    $error = $this->validateUploadedFiles($files, 'design_pages');
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                    foreach ($savedFiles as $sf) {
+                        $attData = $sf;
+                        $attData['section_type'] = 'business_scenario';
+                        $attData['section_id'] = $encryptedId;
+                        $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Blueprint scenario attachment save failed for scenario ' . $encryptedId);
+                            return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
                         }
                     }
                 }
             }
 
-            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-            });
-            if (!empty($files)) {
-                $error = $this->validateUploadedFiles($files, 'design_pages');
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
-                }
-                $savedFiles = $this->saveUploadedFiles($files);
-                foreach ($savedFiles as $sf) {
-                    $attData = $sf;
-                    $attData['section_type'] = 'business_scenario';
-                    $attData['section_id'] = $encryptedId;
-                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Blueprint scenario attachment save failed for scenario ' . $encryptedId);
-                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
-                    }
-                }
-            }
+            return $this->response->setJSON($result);
+        } catch (\Throwable $e) {
+            log_message('error', 'Blueprints updateBusinessScenario exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
         }
-
-        return $this->response->setJSON($result);
     }
 
     public function deleteBusinessScenario(string $encryptedId)
@@ -520,44 +560,54 @@ class Blueprints extends BaseController
         if (!$this->guard('can_create')) {
             return $this->denyResponse();
         }
-        $data = $this->request->getPost();
-        $blueprintToken = $data['blueprint_token'] ?? null;
-        unset($data['blueprint_token']);
+        try {
+            $data = $this->request->getPost();
 
-        $result = $this->api->post_data('blueprints/modules/' . $moduleId . '/design-pages', $data);
+            if (empty(trim($data['title'] ?? ''))) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Field title wajib diisi']);
+            }
 
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints createDesignPage API failed for ' . $moduleId . ': ' . json_encode($result));
-            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-        }
+            $blueprintToken = $data['blueprint_token'] ?? null;
+            unset($data['blueprint_token']);
 
-        $designPageId = $result['data']['result']['id'] ?? null;
-        if ($designPageId && $blueprintToken) {
-            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-            });
-            if (!empty($files)) {
-                $error = $this->validateUploadedFiles($files, 'design_pages');
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
-                }
-                $savedFiles = $this->saveUploadedFiles($files);
-                foreach ($savedFiles as $sf) {
-                    $attData = $sf;
-                    $attData['section_type'] = 'design_page';
-                    $attData['section_id'] = $designPageId;
-                    $attData['module_id'] = $moduleId;
-                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Blueprint design page attachment save failed for page ' . $designPageId);
-                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+            $result = $this->api->post_data('blueprints/modules/' . $moduleId . '/design-pages', $data);
+
+            if (!$result || !($result['status'] ?? false)) {
+                log_message('error', 'Blueprints createDesignPage API failed for ' . $moduleId . ': ' . json_encode($result));
+                return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+            }
+
+            $designPageId = $result['data']['result']['id'] ?? null;
+            if ($designPageId && $blueprintToken) {
+                $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
+                if (!empty($files)) {
+                    $error = $this->validateUploadedFiles($files, 'design_pages');
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                    foreach ($savedFiles as $sf) {
+                        $attData = $sf;
+                        $attData['section_type'] = 'design_page';
+                        $attData['section_id'] = $designPageId;
+                        $attData['module_id'] = $moduleId;
+                        $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Blueprint design page attachment save failed for page ' . $designPageId);
+                            return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
+                        }
                     }
                 }
             }
-        }
 
-        return $this->response->setJSON($result);
+            return $this->response->setJSON($result);
+        } catch (\Throwable $e) {
+            log_message('error', 'Blueprints createDesignPage exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
+        }
     }
 
     public function updateDesignPage(string $encryptedId)
@@ -565,64 +615,69 @@ class Blueprints extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $data = $this->request->getPost();
-        $blueprintToken = $data['blueprint_token'] ?? null;
-        unset($data['blueprint_token']);
+        try {
+            $data = $this->request->getPost();
+            $blueprintToken = $data['blueprint_token'] ?? null;
+            unset($data['blueprint_token']);
 
-        $deletedAttachments = $data['deleted_attachments'] ?? '';
-        unset($data['deleted_attachments']);
+            $deletedAttachments = $data['deleted_attachments'] ?? '';
+            unset($data['deleted_attachments']);
 
-        $result = $this->api->post_data('blueprints/design-pages/' . $encryptedId . '/update', $data);
+            $result = $this->api->post_data('blueprints/design-pages/' . $encryptedId . '/update', $data);
 
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints updateDesignPage API failed for ' . $encryptedId . ': ' . json_encode($result));
-            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-        }
+            if (!$result || !($result['status'] ?? false)) {
+                log_message('error', 'Blueprints updateDesignPage API failed for ' . $encryptedId . ': ' . json_encode($result));
+                return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+            }
 
-        if ($blueprintToken) {
-            if ($deletedAttachments) {
-                $deletedIds = json_decode($deletedAttachments, true);
-                if (is_array($deletedIds)) {
-                    $uploadPath = WRITEPATH . 'uploads/blueprints/';
-                    foreach ($deletedIds as $encAttId) {
-                        $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $encAttId);
-                        if ($attResult && ($attResult['status'] ?? false)) {
-                            $storedName = $attResult['data']['result']['stored_name'] ?? '';
-                            if ($storedName) {
-                                $filePath = $uploadPath . $storedName;
-                                if (is_file($filePath)) { unlink($filePath); }
+            if ($blueprintToken) {
+                if ($deletedAttachments) {
+                    $deletedIds = json_decode($deletedAttachments, true);
+                    if (is_array($deletedIds)) {
+                        $uploadPath = WRITEPATH . 'uploads/blueprints/';
+                        foreach ($deletedIds as $encAttId) {
+                            $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $encAttId);
+                            if ($attResult && ($attResult['status'] ?? false)) {
+                                $storedName = $attResult['data']['result']['stored_name'] ?? '';
+                                if ($storedName) {
+                                    $filePath = $uploadPath . $storedName;
+                                    if (is_file($filePath)) { unlink($filePath); }
+                                }
+                            } else {
+                                log_message('error', 'Blueprints: Failed to delete attachment ' . $encAttId . ': ' . json_encode($attResult));
                             }
-                        } else {
-                            log_message('error', 'Blueprints: Failed to delete attachment ' . $encAttId . ': ' . json_encode($attResult));
+                        }
+                    }
+                }
+
+                $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
+                if (!empty($files)) {
+                    $error = $this->validateUploadedFiles($files, 'design_pages');
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                    foreach ($savedFiles as $sf) {
+                        $attData = $sf;
+                        $attData['section_type'] = 'design_page';
+                        $attData['section_id'] = $encryptedId;
+                        $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Blueprint design page attachment save failed for page ' . $encryptedId);
+                            return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
                         }
                     }
                 }
             }
 
-            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-            });
-            if (!empty($files)) {
-                $error = $this->validateUploadedFiles($files, 'design_pages');
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
-                }
-                $savedFiles = $this->saveUploadedFiles($files);
-                foreach ($savedFiles as $sf) {
-                    $attData = $sf;
-                    $attData['section_type'] = 'design_page';
-                    $attData['section_id'] = $encryptedId;
-                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Blueprint design page attachment save failed for page ' . $encryptedId);
-                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file lampiran']);
-                    }
-                }
-            }
+            return $this->response->setJSON($result);
+        } catch (\Throwable $e) {
+            log_message('error', 'Blueprints updateDesignPage exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
         }
-
-        return $this->response->setJSON($result);
     }
 
     public function deleteDesignPage(string $encryptedId)
@@ -665,42 +720,47 @@ class Blueprints extends BaseController
         if (!$this->guard('can_create')) {
             return $this->denyResponse();
         }
-        $data = $this->request->getPost();
-        $blueprintToken = $data['blueprint_token'] ?? null;
-        unset($data['blueprint_token']);
+        try {
+            $data = $this->request->getPost();
+            $blueprintToken = $data['blueprint_token'] ?? null;
+            unset($data['blueprint_token']);
 
-        $result = $this->api->post_data('blueprints/design-pages/' . $encryptedDesignPageId . '/page-specifications', $data);
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints createPageSpecification API failed for ' . $encryptedDesignPageId . ': ' . json_encode($result));
-            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-        }
+            $result = $this->api->post_data('blueprints/design-pages/' . $encryptedDesignPageId . '/page-specifications', $data);
+            if (!$result || !($result['status'] ?? false)) {
+                log_message('error', 'Blueprints createPageSpecification API failed for ' . $encryptedDesignPageId . ': ' . json_encode($result));
+                return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+            }
 
-        $specId = $result['data']['result']['id'] ?? null;
-        if ($specId && $blueprintToken) {
-            $files = array_filter($this->request->getFileMultiple('ux_image') ?? [], function ($f) {
-                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-            });
-            if (!empty($files)) {
-                $error = $this->validateUploadedFiles($files, 'page_specifications');
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
-                }
-                $savedFiles = $this->saveUploadedFiles($files);
-                foreach ($savedFiles as $sf) {
-                    $attData = $sf;
-                    $attData['section_type'] = 'page_specification';
-                    $attData['section_id'] = $specId;
-                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Blueprints: page spec attachment save failed for spec ' . $specId);
-                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file UX']);
+            $specId = $result['data']['result']['id'] ?? null;
+            if ($specId && $blueprintToken) {
+                $files = array_filter($this->request->getFileMultiple('ux_image') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
+                if (!empty($files)) {
+                    $error = $this->validateUploadedFiles($files, 'page_specifications');
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                    foreach ($savedFiles as $sf) {
+                        $attData = $sf;
+                        $attData['section_type'] = 'page_specification';
+                        $attData['section_id'] = $specId;
+                        $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Blueprints: page spec attachment save failed for spec ' . $specId);
+                            return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file UX']);
+                        }
                     }
                 }
             }
-        }
 
-        return $this->response->setJSON($result);
+            return $this->response->setJSON($result);
+        } catch (\Throwable $e) {
+            log_message('error', 'Blueprints createPageSpecification exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
+        }
     }
 
     public function updatePageSpecification(string $encryptedId)
@@ -708,71 +768,76 @@ class Blueprints extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $data = $this->request->getPost();
-        $blueprintToken = $data['blueprint_token'] ?? null;
-        $removeUx = !empty($data['remove_ux']);
-        unset($data['blueprint_token'], $data['remove_ux']);
+        try {
+            $data = $this->request->getPost();
+            $blueprintToken = $data['blueprint_token'] ?? null;
+            $removeUx = !empty($data['remove_ux']);
+            unset($data['blueprint_token'], $data['remove_ux']);
 
-        $result = $this->api->post_data('blueprints/page-specifications/' . $encryptedId . '/update', $data);
-        if (!$result || !($result['status'] ?? false)) {
-            log_message('error', 'Blueprints updatePageSpecification API failed for ' . $encryptedId . ': ' . json_encode($result));
-            return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
-        }
-
-        if ($blueprintToken) {
-            if ($removeUx) {
-                $existingAtt = $this->request->getPost('existing_ux_att_id');
-                if ($existingAtt) {
-                    $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $existingAtt);
-                    if ($attResult && ($attResult['status'] ?? false)) {
-                        $storedName = $attResult['data']['result']['stored_name'] ?? '';
-                        if ($storedName) {
-                            $filePath = WRITEPATH . 'uploads/blueprints/' . $storedName;
-                            if (is_file($filePath)) { unlink($filePath); }
-                        }
-                    } else {
-                        log_message('error', 'Blueprints: Failed to delete UX attachment ' . $existingAtt . ': ' . json_encode($attResult));
-                    }
-                }
+            $result = $this->api->post_data('blueprints/page-specifications/' . $encryptedId . '/update', $data);
+            if (!$result || !($result['status'] ?? false)) {
+                log_message('error', 'Blueprints updatePageSpecification API failed for ' . $encryptedId . ': ' . json_encode($result));
+                return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
             }
 
-            $files = array_filter($this->request->getFileMultiple('ux_image') ?? [], function ($f) {
-                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-            });
-            if (!empty($files)) {
-                // Delete existing UX attachment first (single-image enforcement)
-                $existingAtt = $this->request->getPost('existing_ux_att_id');
-                if ($existingAtt && !$removeUx) {
-                    $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $existingAtt);
-                    if ($attResult && ($attResult['status'] ?? false)) {
-                        $storedName = $attResult['data']['result']['stored_name'] ?? '';
-                        if ($storedName) {
-                            $filePath = WRITEPATH . 'uploads/blueprints/' . $storedName;
-                            if (is_file($filePath)) { unlink($filePath); }
+            if ($blueprintToken) {
+                if ($removeUx) {
+                    $existingAtt = $this->request->getPost('existing_ux_att_id');
+                    if ($existingAtt) {
+                        $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $existingAtt);
+                        if ($attResult && ($attResult['status'] ?? false)) {
+                            $storedName = $attResult['data']['result']['stored_name'] ?? '';
+                            if ($storedName) {
+                                $filePath = WRITEPATH . 'uploads/blueprints/' . $storedName;
+                                if (is_file($filePath)) { unlink($filePath); }
+                            }
+                        } else {
+                            log_message('error', 'Blueprints: Failed to delete UX attachment ' . $existingAtt . ': ' . json_encode($attResult));
                         }
                     }
                 }
 
-                $error = $this->validateUploadedFiles($files, 'page_specifications');
-                if ($error) {
-                    return $this->response->setJSON(['status' => false, 'message' => $error]);
-                }
-                $savedFiles = $this->saveUploadedFiles($files);
-                foreach ($savedFiles as $sf) {
-                    $attData = $sf;
-                    $attData['section_type'] = 'page_specification';
-                    $attData['section_id'] = $encryptedId;
-                    $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        log_message('error', 'Blueprints: page spec attachment replace failed for spec ' . $encryptedId);
-                        return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file UX']);
+                $files = array_filter($this->request->getFileMultiple('ux_image') ?? [], function ($f) {
+                    return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+                });
+                if (!empty($files)) {
+                    // Delete existing UX attachment first (single-image enforcement)
+                    $existingAtt = $this->request->getPost('existing_ux_att_id');
+                    if ($existingAtt && !$removeUx) {
+                        $attResult = $this->api->delete_data('blueprints/' . $blueprintToken . '/attachments/' . $existingAtt);
+                        if ($attResult && ($attResult['status'] ?? false)) {
+                            $storedName = $attResult['data']['result']['stored_name'] ?? '';
+                            if ($storedName) {
+                                $filePath = WRITEPATH . 'uploads/blueprints/' . $storedName;
+                                if (is_file($filePath)) { unlink($filePath); }
+                            }
+                        }
+                    }
+
+                    $error = $this->validateUploadedFiles($files, 'page_specifications');
+                    if ($error) {
+                        return $this->response->setJSON(['status' => false, 'message' => $error]);
+                    }
+                    $savedFiles = $this->saveUploadedFiles($files);
+                    foreach ($savedFiles as $sf) {
+                        $attData = $sf;
+                        $attData['section_type'] = 'page_specification';
+                        $attData['section_id'] = $encryptedId;
+                        $attResult = $this->api->post_data('blueprints/' . $blueprintToken . '/attachments', $attData);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            log_message('error', 'Blueprints: page spec attachment replace failed for spec ' . $encryptedId);
+                            return $this->response->setJSON(['status' => false, 'message' => 'Gagal menyimpan file UX']);
+                        }
                     }
                 }
             }
-        }
 
-        return $this->response->setJSON($result);
+            return $this->response->setJSON($result);
+        } catch (\Throwable $e) {
+            log_message('error', 'Blueprints updatePageSpecification exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
+        }
     }
 
     public function deletePageSpecification(string $encryptedId)
