@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateMasterProjects extends Migration
 {
@@ -18,8 +19,8 @@ class CreateMasterProjects extends Migration
             'updated_at'  => ['type' => 'TIMESTAMP', 'null' => true],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('created_by', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->createTable('master_projects');
+        $this->forge->addForeignKey('created_by', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->createTable(Tables::MASTER_PROJECTS);
 
         $this->forge->addField([
             'id'                => ['type' => 'BIGINT', 'unsigned' => true, 'auto_increment' => true],
@@ -31,8 +32,8 @@ class CreateMasterProjects extends Migration
             'updated_at'        => ['type' => 'TIMESTAMP', 'null' => true],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('master_project_id', 'master_projects', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('modules');
+        $this->forge->addForeignKey('master_project_id', Tables::MASTER_PROJECTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::MODULES);
 
         $this->forge->addField([
             'id'          => ['type' => 'BIGINT', 'unsigned' => true, 'auto_increment' => true],
@@ -45,14 +46,14 @@ class CreateMasterProjects extends Migration
             'updated_at'  => ['type' => 'TIMESTAMP', 'null' => true],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('module_id', 'modules', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('pages');
+        $this->forge->addForeignKey('module_id', Tables::MODULES, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::PAGES);
     }
 
     public function down()
     {
-        $this->forge->dropTable('pages', true);
-        $this->forge->dropTable('modules', true);
-        $this->forge->dropTable('master_projects', true);
+        $this->forge->dropTable(Tables::PAGES, true);
+        $this->forge->dropTable(Tables::MODULES, true);
+        $this->forge->dropTable(Tables::MASTER_PROJECTS, true);
     }
 }

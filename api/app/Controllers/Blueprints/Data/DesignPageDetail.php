@@ -4,6 +4,7 @@ namespace App\Controllers\Blueprints\Data;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class DesignPageDetail extends BaseApi
 {
@@ -12,12 +13,12 @@ class DesignPageDetail extends BaseApi
         $designPageId = $this->resolveId($encryptedDesignPageId);
         if (!$designPageId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $designPage = $this->db()->table('blueprint_design_pages')
-            ->select('blueprint_design_pages.*, m.name as module_name, m.blueprint_id, b.name as blueprint_name')
-            ->join('blueprint_modules as m', 'm.id = blueprint_design_pages.module_id', 'left')
-            ->join('blueprints as b', 'b.id = m.blueprint_id', 'left')
-            ->where('blueprint_design_pages.id', $designPageId)
-            ->where('blueprint_design_pages.active', 0)
+        $designPage = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)
+            ->select(Tables::BLUEPRINT_DESIGN_PAGES . '.*, m.name as module_name, m.blueprint_id, b.name as blueprint_name')
+            ->join(Tables::BLUEPRINT_MODULES . ' as m', 'm.id = ' . Tables::BLUEPRINT_DESIGN_PAGES . '.module_id', 'left')
+            ->join(Tables::BLUEPRINTS . ' as b', 'b.id = m.blueprint_id', 'left')
+            ->where(Tables::BLUEPRINT_DESIGN_PAGES . '.id', $designPageId)
+            ->where(Tables::BLUEPRINT_DESIGN_PAGES . '.active', 0)
             ->where('m.active', 0)
             ->where('b.active', 0)
             ->get()
@@ -30,7 +31,7 @@ class DesignPageDetail extends BaseApi
         $designPage['id_encrypted'] = $this->api->encryptId($designPage['id']);
         $designPage['blueprint_id_encrypted'] = $this->api->encryptId($designPage['blueprint_id']);
 
-        $specs = $this->db()->table('blueprint_page_specifications')
+        $specs = $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)
             ->where('design_page_id', $designPageId)
             ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
@@ -43,7 +44,7 @@ class DesignPageDetail extends BaseApi
 
         $uxAttachments = [];
         if (!empty($specIds)) {
-            $atts = $this->db()->table('blueprint_attachments')
+            $atts = $this->db()->table(Tables::BLUEPRINT_ATTACHMENTS)
                 ->whereIn('section_id', $specIds)
                 ->where('section_type', 'page_specification')
                 ->where('active', 0)

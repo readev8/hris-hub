@@ -4,12 +4,13 @@ namespace App\Controllers\Roles\Report;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class RoleList extends BaseApi
 {
     public function get_list(): ResponseInterface
     {
-        $roles = $this->db()->table('roles')
+        $roles = $this->db()->table(Tables::ROLES)
             ->where('active', 0)
             ->orderBy('is_active', 'DESC')
             ->orderBy('name', 'ASC')
@@ -18,7 +19,7 @@ class RoleList extends BaseApi
 
         $result = [];
         foreach ($roles as $r) {
-            $userCount = $this->db()->table('users')->where('role_id', $r['id'])->countAllResults();
+            $userCount = $this->db()->table(Tables::USERS)->where('role_id', $r['id'])->countAllResults();
             $result[] = [
                 'raw_id'      => (int) $r['id'],
                 'id'          => $this->api->encryptId($r['id']),
@@ -40,10 +41,10 @@ class RoleList extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $role = $this->db()->table('roles')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $role = $this->db()->table(Tables::ROLES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
 
-        $permissions = $this->db()->table('role_permissions')
+        $permissions = $this->db()->table(Tables::ROLE_PERMISSIONS)
             ->where('role_id', $id)
             ->where('active', 0)
             ->get()
@@ -62,7 +63,7 @@ class RoleList extends BaseApi
 
     public function get_modules(): ResponseInterface
     {
-        $modules = $this->db()->table('access_modules')
+        $modules = $this->db()->table(Tables::ACCESS_MODULES)
             ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
             ->get()
@@ -76,13 +77,13 @@ class RoleList extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
+        $user = $this->db()->table(Tables::USERS)->where('id', $userId)->get()->getRowArray();
         if (!$user) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
         $roleId = $user['role_id'] ?? null;
         if (!$roleId) return $this->JSONResponse('OK', [], 200);
 
-        $permissions = $this->db()->table('role_permissions')
+        $permissions = $this->db()->table(Tables::ROLE_PERMISSIONS)
             ->where('role_id', $roleId)
             ->where('active', 0)
             ->get()

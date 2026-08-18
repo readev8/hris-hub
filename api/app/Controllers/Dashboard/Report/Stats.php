@@ -5,6 +5,7 @@ namespace App\Controllers\Dashboard\Report;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Stats extends BaseApi
 {
@@ -21,7 +22,7 @@ class Stats extends BaseApi
         $db     = $this->db();
 
         // ── Ticket counts by status (in date range) ────────────────
-        $ticketStatusRows = $db->table('tickets')
+        $ticketStatusRows = $db->table(Tables::TICKETS)
             ->select('status, COUNT(*) as count')
             ->where('active', 0)
             ->where('created_at >=', $rangeStart)
@@ -35,7 +36,7 @@ class Stats extends BaseApi
         }
 
         // ── Ticket counts by type (in date range) ──────────────────
-        $ticketTypeRows = $db->table('tickets')
+        $ticketTypeRows = $db->table(Tables::TICKETS)
             ->select('type, COUNT(*) as count')
             ->where('active', 0)
             ->where('created_at >=', $rangeStart)
@@ -49,7 +50,7 @@ class Stats extends BaseApi
         }
 
         // ── Ticket counts by priority (in date range) ──────────────
-        $ticketPriorityRows = $db->table('tickets')
+        $ticketPriorityRows = $db->table(Tables::TICKETS)
             ->select('priority, COUNT(*) as count')
             ->where('active', 0)
             ->where('created_at >=', $rangeStart)
@@ -63,30 +64,30 @@ class Stats extends BaseApi
         }
 
         // ── Totals (date-range scoped) ──────────────────────────────
-        $totalTickets   = $db->table('tickets')->where('active', 0)->where('created_at >=', $rangeStart)->where('created_at <=', $rangeEnd)->countAllResults();
-        $totalProjects  = $db->table('projects')->where('active', 0)->where('created_at >=', $rangeStart)->where('created_at <=', $rangeEnd)->countAllResults();
-        $totalBlueprints = $db->table('blueprints')->where('active', 0)->where('created_at >=', $rangeStart)->where('created_at <=', $rangeEnd)->countAllResults();
+        $totalTickets   = $db->table(Tables::TICKETS)->where('active', 0)->where('created_at >=', $rangeStart)->where('created_at <=', $rangeEnd)->countAllResults();
+        $totalProjects  = $db->table(Tables::PROJECTS)->where('active', 0)->where('created_at >=', $rangeStart)->where('created_at <=', $rangeEnd)->countAllResults();
+        $totalBlueprints = $db->table(Tables::BLUEPRINTS)->where('active', 0)->where('created_at >=', $rangeStart)->where('created_at <=', $rangeEnd)->countAllResults();
 
         // ── Entity totals (system-wide, no date filter) ────────────
-        $totalMasterProjects = $db->table('master_projects')->where('active', 0)->countAllResults();
-        $totalModules        = $db->table('modules')->where('active', 0)->countAllResults();
-        $totalPages          = $db->table('pages')->where('active', 0)->countAllResults();
-        $totalUsers          = $db->table('users')->where('is_active', 1)->countAllResults();
+        $totalMasterProjects = $db->table(Tables::MASTER_PROJECTS)->where('active', 0)->countAllResults();
+        $totalModules        = $db->table(Tables::MODULES)->where('active', 0)->countAllResults();
+        $totalPages          = $db->table(Tables::PAGES)->where('active', 0)->countAllResults();
+        $totalUsers          = $db->table(Tables::USERS)->where('is_active', 1)->countAllResults();
 
         // ── Pending approvals (split by source) ────────────────────
-        $pendingTickets     = $db->table('tickets')->where('active', 0)->where('status', Enums::TICKET_STATUS_OPEN)->groupStart()->where('needs_approval', 1)->orGroupStart()->where('needs_approval', null)->where('approver_id IS NOT NULL')->groupEnd()->groupEnd()->countAllResults();
-        $pendingImprovements = $db->table('projects')->where('active', 0)->whereIn('status', [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING])->countAllResults();
-        $pendingBlueprints  = $db->table('blueprints')->where('active', 0)->whereIn('status', [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING])->countAllResults();
+        $pendingTickets     = $db->table(Tables::TICKETS)->where('active', 0)->where('status', Enums::TICKET_STATUS_OPEN)->groupStart()->where('needs_approval', 1)->orGroupStart()->where('needs_approval', null)->where('approver_id IS NOT NULL')->groupEnd()->groupEnd()->countAllResults();
+        $pendingImprovements = $db->table(Tables::PROJECTS)->where('active', 0)->whereIn('status', [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING])->countAllResults();
+        $pendingBlueprints  = $db->table(Tables::BLUEPRINTS)->where('active', 0)->whereIn('status', [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING])->countAllResults();
 
         // ── Overdue & unassigned ───────────────────────────────────
-        $overdueTickets = $db->table('tickets')
+        $overdueTickets = $db->table(Tables::TICKETS)
             ->where('active', 0)
             ->where('due_date IS NOT NULL')
             ->where('due_date <', date('Y-m-d'))
             ->whereNotIn('status', [Enums::TICKET_STATUS_RESOLVED, Enums::TICKET_STATUS_CLOSED, Enums::TICKET_STATUS_REJECTED])
             ->countAllResults();
 
-        $unassignedOpen = $db->table('tickets')
+        $unassignedOpen = $db->table(Tables::TICKETS)
             ->where('active', 0)
             ->whereIn('status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED])
             ->groupStart()->where('assignee_id IS NULL')->orWhere('assignee_id', 0)->groupEnd()
@@ -95,14 +96,14 @@ class Stats extends BaseApi
         // ── Assignee workload (top 5 by open+in-progress) ─────────
         $assigneeWorkload = [];
         if (in_array($role, [Enums::IT_MANAGER, Enums::DEPT_HEAD, Enums::ADMIN], true)) {
-            $workloadRows = $db->table('tickets')
-                ->select('users.full_name as assignee_name, COUNT(*) as total,
-                    SUM(CASE WHEN tickets.status = 0 THEN 1 ELSE 0 END) as open_count,
-                    SUM(CASE WHEN tickets.status = 2 THEN 1 ELSE 0 END) as in_progress_count')
-                ->join('users', 'users.id = tickets.assignee_id', 'inner')
-                ->where('tickets.active', 0)
-                ->whereIn('tickets.status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
-                ->groupBy('tickets.assignee_id')
+            $workloadRows = $db->table(Tables::TICKETS)
+                ->select(Tables::USERS . '.full_name as assignee_name, COUNT(*) as total,
+                    SUM(CASE WHEN ' . Tables::TICKETS . '.status = 0 THEN 1 ELSE 0 END) as open_count,
+                    SUM(CASE WHEN ' . Tables::TICKETS . '.status = 2 THEN 1 ELSE 0 END) as in_progress_count')
+                ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::TICKETS . '.assignee_id', 'inner')
+                ->where(Tables::TICKETS . '.active', 0)
+                ->whereIn(Tables::TICKETS . '.status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
+                ->groupBy(Tables::TICKETS . '.assignee_id')
                 ->orderBy('total', 'DESC')
                 ->limit(5)
                 ->get()->getResultArray();
@@ -124,20 +125,20 @@ class Stats extends BaseApi
         $weeklyTrend = $this->buildTrend($db, 'week', 8, '\WW');
 
         // ── Bugs by project (with open/closed split + health) ──────
-        $bugsByProject = $db->table('tickets')
-            ->select('master_projects.id, master_projects.name,
+        $bugsByProject = $db->table(Tables::TICKETS)
+            ->select(Tables::MASTER_PROJECTS . '.id, ' . Tables::MASTER_PROJECTS . '.name,
                 COUNT(*) as total,
-                SUM(CASE WHEN tickets.status IN (0,1,2) THEN 1 ELSE 0 END) as open_count,
-                SUM(CASE WHEN tickets.status IN (3,4) THEN 1 ELSE 0 END) as closed_count')
-            ->join('pages', 'pages.id = tickets.page_id')
-            ->join('modules', 'modules.id = pages.module_id')
-            ->join('master_projects', 'master_projects.id = modules.master_project_id')
-            ->where('tickets.active', 0)
-            ->where('pages.active', 0)
-            ->where('modules.active', 0)
-            ->where('master_projects.active', 0)
-            ->where('tickets.type', Enums::TICKET_TYPE_BUG)
-            ->groupBy('master_projects.id')
+                SUM(CASE WHEN ' . Tables::TICKETS . '.status IN (0,1,2) THEN 1 ELSE 0 END) as open_count,
+                SUM(CASE WHEN ' . Tables::TICKETS . '.status IN (3,4) THEN 1 ELSE 0 END) as closed_count')
+            ->join(Tables::PAGES, Tables::PAGES . '.id = ' . Tables::TICKETS . '.page_id')
+            ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id')
+            ->join(Tables::MASTER_PROJECTS, Tables::MASTER_PROJECTS . '.id = ' . Tables::MODULES . '.master_project_id')
+            ->where(Tables::TICKETS . '.active', 0)
+            ->where(Tables::PAGES . '.active', 0)
+            ->where(Tables::MODULES . '.active', 0)
+            ->where(Tables::MASTER_PROJECTS . '.active', 0)
+            ->where(Tables::TICKETS . '.type', Enums::TICKET_TYPE_BUG)
+            ->groupBy(Tables::MASTER_PROJECTS . '.id')
             ->orderBy('total', 'DESC')
             ->get()->getResultArray();
 
@@ -157,7 +158,7 @@ class Stats extends BaseApi
         }
 
         // ── Projects by status ─────────────────────────────────────
-        $projectStatusRows = $db->table('projects')
+        $projectStatusRows = $db->table(Tables::PROJECTS)
             ->select('status, COUNT(*) as count')
             ->where('active', 0)
             ->groupBy('status')
@@ -168,7 +169,7 @@ class Stats extends BaseApi
         }
 
         // ── Blueprints by status ───────────────────────────────────
-        $blueprintStatusRows = $db->table('blueprints')
+        $blueprintStatusRows = $db->table(Tables::BLUEPRINTS)
             ->select('status, COUNT(*) as count')
             ->where('active', 0)
             ->groupBy('status')
@@ -224,14 +225,14 @@ class Stats extends BaseApi
      */
     private function buildTrend($db, string $unit, int $count, string $fmt): array
     {
-        $created = $db->table('tickets')
+        $created = $db->table(Tables::TICKETS)
             ->select("DATE_FORMAT(created_at, '" . ($unit === 'week' ? '%x-%v' : '%Y-%m-%d') . "') as period, COUNT(*) as cnt")
             ->where('active', 0)
             ->where('created_at >=', date('Y-m-d 00:00:00', strtotime('-' . $count . ' ' . $unit . 's')))
             ->groupBy('period')
             ->get()->getResultArray();
 
-        $resolved = $db->table('tickets')
+        $resolved = $db->table(Tables::TICKETS)
             ->select("DATE_FORMAT(updated_at, '" . ($unit === 'week' ? '%x-%v' : '%Y-%m-%d') . "') as period, COUNT(*) as cnt")
             ->where('active', 0)
             ->whereIn('status', [Enums::TICKET_STATUS_RESOLVED, Enums::TICKET_STATUS_CLOSED])
@@ -270,7 +271,7 @@ class Stats extends BaseApi
         // My open tickets (created by me OR assigned to me)
         $myOpenTickets = 0;
         if (in_array($role, [Enums::REQUESTER, Enums::DEVELOPER, Enums::ADMIN], true)) {
-            $myOpenTickets = $db->table('tickets')
+            $myOpenTickets = $db->table(Tables::TICKETS)
                 ->where('active', 0)
                 ->whereIn('status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
                 ->groupStart()->where('creator_id', $userId)->orWhere('assignee_id', $userId)->groupEnd()
@@ -284,13 +285,13 @@ class Stats extends BaseApi
 
         if (in_array($role, [Enums::IT_MANAGER, Enums::DEPT_HEAD, Enums::ADMIN], true)) {
             // Tickets awaiting approval
-            $ticketRows = $db->table('tickets')
-                ->select('tickets.id, tickets.title, tickets.priority, tickets.created_at, creator.full_name as creator_name')
-                ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-                ->where('tickets.active', 0)
-                ->where('tickets.status', Enums::TICKET_STATUS_OPEN)
-                ->where('tickets.needs_approval', 1)
-                ->orderBy('tickets.created_at', 'ASC')
+            $ticketRows = $db->table(Tables::TICKETS)
+                ->select(Tables::TICKETS . '.id, ' . Tables::TICKETS . '.title, ' . Tables::TICKETS . '.priority, ' . Tables::TICKETS . '.created_at, creator.full_name as creator_name')
+                ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+                ->where(Tables::TICKETS . '.active', 0)
+                ->where(Tables::TICKETS . '.status', Enums::TICKET_STATUS_OPEN)
+                ->where(Tables::TICKETS . '.needs_approval', 1)
+                ->orderBy(Tables::TICKETS . '.created_at', 'ASC')
                 ->limit(10)
                 ->get()->getResultArray();
             foreach ($ticketRows as $t) {
@@ -306,12 +307,12 @@ class Stats extends BaseApi
             // Improvements pending (role-aware)
             $impStatuses = $role === Enums::IT_MANAGER ? [Enums::PROJECT_STATUS_DRAFT] : [Enums::PROJECT_STATUS_PENDING];
             if ($role === Enums::ADMIN) { $impStatuses = [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING]; }
-            $impRows = $db->table('projects')
-                ->select('projects.id, projects.name, projects.priority, projects.created_at, creator.full_name as creator_name')
-                ->join('users as creator', 'creator.id = projects.created_by', 'left')
-                ->where('projects.active', 0)
-                ->whereIn('projects.status', $impStatuses)
-                ->orderBy('projects.created_at', 'ASC')
+            $impRows = $db->table(Tables::PROJECTS)
+                ->select(Tables::PROJECTS . '.id, ' . Tables::PROJECTS . '.name, ' . Tables::PROJECTS . '.priority, ' . Tables::PROJECTS . '.created_at, creator.full_name as creator_name')
+                ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::PROJECTS . '.created_by', 'left')
+                ->where(Tables::PROJECTS . '.active', 0)
+                ->whereIn(Tables::PROJECTS . '.status', $impStatuses)
+                ->orderBy(Tables::PROJECTS . '.created_at', 'ASC')
                 ->limit(10)
                 ->get()->getResultArray();
             foreach ($impRows as $p) {
@@ -327,12 +328,12 @@ class Stats extends BaseApi
             // Blueprints pending (role-aware)
             $bpStatuses = $role === Enums::IT_MANAGER ? [Enums::PROJECT_STATUS_DRAFT] : [Enums::PROJECT_STATUS_PENDING];
             if ($role === Enums::ADMIN) { $bpStatuses = [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING]; }
-            $bpRows = $db->table('blueprints')
-                ->select('blueprints.id, blueprints.name, blueprints.created_at, creator.full_name as creator_name')
-                ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
-                ->where('blueprints.active', 0)
-                ->whereIn('blueprints.status', $bpStatuses)
-                ->orderBy('blueprints.created_at', 'ASC')
+            $bpRows = $db->table(Tables::BLUEPRINTS)
+                ->select(Tables::BLUEPRINTS . '.id, ' . Tables::BLUEPRINTS . '.name, ' . Tables::BLUEPRINTS . '.created_at, creator.full_name as creator_name')
+                ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::BLUEPRINTS . '.created_by', 'left')
+                ->where(Tables::BLUEPRINTS . '.active', 0)
+                ->whereIn(Tables::BLUEPRINTS . '.status', $bpStatuses)
+                ->orderBy(Tables::BLUEPRINTS . '.created_at', 'ASC')
                 ->limit(10)
                 ->get()->getResultArray();
             foreach ($bpRows as $b) {

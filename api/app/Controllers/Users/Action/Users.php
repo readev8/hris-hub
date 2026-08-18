@@ -5,6 +5,7 @@ namespace App\Controllers\Users\Action;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Users extends BaseApi
 {
@@ -19,7 +20,7 @@ class Users extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk melihat data users', null, 403);
         }
 
-        $rows = $this->db()->table('users')
+        $rows = $this->db()->table(Tables::USERS)
             ->select('id, user_id, full_name, email, role_id, is_active, created_at, updated_at')
             ->orderBy('id', 'ASC')
             ->get()
@@ -45,7 +46,7 @@ class Users extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $row = $this->db()->table('users')
+        $row = $this->db()->table(Tables::USERS)
             ->select('id, user_id, full_name, email, role_id, is_active, created_at, updated_at')
             ->where('id', $id)
             ->get()
@@ -83,12 +84,12 @@ class Users extends BaseApi
             return $this->JSONResponse('Format email tidak valid', null, 400);
         }
 
-        $existing = $this->db()->table('users')->where('email', $email)->get()->getRowArray();
+        $existing = $this->db()->table(Tables::USERS)->where('email', $email)->get()->getRowArray();
         if ($existing) {
             return $this->JSONResponse('Email sudah digunakan', null, 400);
         }
 
-        $this->db()->table('users')->insert([
+        $this->db()->table(Tables::USERS)->insert([
             'full_name'  => $fullName,
             'email'      => $email,
             'role_id'    => $roleId,
@@ -150,7 +151,7 @@ class Users extends BaseApi
             return $this->JSONResponse('User ID wajib diisi', null, 400);
         }
 
-        $existing = $this->db()->table('users')
+        $existing = $this->db()->table(Tables::USERS)
             ->where('user_id', $targetUserId)
             ->get()
             ->getRowArray();
@@ -206,7 +207,7 @@ class Users extends BaseApi
             return $this->JSONResponse('User ID wajib diisi', null, 400);
         }
 
-        $existing = $this->db()->table('users')
+        $existing = $this->db()->table(Tables::USERS)
             ->where('user_id', $targetUserId)
             ->get()
             ->getRowArray();
@@ -215,7 +216,7 @@ class Users extends BaseApi
             return $this->JSONResponse('User sudah terdaftar di sistem', null, 400);
         }
 
-        $this->db()->table('users')->insert([
+        $this->db()->table(Tables::USERS)->insert([
             'user_id'    => $targetUserId,
             'full_name'  => $fullName ?: 'User ' . $targetUserId,
             'email'      => $email ?: ($targetUserId . '@external.local'),
@@ -247,7 +248,7 @@ class Users extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah user', null, 403);
         }
 
-        $target = $this->db()->table('users')->where('id', $id)->get()->getRowArray();
+        $target = $this->db()->table(Tables::USERS)->where('id', $id)->get()->getRowArray();
         if (!$target) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -266,7 +267,7 @@ class Users extends BaseApi
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return $this->JSONResponse('Format email tidak valid', null, 400);
             }
-            $existing = $this->db()->table('users')->where('email', $email)->where('id !=', $id)->get()->getRowArray();
+            $existing = $this->db()->table(Tables::USERS)->where('email', $email)->where('id !=', $id)->get()->getRowArray();
             if ($existing) return $this->JSONResponse('Email sudah digunakan user lain', null, 400);
             $updateData['email'] = $email;
         }
@@ -277,7 +278,7 @@ class Users extends BaseApi
             $updateData['role_id'] = $roleId;
         }
 
-        $this->db()->table('users')->update($updateData, ['id' => $id]);
+        $this->db()->table(Tables::USERS)->update($updateData, ['id' => $id]);
 
         log_message('info', "User updated: id=$id by user=$userId");
 
@@ -296,16 +297,16 @@ class Users extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah status user', null, 403);
         }
 
-        $currentRecord = $this->db()->table('users')->where('user_id', $currentUserId)->get()->getRowArray();
+        $currentRecord = $this->db()->table(Tables::USERS)->where('user_id', $currentUserId)->get()->getRowArray();
         if ($currentRecord && (int) $currentRecord['id'] === $id) {
             return $this->JSONResponse('Anda tidak dapat menonaktifkan akun sendiri', null, 400);
         }
 
-        $target = $this->db()->table('users')->where('id', $id)->get()->getRowArray();
+        $target = $this->db()->table(Tables::USERS)->where('id', $id)->get()->getRowArray();
         if (!$target) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
         $newActive = $target['is_active'] ? 0 : 1;
-        $this->db()->table('users')->update([
+        $this->db()->table(Tables::USERS)->update([
             'is_active'  => $newActive,
             'updated_at' => date('Y-m-d H:i:s'),
         ], ['id' => $id]);
@@ -327,15 +328,15 @@ class Users extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus user', null, 403);
         }
 
-        $currentRecord = $this->db()->table('users')->where('user_id', $currentUserId)->get()->getRowArray();
+        $currentRecord = $this->db()->table(Tables::USERS)->where('user_id', $currentUserId)->get()->getRowArray();
         if ($currentRecord && (int) $currentRecord['id'] === $id) {
             return $this->JSONResponse('Anda tidak dapat menghapus akun sendiri', null, 400);
         }
 
-        $target = $this->db()->table('users')->where('id', $id)->get()->getRowArray();
+        $target = $this->db()->table(Tables::USERS)->where('id', $id)->get()->getRowArray();
         if (!$target) return $this->JSONResponse('User tidak ditemukan', null, 404);
 
-        $this->db()->table('users')->where('id', $id)->update(['is_active' => 0]);
+        $this->db()->table(Tables::USERS)->where('id', $id)->update(['is_active' => 0]);
 
         log_message('info', "User deleted: id=$id, user_id={$target['user_id']}, by user=$currentUserId");
 

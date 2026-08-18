@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Action;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -20,7 +21,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $ticketId)->where('active', 0)->get()->getRowArray();
         if (!$ticket) {
             return $this->JSONResponse('Tiket tidak ditemukan', null, 404);
         }
@@ -45,7 +46,7 @@ class Attachments extends BaseApi
             if (!$commentId) {
                 return $this->JSONResponse('ID komentar tidak valid', null, 400);
             }
-            $comment = $this->db()->table('ticket_comments')
+            $comment = $this->db()->table(Tables::TICKET_COMMENTS)
                 ->where('id', $commentId)
                 ->where('ticket_id', $ticketId)
                 ->where('active', 0)
@@ -56,7 +57,7 @@ class Attachments extends BaseApi
             }
         }
 
-        $this->db()->table('ticket_attachments')->insert([
+        $this->db()->table(Tables::TICKET_ATTACHMENTS)->insert([
             'ticket_id'   => $ticketId,
             'comment_id'  => $commentId,
             'uploaded_by' => $userId,
@@ -88,14 +89,14 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $attachment = $this->db()->table('ticket_attachments')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $attachment = $this->db()->table(Tables::TICKET_ATTACHMENTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$attachment) {
             return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);
         }
 
         // Check ownership: uploader, ticket creator, or admin
         $isUploader = (int)$attachment['uploaded_by'] === $userId;
-        $isTicketCreator = $this->db()->table('tickets')
+        $isTicketCreator = $this->db()->table(Tables::TICKETS)
             ->where('id', $attachment['ticket_id'])
             ->where('creator_id', $userId)
             ->where('active', 0)
@@ -106,7 +107,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki akses untuk menghapus lampiran ini', null, 403);
         }
 
-        $this->db()->table('ticket_attachments')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::TICKET_ATTACHMENTS)->update(['active' => 1], ['id' => $id]);
 
         return $this->JSONResponse('Lampiran dihapus', [
             'stored_name' => $attachment['stored_name'],

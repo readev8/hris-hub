@@ -4,6 +4,7 @@ namespace App\Controllers\Auth\Action;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Auth extends BaseApi
 {
@@ -19,7 +20,7 @@ class Auth extends BaseApi
             return $this->JSONResponse('Email dan password wajib diisi', null, 400);
         }
 
-        $user = $this->db()->table('users')
+        $user = $this->db()->table(Tables::USERS)
             ->where('email', $email)
             ->where('is_active', 1)
             ->get()
@@ -39,8 +40,8 @@ class Auth extends BaseApi
         // Load permissions for session (graceful if table doesn't exist yet)
         $permissions = [];
         try {
-            if ($this->db()->tableExists('role_permissions')) {
-                $permissions = $this->db()->table('role_permissions')
+            if ($this->db()->tableExists(Tables::ROLE_PERMISSIONS)) {
+                $permissions = $this->db()->table(Tables::ROLE_PERMISSIONS)
                     ->where('role_id', $user['role_id'])
                     ->where('active', 0)
                     ->get()
@@ -84,7 +85,7 @@ class Auth extends BaseApi
         $db = $this->db();
 
         // Find existing user
-        $user = $db->table('users')
+        $user = $db->table(Tables::USERS)
             ->where('user_id', $myhrUserId)
             ->get()
             ->getRowArray();
@@ -99,7 +100,7 @@ class Auth extends BaseApi
             $updateData = ['updated_at' => date('Y-m-d H:i:s')];
             if (!empty($fullName)) $updateData['full_name'] = $fullName;
             if (!empty($email))    $updateData['email']      = $email;
-            $db->table('users')->where('id', $user['id'])->update($updateData);
+            $db->table(Tables::USERS)->where('id', $user['id'])->update($updateData);
             $user['full_name'] = $fullName ?: $user['full_name'];
             $user['email']     = $email    ?: $user['email'];
 
@@ -108,7 +109,7 @@ class Auth extends BaseApi
 
         // Create new user with default role (Requester = 2)
         $now = date('Y-m-d H:i:s');
-        $db->table('users')->insert([
+        $db->table(Tables::USERS)->insert([
             'user_id'    => $myhrUserId,
             'full_name'  => $fullName ?: 'User ' . $myhrUserId,
             'email'      => $email    ?: ($myhrUserId . '@external.local'),
@@ -120,7 +121,7 @@ class Auth extends BaseApi
         $userId = $db->insertID();
 
         // Reload user
-        $user = $db->table('users')->where('id', $userId)->get()->getRowArray();
+        $user = $db->table(Tables::USERS)->where('id', $userId)->get()->getRowArray();
 
         return $this->JSONResponse('User baru dibuat', $user, 201);
     }
@@ -132,7 +133,7 @@ class Auth extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $user = $this->db()->table('users')
+        $user = $this->db()->table(Tables::USERS)
             ->where('id', $userId)
             ->where('is_active', 1)
             ->get()

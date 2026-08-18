@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Report;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -26,7 +27,7 @@ class TicketTracking extends BaseApi
             return $this->JSONResponse('Tracking code wajib diisi', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')
+        $ticket = $this->db()->table(Tables::TICKETS)
             ->where('tracking_code', $code)
             ->where('active', 0)
             ->get()
@@ -36,7 +37,7 @@ class TicketTracking extends BaseApi
             return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
         }
 
-        $logs = $this->db()->table('audit_logs')
+        $logs = $this->db()->table(Tables::AUDIT_LOGS)
             ->where('entity_type', 'ticket')
             ->where('entity_id', $ticket['id'])
             ->whereIn('action', array_keys($this->actionLabels))

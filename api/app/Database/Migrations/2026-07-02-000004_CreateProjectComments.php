@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateProjectComments extends Migration
 {
@@ -17,12 +18,12 @@ class CreateProjectComments extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addKey(['project_id']);
-        $this->forge->addForeignKey('project_id', 'projects', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('project_comments');
+        $this->forge->addForeignKey('project_id', Tables::PROJECTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::PROJECT_COMMENTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('project_comments');
+        $this->forge->dropTable(Tables::PROJECT_COMMENTS);
     }
 }

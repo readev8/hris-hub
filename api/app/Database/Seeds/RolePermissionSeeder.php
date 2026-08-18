@@ -3,6 +3,7 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
+use Config\Tables;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -73,7 +74,7 @@ class RolePermissionSeeder extends Seeder
                 $perm['role_id'] = $roleId;
                 $perm['created_at'] = $now;
                 $perm['updated_at'] = $now;
-                $this->db->table('role_permissions')->insert($perm);
+                $this->db->table(Tables::ROLE_PERMISSIONS)->insert($perm);
             }
         }
     }

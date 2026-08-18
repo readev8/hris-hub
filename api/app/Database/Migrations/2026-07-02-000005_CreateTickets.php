@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateTickets extends Migration
 {
@@ -30,13 +31,13 @@ class CreateTickets extends Migration
         $this->forge->addKey('priority');
         $this->forge->addKey('closed_at');
         $this->forge->addKey(['assignee_id']);
-        $this->forge->addForeignKey('assignee_id', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->addForeignKey('creator_id', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->createTable('tickets');
+        $this->forge->addForeignKey('assignee_id', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->addForeignKey('creator_id', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->createTable(Tables::TICKETS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('tickets');
+        $this->forge->dropTable(Tables::TICKETS);
     }
 }

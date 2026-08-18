@@ -5,6 +5,7 @@ namespace App\Controllers\MasterProjects\Action;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Projects extends BaseApi
 {
@@ -24,7 +25,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Nama project wajib diisi', null, 400);
         }
 
-        $this->db()->table('master_projects')->insert([
+        $this->db()->table(Tables::MASTER_PROJECTS)->insert([
             'name'        => $name,
             'description' => trim($input['description'] ?? ''),
             'status'      => 1,
@@ -53,7 +54,7 @@ class Projects extends BaseApi
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
 
-        $this->db()->table('master_projects')->update([
+        $this->db()->table(Tables::MASTER_PROJECTS)->update([
             'name'        => trim($input['name'] ?? ''),
             'description' => trim($input['description'] ?? ''),
             'status'      => (int) ($input['status'] ?? 1),
@@ -75,7 +76,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus project', null, 403);
         }
 
-        $this->db()->table('master_projects')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::MASTER_PROJECTS)->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Project berhasil dihapus');
     }
 }

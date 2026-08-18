@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateBlueprintComments extends Migration
 {
@@ -17,13 +18,13 @@ class CreateBlueprintComments extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addKey('blueprint_id');
-        $this->forge->addForeignKey('blueprint_id', 'blueprints', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('blueprint_comments');
+        $this->forge->addForeignKey('blueprint_id', Tables::BLUEPRINTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('user_id', Tables::USERS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::BLUEPRINT_COMMENTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('blueprint_comments');
+        $this->forge->dropTable(Tables::BLUEPRINT_COMMENTS);
     }
 }

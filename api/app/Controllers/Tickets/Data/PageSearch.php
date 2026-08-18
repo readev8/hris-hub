@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Data;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -15,24 +16,24 @@ class PageSearch extends BaseApi
         $perPage = max(1, min(50, (int) ($params['per_page'] ?? 15)));
         $offset = ($page - 1) * $perPage;
 
-        $builder = $this->db()->table('pages')
-            ->select('pages.id, pages.name as page_name, modules.name as module_name, master_projects.name as project_name')
-            ->join('modules', 'modules.id = pages.module_id', 'left')
-            ->join('master_projects', 'master_projects.id = modules.master_project_id', 'left')
-            ->where('pages.active', 0)
-            ->where('modules.active', 0)
-            ->where('master_projects.active', 0);
+        $builder = $this->db()->table(Tables::PAGES)
+            ->select(Tables::PAGES . '.id, ' . Tables::PAGES . '.name as page_name, ' . Tables::MODULES . '.name as module_name, ' . Tables::MASTER_PROJECTS . '.name as project_name')
+            ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id', 'left')
+            ->join(Tables::MASTER_PROJECTS, Tables::MASTER_PROJECTS . '.id = ' . Tables::MODULES . '.master_project_id', 'left')
+            ->where(Tables::PAGES . '.active', 0)
+            ->where(Tables::MODULES . '.active', 0)
+            ->where(Tables::MASTER_PROJECTS . '.active', 0);
 
         if (!empty($search)) {
             $builder->groupStart()
-                ->like('pages.name', $search)
-                ->orLike('modules.name', $search)
-                ->orLike('master_projects.name', $search)
+                ->like(Tables::PAGES . '.name', $search)
+                ->orLike(Tables::MODULES . '.name', $search)
+                ->orLike(Tables::MASTER_PROJECTS . '.name', $search)
                 ->groupEnd();
         }
 
         $total = $builder->countAllResults(false);
-        $rows = $builder->orderBy('pages.name', 'ASC')
+        $rows = $builder->orderBy(Tables::PAGES . '.name', 'ASC')
             ->limit($perPage, $offset)
             ->get()
             ->getResultArray();

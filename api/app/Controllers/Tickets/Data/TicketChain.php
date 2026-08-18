@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Data;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -23,7 +24,7 @@ class TicketChain extends BaseApi
         $maxDepth = 20;
 
         while ($currentCode && $maxDepth > 0) {
-            $ticket = $this->db()->table('tickets')
+            $ticket = $this->db()->table(Tables::TICKETS)
                 ->select('id, tracking_code, title, status, type, priority, referral, created_at')
                 ->where('tracking_code', $currentCode)
                 ->where('active', 0)
@@ -43,7 +44,7 @@ class TicketChain extends BaseApi
         }
 
         // Reverse lookup: find all children that refer to the current ticket
-        $children = $this->db()->table('tickets')
+        $children = $this->db()->table(Tables::TICKETS)
             ->select('id, tracking_code, title, status, type, priority, referral, created_at')
             ->where('referral', $trackingCode)
             ->where('active', 0)

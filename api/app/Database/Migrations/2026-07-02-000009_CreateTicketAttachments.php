@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateTicketAttachments extends Migration
 {
@@ -20,14 +21,14 @@ class CreateTicketAttachments extends Migration
             'created_at'  => ['type' => 'TIMESTAMP', 'null' => true, 'default' => null],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('ticket_id', 'tickets', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('comment_id', 'ticket_comments', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('uploaded_by', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('ticket_attachments');
+        $this->forge->addForeignKey('ticket_id', Tables::TICKETS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('comment_id', Tables::TICKET_COMMENTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('uploaded_by', Tables::USERS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::TICKET_ATTACHMENTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('ticket_attachments');
+        $this->forge->dropTable(Tables::TICKET_ATTACHMENTS);
     }
 }

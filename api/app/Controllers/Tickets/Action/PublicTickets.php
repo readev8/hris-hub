@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Action;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -44,7 +45,7 @@ class PublicTickets extends BaseApi
         $trackingCode = 'TKT-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2)));
 
         $this->db()->transStart();
-        $this->db()->table('tickets')->insert([
+        $this->db()->table(Tables::TICKETS)->insert([
             'title'          => $title,
             'description'    => $description,
             'type'           => $type,
@@ -68,7 +69,7 @@ class PublicTickets extends BaseApi
         }
 
         try {
-            $this->db()->table('audit_logs')->insert([
+            $this->db()->table(Tables::AUDIT_LOGS)->insert([
                 'entity_type' => 'ticket',
                 'entity_id'   => $ticketId,
                 'user_id'     => null,

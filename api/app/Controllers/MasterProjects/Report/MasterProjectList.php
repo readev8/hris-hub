@@ -5,56 +5,57 @@ namespace App\Controllers\MasterProjects\Report;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class MasterProjectList extends BaseApi
 {
     public function get_list(): ResponseInterface
     {
-        $projects = $this->db()->table('master_projects')
-            ->select('master_projects.*, users.full_name as creator_name')
-            ->join('users', 'users.id = master_projects.created_by', 'left')
-            ->where('master_projects.active', 0)
-            ->orderBy('master_projects.created_at', 'DESC')
+        $projects = $this->db()->table(Tables::MASTER_PROJECTS)
+            ->select(Tables::MASTER_PROJECTS . '.*, ' . Tables::USERS . '.full_name as creator_name')
+            ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::MASTER_PROJECTS . '.created_by', 'left')
+            ->where(Tables::MASTER_PROJECTS . '.active', 0)
+            ->orderBy(Tables::MASTER_PROJECTS . '.created_at', 'DESC')
             ->get()
             ->getResultArray();
 
         $result = [];
         foreach ($projects as $p) {
-            $moduleCount = $this->db()->table('modules')
+            $moduleCount = $this->db()->table(Tables::MODULES)
                 ->where('master_project_id', $p['id'])
                 ->where('active', 0)
                 ->countAllResults();
 
-            $bugCount = $this->db()->table('tickets')
-                ->join('pages', 'pages.id = tickets.page_id')
-                ->join('modules', 'modules.id = pages.module_id')
-                ->where('modules.master_project_id', $p['id'])
-                ->where('tickets.type', Enums::TICKET_TYPE_BUG)
-                ->where('tickets.active', 0)
-                ->where('pages.active', 0)
-                ->where('modules.active', 0)
+            $bugCount = $this->db()->table(Tables::TICKETS)
+                ->join(Tables::PAGES, Tables::PAGES . '.id = ' . Tables::TICKETS . '.page_id')
+                ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id')
+                ->where(Tables::MODULES . '.master_project_id', $p['id'])
+                ->where(Tables::TICKETS . '.type', Enums::TICKET_TYPE_BUG)
+                ->where(Tables::TICKETS . '.active', 0)
+                ->where(Tables::PAGES . '.active', 0)
+                ->where(Tables::MODULES . '.active', 0)
                 ->countAllResults();
 
-            $bugOpen = $this->db()->table('tickets')
-                ->join('pages', 'pages.id = tickets.page_id')
-                ->join('modules', 'modules.id = pages.module_id')
-                ->where('modules.master_project_id', $p['id'])
-                ->where('tickets.type', Enums::TICKET_TYPE_BUG)
-                ->where('tickets.active', 0)
-                ->where('pages.active', 0)
-                ->where('modules.active', 0)
-                ->whereIn('tickets.status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
+            $bugOpen = $this->db()->table(Tables::TICKETS)
+                ->join(Tables::PAGES, Tables::PAGES . '.id = ' . Tables::TICKETS . '.page_id')
+                ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id')
+                ->where(Tables::MODULES . '.master_project_id', $p['id'])
+                ->where(Tables::TICKETS . '.type', Enums::TICKET_TYPE_BUG)
+                ->where(Tables::TICKETS . '.active', 0)
+                ->where(Tables::PAGES . '.active', 0)
+                ->where(Tables::MODULES . '.active', 0)
+                ->whereIn(Tables::TICKETS . '.status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
                 ->countAllResults();
 
-            $bugClosed = $this->db()->table('tickets')
-                ->join('pages', 'pages.id = tickets.page_id')
-                ->join('modules', 'modules.id = pages.module_id')
-                ->where('modules.master_project_id', $p['id'])
-                ->where('tickets.type', Enums::TICKET_TYPE_BUG)
-                ->where('tickets.active', 0)
-                ->where('pages.active', 0)
-                ->where('modules.active', 0)
-                ->whereIn('tickets.status', [Enums::TICKET_STATUS_RESOLVED, Enums::TICKET_STATUS_CLOSED])
+            $bugClosed = $this->db()->table(Tables::TICKETS)
+                ->join(Tables::PAGES, Tables::PAGES . '.id = ' . Tables::TICKETS . '.page_id')
+                ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id')
+                ->where(Tables::MODULES . '.master_project_id', $p['id'])
+                ->where(Tables::TICKETS . '.type', Enums::TICKET_TYPE_BUG)
+                ->where(Tables::TICKETS . '.active', 0)
+                ->where(Tables::PAGES . '.active', 0)
+                ->where(Tables::MODULES . '.active', 0)
+                ->whereIn(Tables::TICKETS . '.status', [Enums::TICKET_STATUS_RESOLVED, Enums::TICKET_STATUS_CLOSED])
                 ->countAllResults();
 
             $result[] = [
@@ -77,7 +78,7 @@ class MasterProjectList extends BaseApi
 
     public function get_active(): ResponseInterface
     {
-        $projects = $this->db()->table('master_projects')
+        $projects = $this->db()->table(Tables::MASTER_PROJECTS)
             ->select('id, name')
             ->where('status', 1)
             ->where('active', 0)
@@ -101,7 +102,7 @@ class MasterProjectList extends BaseApi
         $projectId = $this->resolveId($encryptedProjectId);
         if (!$projectId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $modules = $this->db()->table('modules')
+        $modules = $this->db()->table(Tables::MODULES)
             ->where('master_project_id', $projectId)
             ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
@@ -124,7 +125,7 @@ class MasterProjectList extends BaseApi
         $moduleId = $this->resolveId($encryptedModuleId);
         if (!$moduleId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $pages = $this->db()->table('pages')
+        $pages = $this->db()->table(Tables::PAGES)
             ->where('module_id', $moduleId)
             ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
@@ -151,27 +152,27 @@ class MasterProjectList extends BaseApi
         $moduleId = !empty($params['moduleId']) ? $this->resolveId($params['moduleId']) : null;
         $pageId   = !empty($params['pageId'])   ? $this->resolveId($params['pageId'])   : null;
 
-        $builder = $this->db()->table('tickets')
-            ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name, pages.name as page_name')
-            ->join('pages', 'pages.id = tickets.page_id', 'left')
-            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
-            ->join('modules', 'modules.id = pages.module_id', 'left')
-            ->where('tickets.status !=', Enums::TICKET_STATUS_REJECTED)
-            ->where('tickets.active', 0)
-            ->where('pages.active', 0)
-            ->where('modules.active', 0);
+        $builder = $this->db()->table(Tables::TICKETS)
+            ->select(Tables::TICKETS . '.*, creator.full_name as creator_name, assignee.full_name as assignee_name, ' . Tables::PAGES . '.name as page_name')
+            ->join(Tables::PAGES, Tables::PAGES . '.id = ' . Tables::TICKETS . '.page_id', 'left')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+            ->join(Tables::USERS . ' as assignee', 'assignee.id = ' . Tables::TICKETS . '.assignee_id', 'left')
+            ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id', 'left')
+            ->where(Tables::TICKETS . '.status !=', Enums::TICKET_STATUS_REJECTED)
+            ->where(Tables::TICKETS . '.active', 0)
+            ->where(Tables::PAGES . '.active', 0)
+            ->where(Tables::MODULES . '.active', 0);
 
         if ($pageId) {
-            $builder->where('tickets.page_id', $pageId);
+            $builder->where(Tables::TICKETS . '.page_id', $pageId);
         } elseif ($moduleId) {
-            $builder->where('modules.id', $moduleId);
+            $builder->where(Tables::MODULES . '.id', $moduleId);
         } else {
-            $builder->where('modules.master_project_id', $projectId);
+            $builder->where(Tables::MODULES . '.master_project_id', $projectId);
         }
 
-        $tickets = $builder->orderBy('tickets.priority', 'DESC')
-            ->orderBy('tickets.created_at', 'ASC')
+        $tickets = $builder->orderBy(Tables::TICKETS . '.priority', 'DESC')
+            ->orderBy(Tables::TICKETS . '.created_at', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -218,13 +219,13 @@ class MasterProjectList extends BaseApi
         $pageId = $this->resolveId($encryptedPageId);
         if (!$pageId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $bugs = $this->db()->table('tickets')
-            ->select('tickets.*, creator.full_name as creator_name')
-            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->where('tickets.page_id', $pageId)
-            ->where('tickets.type', Enums::TICKET_TYPE_BUG)
-            ->where('tickets.active', 0)
-            ->orderBy('tickets.created_at', 'DESC')
+        $bugs = $this->db()->table(Tables::TICKETS)
+            ->select(Tables::TICKETS . '.*, creator.full_name as creator_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+            ->where(Tables::TICKETS . '.page_id', $pageId)
+            ->where(Tables::TICKETS . '.type', Enums::TICKET_TYPE_BUG)
+            ->where(Tables::TICKETS . '.active', 0)
+            ->orderBy(Tables::TICKETS . '.created_at', 'DESC')
             ->get()
             ->getResultArray();
 
@@ -247,13 +248,13 @@ class MasterProjectList extends BaseApi
 
     public function get_available_blueprint_modules(): ResponseInterface
     {
-        $modules = $this->db()->table('blueprint_modules')
-            ->select('blueprint_modules.*, blueprints.name as blueprint_name')
-            ->join('blueprints', 'blueprints.id = blueprint_modules.blueprint_id', 'left')
-            ->where('blueprint_modules.active', 0)
-            ->where('blueprints.active', 0)
-            ->orderBy('blueprints.name', 'ASC')
-            ->orderBy('blueprint_modules.sort_order', 'ASC')
+        $modules = $this->db()->table(Tables::BLUEPRINT_MODULES)
+            ->select(Tables::BLUEPRINT_MODULES . '.*, ' . Tables::BLUEPRINTS . '.name as blueprint_name')
+            ->join(Tables::BLUEPRINTS, Tables::BLUEPRINTS . '.id = ' . Tables::BLUEPRINT_MODULES . '.blueprint_id', 'left')
+            ->where(Tables::BLUEPRINT_MODULES . '.active', 0)
+            ->where(Tables::BLUEPRINTS . '.active', 0)
+            ->orderBy(Tables::BLUEPRINTS . '.name', 'ASC')
+            ->orderBy(Tables::BLUEPRINT_MODULES . '.sort_order', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -267,8 +268,8 @@ class MasterProjectList extends BaseApi
                     'modules'        => [],
                 ];
             }
-            $scenarioCount = $this->db()->table('blueprint_business_scenarios')->where('module_id', $m['id'])->where('active', 0)->countAllResults();
-            $designPageCount = $this->db()->table('blueprint_design_pages')->where('module_id', $m['id'])->where('active', 0)->countAllResults();
+            $scenarioCount = $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)->where('module_id', $m['id'])->where('active', 0)->countAllResults();
+            $designPageCount = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->where('module_id', $m['id'])->where('active', 0)->countAllResults();
 
             $grouped[$bpId]['modules'][] = [
                 'id'              => $this->api->encryptId($m['id']),
@@ -290,7 +291,7 @@ class MasterProjectList extends BaseApi
         if ($encryptedModuleId) {
             $moduleId = $this->resolveId($encryptedModuleId);
             if ($moduleId) {
-                $assignedBmIds = $this->db()->table('module_blueprint_modules')
+                $assignedBmIds = $this->db()->table(Tables::MODULE_BLUEPRINT_MODULES)
                     ->select('blueprint_module_id')
                     ->where('module_id', $moduleId)
                     ->get()
@@ -299,10 +300,10 @@ class MasterProjectList extends BaseApi
             }
         }
 
-        $builder = $this->db()->table('blueprint_design_pages as bdp')
+        $builder = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES . ' as bdp')
             ->select('bdp.*, bm.name as blueprint_module_name, b.name as blueprint_name')
-            ->join('blueprint_modules as bm', 'bm.id = bdp.module_id AND bm.active = 0', 'left')
-            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
+            ->join(Tables::BLUEPRINT_MODULES . ' as bm', 'bm.id = bdp.module_id AND bm.active = 0', 'left')
+            ->join(Tables::BLUEPRINTS . ' as b', 'b.id = bm.blueprint_id AND b.active = 0', 'left')
             ->where('bdp.active', 0);
 
         if (!empty($moduleBmIds)) {
@@ -328,7 +329,7 @@ class MasterProjectList extends BaseApi
                     'design_pages'         => [],
                 ];
             }
-            $specCount = $this->db()->table('blueprint_page_specifications')
+            $specCount = $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)
                 ->where('design_page_id', $dp['id'])
                 ->where('active', 0)
                 ->countAllResults();

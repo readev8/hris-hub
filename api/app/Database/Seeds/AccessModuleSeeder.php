@@ -3,6 +3,7 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
+use Config\Tables;
 
 class AccessModuleSeeder extends Seeder
 {
@@ -19,7 +20,7 @@ class AccessModuleSeeder extends Seeder
         ];
 
         foreach ($modules as $mod) {
-            $this->db->table('access_modules')->insert($mod);
+            $this->db->table(Tables::ACCESS_MODULES)->insert($mod);
         }
     }
 }

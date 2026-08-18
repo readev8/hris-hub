@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateProjectAttachments extends Migration
 {
@@ -19,13 +20,13 @@ class CreateProjectAttachments extends Migration
             'created_at'  => ['type' => 'TIMESTAMP', 'null' => true, 'default' => null],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('project_id', 'projects', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('uploaded_by', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('project_attachments');
+        $this->forge->addForeignKey('project_id', Tables::PROJECTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('uploaded_by', Tables::USERS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::PROJECT_ATTACHMENTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('project_attachments');
+        $this->forge->dropTable(Tables::PROJECT_ATTACHMENTS);
     }
 }

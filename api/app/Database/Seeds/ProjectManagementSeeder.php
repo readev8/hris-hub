@@ -3,6 +3,7 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
+use Config\Tables;
 
 class ProjectManagementSeeder extends Seeder
 {
@@ -16,10 +17,10 @@ class ProjectManagementSeeder extends Seeder
             ['user_id' => 'USR-004', 'full_name' => 'Andi ITManager',  'email' => 'itmanager@pm.test', 'role_id' => 4, 'is_active' => 1],
             ['user_id' => 'USR-005', 'full_name' => 'Admin Sistem',    'email' => 'admin@pm.test', 'role_id' => 5, 'is_active' => 1],
         ];
-        $this->db->table('users')->insertBatch($users);
+        $this->db->table(Tables::USERS)->insertBatch($users);
 
         // API key for web/ app
-        $this->db->table('api_keys')->insert([
+        $this->db->table(Tables::API_KEYS)->insert([
             'api_key' => '0a99ba4084fbfd7c59188477d177f8daaf45b742a8dfadf47aecb114aace8341',
             'name'    => 'Web App Service Key',
             'is_active' => 1,

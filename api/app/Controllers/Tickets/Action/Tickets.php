@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Action;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use App\Libraries\AuditLogger;
@@ -61,7 +62,7 @@ class Tickets extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('tickets')->insert([
+        $this->db()->table(Tables::TICKETS)->insert([
             'title'          => $title,
             'description'    => $description,
             'type'           => $type,
@@ -79,7 +80,7 @@ class Tickets extends BaseApi
         ]);
         $ticketId = $this->db()->insertID();
 
-        $row = $this->db()->table('tickets')->where('id', $ticketId)->get()->getRowArray();
+        $row = $this->db()->table(Tables::TICKETS)->where('id', $ticketId)->get()->getRowArray();
         $trackingCode = $row['tracking_code'] ?? null;
 
         $this->audit->log($userId, 'ticket', $ticketId, 'create_ticket', null, [
@@ -99,7 +100,7 @@ class Tickets extends BaseApi
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
         return $this->transition($id, Enums::TICKET_STATUS_IN_PROGRESS, function ($ticket, $userId) {
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'assignee_id' => $userId,
                 'status'      => Enums::TICKET_STATUS_IN_PROGRESS,
                 'updated_at'  => date('Y-m-d H:i:s'),
@@ -122,7 +123,7 @@ class Tickets extends BaseApi
         }
 
         return $this->transition($id, Enums::TICKET_STATUS_RESOLVED, function ($ticket, $userId) use ($note) {
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'status'          => Enums::TICKET_STATUS_RESOLVED,
                 'resolution_note' => $note,
                 'updated_at'      => date('Y-m-d H:i:s'),
@@ -140,7 +141,7 @@ class Tickets extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         $creatorId = (int) $ticket['creator_id'];
@@ -149,7 +150,7 @@ class Tickets extends BaseApi
         }
 
         return $this->transition($id, Enums::TICKET_STATUS_CLOSED, function ($ticket, $userId) {
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'status'     => Enums::TICKET_STATUS_CLOSED,
                 'closed_at'  => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
@@ -172,7 +173,7 @@ class Tickets extends BaseApi
         }
 
         return $this->transition($id, Enums::TICKET_STATUS_OPEN, function ($ticket, $userId) use ($note) {
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'status'         => Enums::TICKET_STATUS_OPEN,
                 'rejection_note' => $note,
                 'closed_at'      => null,
@@ -196,7 +197,7 @@ class Tickets extends BaseApi
         }
 
         return $this->transition($id, Enums::TICKET_STATUS_APPROVED, function ($ticket, $userId) {
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'status'     => Enums::TICKET_STATUS_APPROVED,
                 'updated_at' => date('Y-m-d H:i:s'),
             ], ['id' => $ticket['id']]);
@@ -223,7 +224,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Catatan penolakan wajib diisi', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['creator_id'] !== $userId && $this->getCurrentUserRole() !== Enums::ADMIN) {
@@ -231,7 +232,7 @@ class Tickets extends BaseApi
         }
 
         return $this->transition($id, Enums::TICKET_STATUS_REJECTED, function ($ticket, $userId) use ($note) {
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'status'         => Enums::TICKET_STATUS_REJECTED,
                 'rejection_note' => $note,
                 'updated_at'     => date('Y-m-d H:i:s'),
@@ -252,12 +253,12 @@ class Tickets extends BaseApi
                 ? Enums::TICKET_STATUS_IN_PROGRESS
                 : Enums::TICKET_STATUS_APPROVED;
 
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'status'     => $newStatus,
                 'updated_at' => date('Y-m-d H:i:s'),
             ], ['id' => $ticket['id']]);
 
-            $this->db()->table('approval_requests')->insert([
+            $this->db()->table(Tables::APPROVAL_REQUESTS)->insert([
                 'ticket_id'       => $ticket['id'],
                 'requester_id'    => $ticket['creator_id'],
                 'approver_id'     => $userId,
@@ -278,12 +279,12 @@ class Tickets extends BaseApi
     public function approve_dept(string $encryptedId): ResponseInterface
     {
         return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_DEPT, function ($ticket, $userId) {
-            $this->db()->table('tickets')->update([
+            $this->db()->table(Tables::TICKETS)->update([
                 'status'     => Enums::TICKET_STATUS_IN_PROGRESS,
                 'updated_at' => date('Y-m-d H:i:s'),
             ], ['id' => $ticket['id']]);
 
-            $this->db()->table('approval_requests')->insert([
+            $this->db()->table(Tables::APPROVAL_REQUESTS)->insert([
                 'ticket_id'       => $ticket['id'],
                 'requester_id'    => $ticket['creator_id'],
                 'approver_id'     => $userId,
@@ -320,7 +321,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Alasan penolakan wajib diisi', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['needs_approval'] !== 1) {
@@ -350,13 +351,13 @@ class Tickets extends BaseApi
             : Enums::STAGE_PENDING_DEPT;
 
         $this->db()->transStart();
-        $this->db()->table('tickets')->update([
+        $this->db()->table(Tables::TICKETS)->update([
             'status'         => Enums::TICKET_STATUS_REJECTED,
             'rejection_note' => $notes,
             'updated_at'     => date('Y-m-d H:i:s'),
         ], ['id' => $ticket['id']]);
 
-        $this->db()->table('approval_requests')->insert([
+        $this->db()->table(Tables::APPROVAL_REQUESTS)->insert([
             'ticket_id'       => $ticket['id'],
             'requester_id'    => $ticket['creator_id'],
             'approver_id'     => $userId,
@@ -388,7 +389,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk resubmit ticket', null, 403);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['status'] !== Enums::TICKET_STATUS_REJECTED) {
@@ -400,13 +401,13 @@ class Tickets extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('tickets')->update([
+        $this->db()->table(Tables::TICKETS)->update([
             'status'         => Enums::TICKET_STATUS_OPEN,
             'rejection_note' => null,
             'updated_at'     => date('Y-m-d H:i:s'),
         ], ['id' => $ticket['id']]);
 
-        $this->db()->table('approval_requests')->insert([
+        $this->db()->table(Tables::APPROVAL_REQUESTS)->insert([
             'ticket_id'       => $ticket['id'],
             'requester_id'    => $userId,
             'approver_id'     => null,
@@ -436,7 +437,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk approve ticket', null, 403);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if ((int) $ticket['needs_approval'] !== 1) {
@@ -501,11 +502,11 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Komentar tidak boleh kosong', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('ticket_comments')->insert([
+        $this->db()->table(Tables::TICKET_COMMENTS)->insert([
             'ticket_id'  => $id,
             'user_id'    => $userId,
             'content'    => $content,
@@ -555,7 +556,7 @@ class Tickets extends BaseApi
                 $update['assignee_id'] = $userId;
             }
 
-            $this->db()->table('tickets')->update($update, ['id' => $ticket['id']]);
+            $this->db()->table(Tables::TICKETS)->update($update, ['id' => $ticket['id']]);
 
             $this->audit->log($userId, 'ticket', $ticket['id'], 'move_ticket', ['status' => $ticket['status']], ['status' => $newStatus]);
 
@@ -571,7 +572,7 @@ class Tickets extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         if (!$this->checkTicketOwnership($id)) {
@@ -626,7 +627,7 @@ class Tickets extends BaseApi
         ];
 
         $this->db()->transStart();
-        $this->db()->table('tickets')->update($new, ['id' => $id]);
+        $this->db()->table(Tables::TICKETS)->update($new, ['id' => $id]);
         $this->audit->log($userId, 'ticket', $id, 'update_ticket', $old, $new);
         $this->db()->transComplete();
 
@@ -640,7 +641,7 @@ class Tickets extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $ticket = $this->db()->table('tickets')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$ticket) {
             return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
         }

@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateMasterUserTypes extends Migration
 {
@@ -18,9 +19,9 @@ class CreateMasterUserTypes extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addKey('active');
-        $this->forge->createTable('master_user_types');
+        $this->forge->createTable(Tables::MASTER_USER_TYPES);
 
-        $this->db->query("ALTER TABLE `master_user_types` ADD UNIQUE KEY `uq_master_user_types_name` (`name`)");
+        $this->db->query("ALTER TABLE `" . Tables::MASTER_USER_TYPES . "` ADD UNIQUE KEY `uq_master_user_types_name` (`name`)");
 
         $this->forge->addField([
             'id'           => ['type' => 'INT', 'unsigned' => true, 'auto_increment' => true],
@@ -29,15 +30,15 @@ class CreateMasterUserTypes extends Migration
             'created_at'   => ['type' => 'TIMESTAMP', 'null' => true, 'default' => null],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('project_user_types');
+        $this->forge->createTable(Tables::PROJECT_USER_TYPES);
 
-        $this->db->query("ALTER TABLE `project_user_types` ADD UNIQUE KEY `uq_put_project_type` (`project_id`, `user_type_id`)");
+        $this->db->query("ALTER TABLE `" . Tables::PROJECT_USER_TYPES . "` ADD UNIQUE KEY `uq_put_project_type` (`project_id`, `user_type_id`)");
 
-        $this->db->query("ALTER TABLE `project_user_types` ADD CONSTRAINT `fk_put_project` FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE ON UPDATE CASCADE");
-        $this->db->query("ALTER TABLE `project_user_types` ADD CONSTRAINT `fk_put_user_type` FOREIGN KEY (`user_type_id`) REFERENCES `master_user_types`(`id`) ON DELETE CASCADE ON UPDATE CASCADE");
+        $this->db->query("ALTER TABLE `" . Tables::PROJECT_USER_TYPES . "` ADD CONSTRAINT `fk_put_project` FOREIGN KEY (`project_id`) REFERENCES `" . Tables::PROJECTS . "`(`id`) ON DELETE CASCADE ON UPDATE CASCADE");
+        $this->db->query("ALTER TABLE `" . Tables::PROJECT_USER_TYPES . "` ADD CONSTRAINT `fk_put_user_type` FOREIGN KEY (`user_type_id`) REFERENCES `" . Tables::MASTER_USER_TYPES . "`(`id`) ON DELETE CASCADE ON UPDATE CASCADE");
 
         $now = date('Y-m-d H:i:s');
-        $this->db->table('master_user_types')->insertBatch([
+        $this->db->table(Tables::MASTER_USER_TYPES)->insertBatch([
             ['name' => 'Admin Departemen', 'description' => 'Administrator departemen yang mengelola sistem', 'active' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Kepala Departemen', 'description' => 'Kepala departemen yang melakukan approval', 'active' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'User (Sistem)', 'description' => 'Pengguna sistem yang menggunakan aplikasi', 'active' => 1, 'created_at' => $now, 'updated_at' => $now],
@@ -46,9 +47,9 @@ class CreateMasterUserTypes extends Migration
 
     public function down()
     {
-        $this->db->query("ALTER TABLE `project_user_types` DROP FOREIGN KEY `fk_put_project`");
-        $this->db->query("ALTER TABLE `project_user_types` DROP FOREIGN KEY `fk_put_user_type`");
-        $this->forge->dropTable('project_user_types');
-        $this->forge->dropTable('master_user_types');
+        $this->db->query("ALTER TABLE `" . Tables::PROJECT_USER_TYPES . "` DROP FOREIGN KEY `fk_put_project`");
+        $this->db->query("ALTER TABLE `" . Tables::PROJECT_USER_TYPES . "` DROP FOREIGN KEY `fk_put_user_type`");
+        $this->forge->dropTable(Tables::PROJECT_USER_TYPES);
+        $this->forge->dropTable(Tables::MASTER_USER_TYPES);
     }
 }

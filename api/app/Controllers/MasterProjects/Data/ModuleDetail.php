@@ -5,6 +5,7 @@ namespace App\Controllers\MasterProjects\Data;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class ModuleDetail extends BaseApi
 {
@@ -13,18 +14,18 @@ class ModuleDetail extends BaseApi
         $moduleId = $this->resolveId($encryptedModuleId);
         if (!$moduleId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $module = $this->db()->table('modules')
-            ->where('modules.id', $moduleId)
-            ->where('modules.active', 0)
+        $module = $this->db()->table(Tables::MODULES)
+            ->where(Tables::MODULES . '.id', $moduleId)
+            ->where(Tables::MODULES . '.active', 0)
             ->get()
             ->getRowArray();
 
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
-        $blueprintModules = $this->db()->table('module_blueprint_modules as mbm')
+        $blueprintModules = $this->db()->table(Tables::MODULE_BLUEPRINT_MODULES . ' as mbm')
             ->select('bm.id as bm_id, bm.name as bm_name, b.id as bp_id, b.name as bp_name')
-            ->join('blueprint_modules as bm', 'bm.id = mbm.blueprint_module_id AND bm.active = 0')
-            ->join('blueprints as b', 'b.id = bm.blueprint_id AND b.active = 0')
+            ->join(Tables::BLUEPRINT_MODULES . ' as bm', 'bm.id = mbm.blueprint_module_id AND bm.active = 0')
+            ->join(Tables::BLUEPRINTS . ' as b', 'b.id = bm.blueprint_id AND b.active = 0')
             ->where('mbm.module_id', $moduleId)
             ->get()
             ->getResultArray();
@@ -34,31 +35,31 @@ class ModuleDetail extends BaseApi
         }
         unset($bm);
 
-        $pages = $this->db()->table('pages')
-            ->select('pages.*, bdp.title as blueprint_design_page_title')
-            ->join('blueprint_design_pages as bdp', 'bdp.id = pages.blueprint_design_page_id AND bdp.active = 0', 'left')
-            ->where('pages.module_id', $moduleId)
-            ->where('pages.active', 0)
-            ->orderBy('pages.sort_order', 'ASC')
+        $pages = $this->db()->table(Tables::PAGES)
+            ->select(Tables::PAGES . '.*, bdp.title as blueprint_design_page_title')
+            ->join(Tables::BLUEPRINT_DESIGN_PAGES . ' as bdp', 'bdp.id = ' . Tables::PAGES . '.blueprint_design_page_id AND bdp.active = 0', 'left')
+            ->where(Tables::PAGES . '.module_id', $moduleId)
+            ->where(Tables::PAGES . '.active', 0)
+            ->orderBy(Tables::PAGES . '.sort_order', 'ASC')
             ->get()
             ->getResultArray();
 
         $pageList = [];
         foreach ($pages as $p) {
-            $bugTotal = $this->db()->table('tickets')
+            $bugTotal = $this->db()->table(Tables::TICKETS)
                 ->where('page_id', $p['id'])
                 ->where('type', Enums::TICKET_TYPE_BUG)
                 ->where('active', 0)
                 ->countAllResults();
 
-            $bugOpen = $this->db()->table('tickets')
+            $bugOpen = $this->db()->table(Tables::TICKETS)
                 ->where('page_id', $p['id'])
                 ->where('type', Enums::TICKET_TYPE_BUG)
                 ->whereIn('status', [Enums::TICKET_STATUS_OPEN, Enums::TICKET_STATUS_APPROVED, Enums::TICKET_STATUS_IN_PROGRESS])
                 ->where('active', 0)
                 ->countAllResults();
 
-            $bugResolved = $this->db()->table('tickets')
+            $bugResolved = $this->db()->table(Tables::TICKETS)
                 ->where('page_id', $p['id'])
                 ->where('type', Enums::TICKET_TYPE_BUG)
                 ->whereIn('status', [Enums::TICKET_STATUS_RESOLVED, Enums::TICKET_STATUS_CLOSED])
@@ -67,7 +68,7 @@ class ModuleDetail extends BaseApi
 
             $pageSpecs = null;
             if (!empty($p['blueprint_design_page_id'])) {
-                $specsRows = $this->db()->table('blueprint_page_specifications')
+                $specsRows = $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)
                     ->where('design_page_id', $p['blueprint_design_page_id'])
                     ->where('active', 0)
                     ->orderBy('sort_order', 'ASC')

@@ -5,6 +5,7 @@ namespace App\Controllers\Blueprints\Action;
 use App\Controllers\BaseApi;
 use App\Libraries\AuditLogger;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class BusinessScenarios extends BaseApi
 {
@@ -35,13 +36,13 @@ class BusinessScenarios extends BaseApi
             return $this->JSONResponse('Judul wajib diisi', null, 400);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::BLUEPRINT_MODULES)->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_business_scenarios')->where('module_id', $moduleId)->where('active', 0)->countAllResults();
+        $maxSort = $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)->where('module_id', $moduleId)->where('active', 0)->countAllResults();
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_business_scenarios')->insert([
+        $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)->insert([
             'module_id'      => $moduleId,
             'title'          => $title,
             'description'    => $this->sanitizeRichText($rawInput['description'] ?? ''),
@@ -79,7 +80,7 @@ class BusinessScenarios extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $scenario = $this->db()->table('blueprint_business_scenarios')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $scenario = $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$scenario) return $this->JSONResponse('Business scenario tidak ditemukan', null, 404);
 
         $rawInput = $this->req->getJSON(true) ?? $this->req->getPost();
@@ -98,7 +99,7 @@ class BusinessScenarios extends BaseApi
         $update['updated_at'] = date('Y-m-d H:i:s');
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_business_scenarios')->update($update, ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)->update($update, ['id' => $id]);
         $this->audit->log($userId, 'blueprint_scenario', $id, 'update', null, $update);
         $this->db()->transComplete();
 
@@ -119,11 +120,11 @@ class BusinessScenarios extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $scenario = $this->db()->table('blueprint_business_scenarios')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $scenario = $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$scenario) return $this->JSONResponse('Business scenario tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_business_scenarios')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint_scenario', $id, 'delete', null, ['title' => $scenario['title']]);
         $this->db()->transComplete();
 

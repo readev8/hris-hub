@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateApprovalRequests extends Migration
 {
@@ -23,14 +24,14 @@ class CreateApprovalRequests extends Migration
         $this->forge->addKey(['project_id']);
         $this->forge->addKey(['approver_id']);
         $this->forge->addKey(['requester_id']);
-        $this->forge->addForeignKey('project_id', 'projects', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('approver_id', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->addForeignKey('requester_id', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('approval_requests');
+        $this->forge->addForeignKey('project_id', Tables::PROJECTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('approver_id', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->addForeignKey('requester_id', Tables::USERS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::APPROVAL_REQUESTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('approval_requests');
+        $this->forge->dropTable(Tables::APPROVAL_REQUESTS);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Controllers\Blueprints\Data;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class BlueprintDetail extends BaseApi
 {
@@ -12,13 +13,13 @@ class BlueprintDetail extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $blueprint = $this->db()->table('blueprints')
-            ->select('blueprints.*, p.id as improvement_id_raw, p.name as improvement_name, creator.full_name as creator_name, approver.full_name as approver_name')
-            ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
-            ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
-            ->join('users as approver', 'approver.id = blueprints.approver_id', 'left')
-            ->where('blueprints.id', $id)
-            ->where('blueprints.active', 0)
+        $blueprint = $this->db()->table(Tables::BLUEPRINTS)
+            ->select(Tables::BLUEPRINTS . '.*, p.id as improvement_id_raw, p.name as improvement_name, creator.full_name as creator_name, approver.full_name as approver_name')
+            ->join(Tables::PROJECTS . ' as p', 'p.id = ' . Tables::BLUEPRINTS . '.improvement_id AND p.active = 0', 'left')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::BLUEPRINTS . '.created_by', 'left')
+            ->join(Tables::USERS . ' as approver', 'approver.id = ' . Tables::BLUEPRINTS . '.approver_id', 'left')
+            ->where(Tables::BLUEPRINTS . '.id', $id)
+            ->where(Tables::BLUEPRINTS . '.active', 0)
             ->get()
             ->getRowArray();
 
@@ -26,7 +27,7 @@ class BlueprintDetail extends BaseApi
             return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
         }
 
-        $modules = $this->db()->table('blueprint_modules')
+        $modules = $this->db()->table(Tables::BLUEPRINT_MODULES)
             ->where('blueprint_id', $id)
             ->where('active', 0)
             ->orderBy('sort_order', 'ASC')
@@ -37,7 +38,7 @@ class BlueprintDetail extends BaseApi
         foreach ($modules as &$mod) {
             $mod['id_encrypted'] = $this->api->encryptId($mod['id']);
 
-            $mod['business_scenarios'] = $this->db()->table('blueprint_business_scenarios')
+            $mod['business_scenarios'] = $this->db()->table(Tables::BLUEPRINT_BUSINESS_SCENARIOS)
                 ->where('module_id', $mod['id'])
                 ->where('active', 0)
                 ->orderBy('sort_order', 'ASC')
@@ -47,7 +48,7 @@ class BlueprintDetail extends BaseApi
                 $bs['id_encrypted'] = $this->api->encryptId($bs['id']);
             }
 
-            $mod['design_pages'] = $this->db()->table('blueprint_design_pages')
+            $mod['design_pages'] = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)
                 ->where('module_id', $mod['id'])
                 ->where('active', 0)
                 ->orderBy('sort_order', 'ASC')
@@ -56,7 +57,7 @@ class BlueprintDetail extends BaseApi
             foreach ($mod['design_pages'] as &$dp) {
                 $dp['id_encrypted'] = $this->api->encryptId($dp['id']);
 
-                $dp['page_specifications'] = $this->db()->table('blueprint_page_specifications')
+                $dp['page_specifications'] = $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)
                     ->where('design_page_id', $dp['id'])
                     ->where('active', 0)
                     ->orderBy('sort_order', 'ASC')
@@ -69,7 +70,7 @@ class BlueprintDetail extends BaseApi
         }
         unset($mod, $bs, $dp, $ps);
 
-        $allAttachments = $this->db()->table('blueprint_attachments')
+        $allAttachments = $this->db()->table(Tables::BLUEPRINT_ATTACHMENTS)
             ->where('blueprint_id', $id)
             ->where('active', 0)
             ->orderBy('created_at', 'ASC')
@@ -112,21 +113,21 @@ class BlueprintDetail extends BaseApi
         unset($mod, $bs, $dp);
         $blueprint['modules'] = $modules;
 
-        $approvals = $this->db()->table('blueprint_approval_requests')
-            ->select('blueprint_approval_requests.*, approver.full_name as approver_name')
-            ->join('users as approver', 'approver.id = blueprint_approval_requests.approver_id', 'left')
-            ->where('blueprint_approval_requests.blueprint_id', $id)
-            ->where('blueprint_approval_requests.active', 0)
-            ->orderBy('blueprint_approval_requests.stage_sequence', 'ASC')
+        $approvals = $this->db()->table(Tables::BLUEPRINT_APPROVAL_REQUESTS)
+            ->select(Tables::BLUEPRINT_APPROVAL_REQUESTS . '.*, approver.full_name as approver_name')
+            ->join(Tables::USERS . ' as approver', 'approver.id = ' . Tables::BLUEPRINT_APPROVAL_REQUESTS . '.approver_id', 'left')
+            ->where(Tables::BLUEPRINT_APPROVAL_REQUESTS . '.blueprint_id', $id)
+            ->where(Tables::BLUEPRINT_APPROVAL_REQUESTS . '.active', 0)
+            ->orderBy(Tables::BLUEPRINT_APPROVAL_REQUESTS . '.stage_sequence', 'ASC')
             ->get()
             ->getResultArray();
 
-        $comments = $this->db()->table('blueprint_comments')
-            ->select('blueprint_comments.*, users.full_name')
-            ->join('users', 'users.id = blueprint_comments.user_id')
-            ->where('blueprint_comments.blueprint_id', $id)
-            ->where('blueprint_comments.active', 0)
-            ->orderBy('blueprint_comments.created_at', 'ASC')
+        $comments = $this->db()->table(Tables::BLUEPRINT_COMMENTS)
+            ->select(Tables::BLUEPRINT_COMMENTS . '.*, ' . Tables::USERS . '.full_name')
+            ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::BLUEPRINT_COMMENTS . '.user_id')
+            ->where(Tables::BLUEPRINT_COMMENTS . '.blueprint_id', $id)
+            ->where(Tables::BLUEPRINT_COMMENTS . '.active', 0)
+            ->orderBy(Tables::BLUEPRINT_COMMENTS . '.created_at', 'ASC')
             ->get()
             ->getResultArray();
 

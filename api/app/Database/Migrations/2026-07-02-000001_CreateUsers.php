@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateUsers extends Migration
 {
@@ -21,11 +22,11 @@ class CreateUsers extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addUniqueKey('email');
         $this->forge->addKey('role');
-        $this->forge->createTable('users');
+        $this->forge->createTable(Tables::USERS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('users');
+        $this->forge->dropTable(Tables::USERS);
     }
 }

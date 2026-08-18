@@ -5,6 +5,7 @@ namespace App\Controllers\MasterProjects\Action;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Modules extends BaseApi
 {
@@ -27,17 +28,17 @@ class Modules extends BaseApi
             return $this->JSONResponse('Nama modul wajib diisi', null, 400);
         }
 
-        $project = $this->db()->table('master_projects')->where('id', $projectId)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::MASTER_PROJECTS)->where('id', $projectId)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Project tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('modules')
+        $maxSort = $this->db()->table(Tables::MODULES)
             ->selectMax('sort_order')
             ->where('master_project_id', $projectId)
             ->where('active', 0)
             ->get()
             ->getRowArray();
 
-        $this->db()->table('modules')->insert([
+        $this->db()->table(Tables::MODULES)->insert([
             'master_project_id' => $projectId,
             'name'              => $name,
             'description'       => trim($input['description'] ?? ''),
@@ -66,7 +67,7 @@ class Modules extends BaseApi
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
 
-        $this->db()->table('modules')->update([
+        $this->db()->table(Tables::MODULES)->update([
             'name'        => trim($input['name'] ?? ''),
             'description' => trim($input['description'] ?? ''),
             'updated_at'  => date('Y-m-d H:i:s'),
@@ -87,7 +88,7 @@ class Modules extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus modul', null, 403);
         }
 
-        $this->db()->table('modules')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::MODULES)->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Modul berhasil dihapus');
     }
 
@@ -106,21 +107,21 @@ class Modules extends BaseApi
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $blueprintModuleId = !empty($input['blueprint_module_id']) ? $this->resolveId($input['blueprint_module_id']) : null;
 
-        $module = $this->db()->table('modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::MODULES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         if ($blueprintModuleId) {
-            $blueprintModule = $this->db()->table('blueprint_modules')->where('id', $blueprintModuleId)->where('active', 0)->get()->getRowArray();
+            $blueprintModule = $this->db()->table(Tables::BLUEPRINT_MODULES)->where('id', $blueprintModuleId)->where('active', 0)->get()->getRowArray();
             if (!$blueprintModule) return $this->JSONResponse('Blueprint module tidak ditemukan', null, 404);
         }
 
-        $existing = $this->db()->table('module_blueprint_modules')
+        $existing = $this->db()->table(Tables::MODULE_BLUEPRINT_MODULES)
             ->where('module_id', $id)
             ->where('blueprint_module_id', $blueprintModuleId)
             ->get()->getRowArray();
 
         if (!$existing) {
-            $this->db()->table('module_blueprint_modules')->insert([
+            $this->db()->table(Tables::MODULE_BLUEPRINT_MODULES)->insert([
                 'module_id'           => $id,
                 'blueprint_module_id' => $blueprintModuleId,
                 'created_at'          => date('Y-m-d H:i:s'),
@@ -145,14 +146,14 @@ class Modules extends BaseApi
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $blueprintModuleId = !empty($input['blueprint_module_id']) ? $this->resolveId($input['blueprint_module_id']) : null;
 
-        $module = $this->db()->table('modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::MODULES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         if (!$blueprintModuleId) {
             return $this->JSONResponse('blueprint_module_id wajib diisi', null, 400);
         }
 
-        $this->db()->table('module_blueprint_modules')
+        $this->db()->table(Tables::MODULE_BLUEPRINT_MODULES)
             ->where('module_id', $id)
             ->where('blueprint_module_id', $blueprintModuleId)
             ->delete();

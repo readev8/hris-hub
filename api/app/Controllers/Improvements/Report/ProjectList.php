@@ -4,6 +4,7 @@ namespace App\Controllers\Improvements\Report;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class ProjectList extends BaseApi
 {
@@ -16,21 +17,21 @@ class ProjectList extends BaseApi
         $status = $params['status'] ?? '';
         $priority = $params['priority'] ?? '';
 
-        $builder = $this->db()->table('projects')
-            ->select('projects.*, creator.full_name as creator_name')
-            ->join('users as creator', 'creator.id = projects.created_by', 'left')
-            ->where('projects.active', 0);
+        $builder = $this->db()->table(Tables::PROJECTS)
+            ->select(Tables::PROJECTS . '.*, creator.full_name as creator_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::PROJECTS . '.created_by', 'left')
+            ->where(Tables::PROJECTS . '.active', 0);
 
-        if ($status !== '') $builder->where('projects.status', (int) $status);
-        if ($priority !== '') $builder->where('projects.priority', (int) $priority);
+        if ($status !== '') $builder->where(Tables::PROJECTS . '.status', (int) $status);
+        if ($priority !== '') $builder->where(Tables::PROJECTS . '.priority', (int) $priority);
 
         $excludeBlueprint = !empty($params['exclude_blueprint']);
         if ($excludeBlueprint) {
-            $builder->where('projects.id NOT IN (SELECT improvement_id FROM blueprints WHERE improvement_id IS NOT NULL)', null, false);
+            $builder->where(Tables::PROJECTS . '.id NOT IN (SELECT improvement_id FROM ' . Tables::BLUEPRINTS . ' WHERE improvement_id IS NOT NULL)', null, false);
         }
 
         $total = $builder->countAllResults(false);
-        $rows = $builder->orderBy('projects.id', 'DESC')
+        $rows = $builder->orderBy(Tables::PROJECTS . '.id', 'DESC')
             ->limit($perPage, $offset)
             ->get()
             ->getResultArray();
@@ -60,24 +61,24 @@ class ProjectList extends BaseApi
         $projects = [];
 
         if ($role === \App\Config\Enums::IT_MANAGER || $role === \App\Config\Enums::ADMIN) {
-            $draft = $this->db()->table('projects')
-                ->select('projects.*, creator.full_name as creator_name')
-                ->join('users as creator', 'creator.id = projects.created_by', 'left')
-                ->where('projects.active', 0)
-                ->where('projects.status', \App\Config\Enums::PROJECT_STATUS_DRAFT)
-                ->orderBy('projects.id', 'DESC')
+            $draft = $this->db()->table(Tables::PROJECTS)
+                ->select(Tables::PROJECTS . '.*, creator.full_name as creator_name')
+                ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::PROJECTS . '.created_by', 'left')
+                ->where(Tables::PROJECTS . '.active', 0)
+                ->where(Tables::PROJECTS . '.status', \App\Config\Enums::PROJECT_STATUS_DRAFT)
+                ->orderBy(Tables::PROJECTS . '.id', 'DESC')
                 ->get()
                 ->getResultArray();
             $projects = array_merge($projects, $draft);
         }
 
         if ($role === \App\Config\Enums::DEPT_HEAD || $role === \App\Config\Enums::ADMIN) {
-            $pending = $this->db()->table('projects')
-                ->select('projects.*, creator.full_name as creator_name')
-                ->join('users as creator', 'creator.id = projects.created_by', 'left')
-                ->where('projects.active', 0)
-                ->where('projects.status', \App\Config\Enums::PROJECT_STATUS_PENDING)
-                ->orderBy('projects.id', 'DESC')
+            $pending = $this->db()->table(Tables::PROJECTS)
+                ->select(Tables::PROJECTS . '.*, creator.full_name as creator_name')
+                ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::PROJECTS . '.created_by', 'left')
+                ->where(Tables::PROJECTS . '.active', 0)
+                ->where(Tables::PROJECTS . '.status', \App\Config\Enums::PROJECT_STATUS_PENDING)
+                ->orderBy(Tables::PROJECTS . '.id', 'DESC')
                 ->get()
                 ->getResultArray();
             $projects = array_merge($projects, $pending);

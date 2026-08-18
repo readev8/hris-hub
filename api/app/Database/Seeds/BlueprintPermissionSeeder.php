@@ -3,6 +3,7 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
+use Config\Tables;
 
 class BlueprintPermissionSeeder extends Seeder
 {
@@ -39,7 +40,7 @@ class BlueprintPermissionSeeder extends Seeder
         foreach ($permissions as $slug => $perms) {
             $roleId = $roleMap[$slug];
             foreach ($perms as $perm) {
-                $this->db->table('role_permissions')->insert([
+                $this->db->table(Tables::ROLE_PERMISSIONS)->insert([
                     'role_id'     => $roleId,
                     'module_slug' => 'blueprints',
                     'can_view'    => $perm['can_view'],
