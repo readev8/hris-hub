@@ -274,17 +274,18 @@ const ModuleFlowsCanvas = (function () {
 
         document.getElementById('flow-canvas').appendChild(el);
 
-        // Add endpoints (jsPlumb CE 6 auto-makes managed elements draggable)
+        // Add endpoints — jsPlumb CE 6 reads params.source/params.target
+        // (NOT params.isSource/isTarget) in Endpoint constructor (line 6505-6507)
         jsp.addEndpoint(el, {
             anchor: 'Left',
-            isTarget: true,
+            target: true,
             maxConnections: -1,
             cssClass: 'flow-endpoint flow-endpoint-in',
             parameters: { role: 'input' },
         });
         jsp.addEndpoint(el, {
             anchor: 'Right',
-            isSource: true,
+            source: true,
             maxConnections: -1,
             cssClass: 'flow-endpoint flow-endpoint-out',
             parameters: { role: 'output' },
