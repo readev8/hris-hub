@@ -14,7 +14,6 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/vendor/jsplumb/6.2.10/jsplumb.css?v=' . config('App')->assetVersion) ?>">
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/module-flows/canvas.css?v=' . config('App')->assetVersion) ?>">
 <?= $this->endSection() ?>
 

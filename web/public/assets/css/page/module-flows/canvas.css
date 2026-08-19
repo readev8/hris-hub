@@ -151,6 +151,10 @@
 }
 
 /* ── jsPlumb Endpoint Override ────────────────────────── */
+.jtk-endpoint {
+    z-index: 2;
+}
+
 .flow-endpoint {
     width: 14px !important;
     height: 14px !important;

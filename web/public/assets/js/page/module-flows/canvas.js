@@ -95,11 +95,6 @@ const ModuleFlowsCanvas = (function () {
             maxConnections: -1,
         });
 
-        // Register source selector for interactive drag-to-connect
-        // In jsPlumb CE 6, isSource:true on addEndpoint only allows programmatic
-        // connections. addSourceSelector() is required for interactive drag.
-        jsp.addSourceSelector('.flow-endpoint-out', { maxConnections: -1 });
-
         // Connection events
         jsp.bind('beforeDrop', _onBeforeDrop);
         jsp.bind('connection', _onConnection);
