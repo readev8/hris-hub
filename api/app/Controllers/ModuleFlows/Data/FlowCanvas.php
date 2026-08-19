@@ -23,15 +23,18 @@ class FlowCanvas extends BaseApi
             ->getResultArray();
 
         $nodesOut = [];
+        $moduleIdToEnc = [];
         foreach ($nodes as $n) {
+            $encId = $this->api->encryptId($n['module_id']);
             $nodesOut[] = [
-                'module_id'       => $this->api->encryptId($n['module_id']),
+                'module_id'       => $encId,
                 'name'            => $n['label'] ?: $n['module_name'],
                 'project_id'      => $n['master_project_id'] ? $this->api->encryptId($n['master_project_id']) : null,
                 'project_name'    => $n['project_name'],
                 'pos_x'           => (int) $n['pos_x'],
                 'pos_y'           => (int) $n['pos_y'],
             ];
+            $moduleIdToEnc[(int) $n['module_id']] = $encId;
         }
 
         // ── Available modules (live, not yet on canvas) ───────────
@@ -67,11 +70,15 @@ class FlowCanvas extends BaseApi
 
         $connections = [];
         foreach ($conns as $c) {
-            $connections[] = [
-                'id'      => $this->api->encryptId($c['id']),
-                'from'    => $this->api->encryptId($c['from_module_id']),
-                'to'      => $this->api->encryptId($c['to_module_id']),
-            ];
+            $fromEnc = $moduleIdToEnc[(int) $c['from_module_id']] ?? null;
+            $toEnc   = $moduleIdToEnc[(int) $c['to_module_id']] ?? null;
+            if ($fromEnc && $toEnc) {
+                $connections[] = [
+                    'id'   => $this->api->encryptId($c['id']),
+                    'from' => $fromEnc,
+                    'to'   => $toEnc,
+                ];
+            }
         }
 
         return $this->JSONResponse('OK', [
