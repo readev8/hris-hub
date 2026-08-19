@@ -77,7 +77,7 @@ const ModuleFlowsCanvas = (function () {
         var container = document.getElementById('flow-canvas');
         if (!container) return;
 
-        jsp = new jsPlumb.BrowserJsPlumbInstance({
+        jsp = jsPlumb.newInstance({
             container: container,
             connector: {
                 type: 'Flowchart',
