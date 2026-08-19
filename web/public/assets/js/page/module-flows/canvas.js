@@ -61,6 +61,7 @@ const ModuleFlowsCanvas = (function () {
     var _connMap = {};
     var _selectedNodeId = null;
     var _selectedConnId = null;
+    var _isRendering = false;
 
     // ===========================
     // INITIALIZATION
@@ -124,11 +125,9 @@ const ModuleFlowsCanvas = (function () {
         jsp.deleteEveryConnection();
         var els = document.querySelectorAll('#flow-canvas .jtk-node');
         els.forEach(function (el) {
-            jsp.removeEndpoints(el);
-            jsp.remove(el);
+            jsp.removeAllEndpoints(el);
+            el.parentNode && el.parentNode.removeChild(el);
         });
-        var surface = document.getElementById('flow-canvas');
-        if (surface) surface.innerHTML = '';
     }
 
     // ===========================
@@ -241,6 +240,7 @@ const ModuleFlowsCanvas = (function () {
         });
 
         // Add connections
+        _isRendering = true;
         _canvasConnections.forEach(function (conn) {
             var sourceEl = document.getElementById(conn.from);
             var targetEl = document.getElementById(conn.to);
@@ -256,6 +256,7 @@ const ModuleFlowsCanvas = (function () {
                 }
             }
         });
+        _isRendering = false;
     }
 
     function _createNodeElement(node) {
@@ -322,9 +323,16 @@ const ModuleFlowsCanvas = (function () {
         var sourceId = info.source.id;
         var targetId = info.target.id;
 
+        // During initial render, jsp.connect() fires 'connection' event for each
+        // existing connection. Skip API calls — just populate _connMap.
+        if (_isRendering) {
+            _connMap[sourceId + '>' + targetId] = info.connection.id || '';
+            return;
+        }
+
         // Prevent duplicate (race condition guard)
         if (_connMap[sourceId + '>' + targetId]) {
-            info.connection.detach({ silent: true });
+            jsp.deleteConnection(info.connection, { fireEvent: false });
             return;
         }
 
@@ -332,7 +340,7 @@ const ModuleFlowsCanvas = (function () {
         $.post(ENDPOINTS.ADD_CONNECTION, { from: sourceId, to: targetId }, function (res) {
             if (!res || !res.status) {
                 toastr.error(res?.data?.message || res?.message || 'Gagal membuat koneksi');
-                info.connection.detach({ silent: true });
+                jsp.deleteConnection(info.connection, { fireEvent: false });
                 _showStatus('error');
                 return;
             }
@@ -340,7 +348,7 @@ const ModuleFlowsCanvas = (function () {
             _showSavedStatus();
         }).fail(function () {
             toastr.error('Gagal terhubung ke server');
-            info.connection.detach({ silent: true });
+            jsp.deleteConnection(info.connection, { fireEvent: false });
             _showStatus('error');
         });
     }
@@ -382,7 +390,7 @@ const ModuleFlowsCanvas = (function () {
         }).then(function (result) {
             if (!result.isConfirmed) return;
 
-            conn.detach({ silent: true });
+            jsp.deleteConnection(conn, { fireEvent: false });
 
             _showStatus('saving');
             $.post(ENDPOINTS.DELETE_CONNECTION + connEncId, {}, function (res) {
