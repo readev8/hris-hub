@@ -90,7 +90,7 @@ const ModuleFlowsCanvas = (function () {
             endpointStyle: { fill: '#fff', stroke: '#0D9488', strokeWidth: 2 },
             endpointHoverStyle: { fill: '#0D9488', stroke: '#0f766e', strokeWidth: 2 },
             connectionOverlays: [
-                { type: 'Arrow', options: { width: 10, length: 10, location: 1, foldback: 0.8 } }
+                { type: 'Arrow', options: { width: 10, length: 10, location: 1, foldback: 0.8, paintStyle: { fill: '#0D9488', stroke: '#0D9488' } } }
             ],
             maxConnections: -1,
         });
@@ -249,7 +249,6 @@ const ModuleFlowsCanvas = (function () {
                     source: sourceEl,
                     target: targetEl,
                     anchors: ['Right', 'Left'],
-                    cssClass: 'flow-connection',
                 });
                 if (jsConn) {
                     _connMap[conn.from + '>' + conn.to] = conn.id;

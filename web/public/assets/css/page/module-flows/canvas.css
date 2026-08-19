@@ -170,14 +170,6 @@
     z-index: 0;
 }
 
-.jtk-connector:hover .jtk-overlay {
-    display: block !important;
-}
-
-.flow-connection .jtk-overlay {
-    display: none;
-}
-
 .jtk-connector.selected {
     z-index: 10;
 }
