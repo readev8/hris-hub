@@ -4,25 +4,26 @@
  * ============================================================================
  *
  * Kanvas interaktif visualisasi flow antar modul lintas project.
- * Menggunakan Drawflow 0.0.59 (vanilla JS).
+ * Menggunakan jsPlumb CE 6.2.10 (vanilla JS).
  *
  * Fitur:
  * - Add module dari daftar existing, drag-drop posisi
- * - Connect modules dengan panah arah
+ * - Connect modules dengan panah arah (many-to-many)
  * - Remove connector (klik → konfirmasi SweetAlert2)
  * - Remove node (toolbar → konfirmasi cascade)
  * - Autosave posisi saat drag (debounce 800ms)
  * - Filter project (dim non-selected)
- * - Zoom +/−/fit/reset
- * - Intercept keyboard Delete → konfirmasi (bypass native delete Drawflow)
+ * - Double-click rename label
+ * - Keyboard Delete → konfirmasi
  *
- * Arsitekstur state: mapping sendiri, tidak akses internal Drawflow
- *   _encIdToDfId: { encryptedModuleId → numericDfId }
- *   _dfIdToEncId: { numericDfId → encryptedModuleId }
- *   _connKeyToEncId: { 'fromDfId>toDfId' → encryptedConnectionId }
+ * State:
+ *   jsp             — jsPlumb instance
+ *   _connMap        — { 'encFrom>encTo' → encConnId }
+ *   _selectedNodeId — currently selected node element ID (string|null)
+ *   _selectedConnId — currently selected jsPlumb connection ID (string|null)
  *
- * Dependencies: Drawflow 0.0.59, jQuery, SweetAlert2, Toastr, Select2, GlobalSanitize
- * Date: 2026-08-18
+ * Dependencies: jsPlumb CE 6.2.10, jQuery, SweetAlert2, Toastr, Select2
+ * Date: 2026-08-19
  */
 
 const ModuleFlowsCanvas = (function () {
@@ -49,7 +50,7 @@ const ModuleFlowsCanvas = (function () {
     // ===========================
     // STATE
     // ===========================
-    var editor = null;
+    var jsp = null;
     var _canvasNodes = [];
     var _canvasConnections = [];
     var _availableModules = [];
@@ -57,77 +58,98 @@ const ModuleFlowsCanvas = (function () {
     var _projectColorMap = {};
     var _activeFilter = null;
     var _select2Instance = null;
-
-    // Mappings (Drawflow numeric IDs ↔ encrypted IDs)
-    var _dfIdToEncId = {};
-    var _encIdToDfId = {};
-    var _connKeyToEncId = {};
-
-    // Connection pending selection (for keyboard Delete intercept)
-    var _selectedConnInfo = null;
+    var _connMap = {};
+    var _selectedNodeId = null;
+    var _selectedConnId = null;
 
     // ===========================
     // INITIALIZATION
     // ===========================
     function init() {
-        _initDrawflow();
+        _initJsPlumb();
         _loadCanvas();
         _bindToolbarEvents();
         _bindModalEvents();
         _bindProjectFilter();
     }
 
-    function _initDrawflow() {
-        var container = document.getElementById('drawflow-container');
+    function _initJsPlumb() {
+        var container = document.getElementById('flow-canvas');
         if (!container) return;
 
-        editor = new Drawflow(container);
-        editor.reroute = false;
-        editor.reroute_fix_curvature = false;
-        editor.force_first_input = false;
-        editor.curvature = 0.5;
-        editor.editor_mode = 'edit';
-        editor.start();
+        jsp = new jsPlumb.BrowserJsPlumbInstance({
+            container: container,
+            connector: {
+                type: 'Flowchart',
+                options: { cornerRadius: 5, alwaysRespectStubs: true }
+            },
+            paintStyle: { strokeWidth: 2, stroke: '#0D9488' },
+            hoverPaintStyle: { strokeWidth: 3, stroke: '#0f766e' },
+            endpoint: { type: 'Dot', options: { radius: 5 } },
+            endpointStyle: { fill: '#fff', stroke: '#0D9488', strokeWidth: 2 },
+            endpointHoverStyle: { fill: '#0D9488', stroke: '#0f766e', strokeWidth: 2 },
+            connectionOverlays: [
+                { type: 'Arrow', options: { width: 10, length: 10, location: 1, foldback: 0.8 } }
+            ],
+            maxConnections: -1,
+        });
 
-        editor.on('connectionCreated', _onConnectionCreated);
+        // Connection events
+        jsp.bind('beforeDrop', _onBeforeDrop);
+        jsp.bind('connection', _onConnection);
+        jsp.bind('connectionDetached', _onConnectionDetached);
+        jsp.bind('click', _onConnectionClick);
 
-        // Double-click node → rename label
+        // Drag stop → save positions
+        jsp.bind('drag:stop', function () {
+            _saveAllPositions();
+        });
+
+        // Click on canvas background → clear selection
+        container.addEventListener('mousedown', function (e) {
+            if (e.target === container || e.target.classList.contains('jtk-surface')) {
+                _clearSelection();
+            }
+        });
+
+        // Double-click node → rename
         container.addEventListener('dblclick', _onNodeDblClick);
 
-        // Inject SVG marker defs for arrowheads
-        _injectArrowMarker(container);
+        // Keyboard Delete
+        document.addEventListener('keydown', _onKeyDown, true);
+    }
 
-        // Mouseup on canvas → save positions
-        container.addEventListener('mouseup', _saveAllPositions);
-        container.addEventListener('touchend', _saveAllPositions);
-
-        // Intercept Delete key in CAPTURE phase → bypass native Drawflow delete
-        document.addEventListener('keydown', _onKeyDownCapture, true);
+    function _clearCanvas() {
+        if (!jsp) return;
+        jsp.deleteEveryConnection();
+        var els = document.querySelectorAll('#flow-canvas .jtk-node');
+        els.forEach(function (el) {
+            jsp.removeEndpoints(el);
+            jsp.remove(el);
+        });
+        var surface = document.getElementById('flow-canvas');
+        if (surface) surface.innerHTML = '';
     }
 
     // ===========================
     // KEYBOARD DELETE INTERCEPT
     // ===========================
-    function _onKeyDownCapture(e) {
+    function _onKeyDown(e) {
         if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-        if (!editor || editor.editor_mode !== 'edit') return;
 
         var active = document.activeElement;
         if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
 
-        // Check connection selected
-        var connEl = container().querySelector('.connection.selected');
-        if (connEl) {
+        if (_selectedConnId) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            _confirmDeleteConnectionByElement(connEl);
+            var conn = jsp.getConnections().find(function (c) { return c.id === _selectedConnId; });
+            if (conn) _confirmDeleteConnection(conn);
             return;
         }
 
-        // Check node selected
-        var nodeEl = editor.node_selected;
-        if (nodeEl) {
+        if (_selectedNodeId) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -136,8 +158,31 @@ const ModuleFlowsCanvas = (function () {
         }
     }
 
-    function container() {
-        return document.getElementById('drawflow-container');
+    // ===========================
+    // SELECTION
+    // ===========================
+    function _clearSelection() {
+        _selectedNodeId = null;
+        _selectedConnId = null;
+        document.querySelectorAll('.jtk-node.selected').forEach(function (el) {
+            el.classList.remove('selected');
+        });
+        document.querySelectorAll('.jtk-connector.selected').forEach(function (el) {
+            el.classList.remove('selected');
+        });
+    }
+
+    function _selectNode(nodeEl) {
+        _clearSelection();
+        _selectedNodeId = nodeEl.id;
+        nodeEl.classList.add('selected');
+    }
+
+    function _selectConnection(conn) {
+        _clearSelection();
+        _selectedConnId = conn.id;
+        var overlayEl = conn.canvas;
+        if (overlayEl) overlayEl.classList.add('selected');
     }
 
     // ===========================
@@ -157,7 +202,7 @@ const ModuleFlowsCanvas = (function () {
             _availableModules = data.available || [];
 
             _buildProjectIndex();
-            editor.clear();
+            _clearCanvas();
             _renderCanvas();
             _populateProjectFilter();
             _renderLegend();
@@ -185,132 +230,155 @@ const ModuleFlowsCanvas = (function () {
     }
 
     // ===========================
-    // RENDER CANVAS (correct addNode signature)
+    // RENDER CANVAS
     // ===========================
     function _renderCanvas() {
-        // Reset mappings
-        _dfIdToEncId = {};
-        _encIdToDfId = {};
-        _connKeyToEncId = {};
+        _connMap = {};
 
-        // Add nodes — correct 8-param signature: name, inputs, outputs, x, y, class, data, html
+        // Add nodes
         _canvasNodes.forEach(function (node) {
-            var color = _projectColorMap[node.project_id] || '#94a3b8';
-            var html = '<div class="flow-module" style="border-left:4px solid ' + color + '">'
-                + '<div class="flow-module-header">'
-                + '<span class="flow-project-dot" style="background:' + color + '"></span>'
-                + '<span class="flow-module-name">' + _escHtml(node.name) + '</span>'
-                + '</div>'
-                + '<div class="flow-module-project">' + _escHtml(node.project_name || '—') + '</div>'
-                + '</div>';
-
-            var dfId = editor.addNode(
-                node.module_id,   // name: store encrypted id
-                10, 10,            // inputs, outputs (multi-connection)
-                node.pos_x || 0,  // pos_x
-                node.pos_y || 0,  // pos_y
-                'module',         // CSS class
-                {},               // data
-                html,             // html (string)
-                false             // typenode: false = render as HTML string
-            );
-
-            // Map bidirectional
-            _dfIdToEncId[dfId] = node.module_id;
-            _encIdToDfId[node.module_id] = dfId;
+            _createNodeElement(node);
         });
 
         // Add connections
         _canvasConnections.forEach(function (conn) {
-            var fromDfId = _encIdToDfId[conn.from];
-            var toDfId = _encIdToDfId[conn.to];
-            if (fromDfId && toDfId) {
-                editor.addConnection(fromDfId, toDfId, 'output_1', 'input_1');
-                _connKeyToEncId[fromDfId + '>' + toDfId] = conn.id;
+            var sourceEl = document.getElementById(conn.from);
+            var targetEl = document.getElementById(conn.to);
+            if (sourceEl && targetEl) {
+                var jsConn = jsp.connect({
+                    source: sourceEl,
+                    target: targetEl,
+                    anchors: ['Right', 'Left'],
+                    cssClass: 'flow-connection',
+                });
+                if (jsConn) {
+                    _connMap[conn.from + '>' + conn.to] = conn.id;
+                }
             }
         });
-
-        // Reset position state
-        _lastPositionState = {};
     }
 
-    function _getProjectColorClass(projectId) {
-        if (!projectId) return '';
-        var idx = Object.keys(_projectColorMap).indexOf(projectId);
-        if (idx < 0) return '';
-        return 'project-color-' + ((idx % 6) + 1);
+    function _createNodeElement(node) {
+        var color = _projectColorMap[node.project_id] || '#94a3b8';
+        var el = document.createElement('div');
+        el.id = node.module_id;
+        el.className = 'jtk-node flow-module';
+        el.style.left = (node.pos_x || 0) + 'px';
+        el.style.top = (node.pos_y || 0) + 'px';
+        el.innerHTML = '<div class="flow-module-header">'
+            + '<span class="flow-project-dot" style="background:' + color + '"></span>'
+            + '<span class="flow-module-name">' + _escHtml(node.name) + '</span>'
+            + '</div>'
+            + '<div class="flow-module-project">' + _escHtml(node.project_name || '—') + '</div>';
+
+        document.getElementById('flow-canvas').appendChild(el);
+
+        // Make draggable
+        jsp.draggable(el, {
+            containment: 'parent',
+        });
+
+        // Add endpoints
+        jsp.addEndpoint(el, {
+            anchor: 'Left',
+            isTarget: true,
+            maxConnections: -1,
+            cssClass: 'flow-endpoint flow-endpoint-in',
+            parameters: { role: 'input' },
+        });
+        jsp.addEndpoint(el, {
+            anchor: 'Right',
+            isSource: true,
+            maxConnections: -1,
+            cssClass: 'flow-endpoint flow-endpoint-out',
+            parameters: { role: 'output' },
+        });
+
+        // Click → select
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+            _selectNode(el);
+        });
     }
 
     // ===========================
-    // CONNECTION CREATED (user drew a line)
+    // CONNECTION EVENTS
     // ===========================
-    function _onConnectionCreated(info) {
-        // info: { output_id (fromDfId string), input_id (toDfId string),
-        //         output_class ('output_1'), input_class ('input_1') }
-        var fromDfId = parseInt(info.output_id);
-        var toDfId = parseInt(info.input_id);
+    function _onBeforeDrop(info) {
+        var sourceId = info.sourceId;
+        var targetId = info.targetId;
 
-        var fromEnc = _dfIdToEncId[fromDfId];
-        var toEnc = _dfIdToEncId[toDfId];
-
-        // Validation
-        if (!fromEnc || !toEnc) {
-            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
-            return;
-        }
-        if (fromEnc === toEnc) {
-            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+        // No self-loop
+        if (sourceId === targetId) {
             toastr.warning('Tidak dapat menghubungkan modul ke dirinya sendiri');
-            return;
+            return false;
         }
-        if (_connKeyToEncId[fromDfId + '>' + toDfId]) {
+
+        // No duplicate
+        if (_connMap[sourceId + '>' + targetId]) {
             toastr.info('Koneksi ini sudah ada');
+            return false;
+        }
+
+        return true;
+    }
+
+    function _onConnection(info) {
+        var sourceId = info.source.id;
+        var targetId = info.target.id;
+
+        // Prevent duplicate (race condition guard)
+        if (_connMap[sourceId + '>' + targetId]) {
+            info.connection.detach({ silent: true });
             return;
         }
 
         _showStatus('saving');
-        $.post(ENDPOINTS.ADD_CONNECTION, { from: fromEnc, to: toEnc }, function (res) {
+        $.post(ENDPOINTS.ADD_CONNECTION, { from: sourceId, to: targetId }, function (res) {
             if (!res || !res.status) {
                 toastr.error(res?.data?.message || res?.message || 'Gagal membuat koneksi');
-                editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+                info.connection.detach({ silent: true });
                 _showStatus('error');
                 return;
             }
-            _connKeyToEncId[fromDfId + '>' + toDfId] = res.data?.result?.id || res.data?.id || '';
+            _connMap[sourceId + '>' + targetId] = res.data?.result?.id || res.data?.id || '';
             _showSavedStatus();
         }).fail(function () {
             toastr.error('Gagal terhubung ke server');
-            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+            info.connection.detach({ silent: true });
             _showStatus('error');
         });
     }
 
+    function _onConnectionDetached(info) {
+        var sourceId = info.source.id;
+        var targetId = info.target.id;
+        var key = sourceId + '>' + targetId;
+
+        if (_connMap[key]) {
+            // This was a user-initiated detach (from confirm dialog)
+            // The confirm dialog already handles the API call
+            delete _connMap[key];
+        }
+    }
+
+    function _onConnectionClick(conn) {
+        _selectConnection(conn);
+    }
+
     // ===========================
-    // CONNECTION DELETE (click → confirm)
+    // CONNECTION DELETE
     // ===========================
-    function _confirmDeleteConnectionByElement(connEl) {
-        if (!connEl) return;
+    function _confirmDeleteConnection(conn) {
+        var sourceName = _getNodeLabelById(conn.sourceId);
+        var targetName = _getNodeLabelById(conn.targetId);
+        var connEncId = _connMap[conn.sourceId + '>' + conn.targetId];
 
-        // Get node IDs from class attribute: "connection node_in_node-X node_out_node-Y ..."
-        var classes = connEl.className.baseVal || connEl.className;
-        var fromMatch = classes.match(/node_out_node-(\d+)/);
-        var toMatch = classes.match(/node_in_node-(\d+)/);
-        if (!fromMatch || !toMatch) return;
-
-        var fromDfId = parseInt(fromMatch[1]);
-        var toDfId = parseInt(toMatch[1]);
-        var fromEnc = _dfIdToEncId[fromDfId];
-        var toEnc = _dfIdToEncId[toDfId];
-        var connEncId = _connKeyToEncId[fromDfId + '>' + toDfId];
-
-        if (!fromEnc || !toEnc || !connEncId) return;
-
-        var fromName = _getNodeLabel(fromDfId);
-        var toName = _getNodeLabel(toDfId);
+        if (!connEncId) return;
 
         Swal.fire({
             title: 'Hapus koneksi?',
-            text: fromName + ' → ' + toName,
+            text: sourceName + ' → ' + targetName,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Hapus',
@@ -319,12 +387,12 @@ const ModuleFlowsCanvas = (function () {
         }).then(function (result) {
             if (!result.isConfirmed) return;
 
-            editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
+            conn.detach({ silent: true });
 
             _showStatus('saving');
             $.post(ENDPOINTS.DELETE_CONNECTION + connEncId, {}, function (res) {
                 if (res && res.status) {
-                    delete _connKeyToEncId[fromDfId + '>' + toDfId];
+                    delete _connMap[conn.sourceId + '>' + conn.targetId];
                     _showSavedStatus();
                     toastr.success('Koneksi dihapus');
                 } else {
@@ -341,28 +409,23 @@ const ModuleFlowsCanvas = (function () {
     }
 
     // ===========================
-    // NODE DELETE (toolbar button → confirm)
+    // NODE DELETE
     // ===========================
     function _confirmRemoveNode() {
-        var nodeEl = editor.node_selected;
-        if (!nodeEl) {
+        if (!_selectedNodeId) {
             toastr.info('Pilih modul terlebih dahulu (klik node di kanvas)');
             return;
         }
 
-        var dfId = parseInt(nodeEl.id.replace('node-', ''));
-        var encId = _dfIdToEncId[dfId];
-        if (!encId) return;
+        var el = document.getElementById(_selectedNodeId);
+        if (!el) return;
 
-        var moduleName = _getNodeLabel(dfId);
+        var moduleName = _getNodeLabelById(_selectedNodeId);
 
         // Count affected connections
-        var affected = [];
-        Object.keys(_connKeyToEncId).forEach(function (key) {
+        var affected = Object.keys(_connMap).filter(function (key) {
             var parts = key.split('>');
-            if (parseInt(parts[0]) === dfId || parseInt(parts[1]) === dfId) {
-                affected.push(_connKeyToEncId[key]);
-            }
+            return parts[0] === _selectedNodeId || parts[1] === _selectedNodeId;
         });
 
         var text = 'Menghapus "' + moduleName + '"';
@@ -382,7 +445,7 @@ const ModuleFlowsCanvas = (function () {
             if (!result.isConfirmed) return;
 
             _showStatus('saving');
-            $.post(ENDPOINTS.REMOVE_MODULE + encId, {}, function (res) {
+            $.post(ENDPOINTS.REMOVE_MODULE + _selectedNodeId, {}, function (res) {
                 if (res && res.status) {
                     toastr.success('Modul dihapus dari kanvas');
                     _refreshCanvas();
@@ -397,27 +460,15 @@ const ModuleFlowsCanvas = (function () {
         });
     }
 
-    function _getNodeLabel(dfId) {
-        var nodeData = editor.getNodeFromId(dfId);
-        if (!nodeData) return '';
-        var match = (nodeData.html || '').match(/flow-module-name[^>]*>([^<]+)/);
-        return match ? match[1].trim() : '';
-    }
-
     // ===========================
     // RENAME MODULE (double-click → SweetAlert2 prompt → auto-save)
     // ===========================
     function _onNodeDblClick(e) {
-        if (!editor || editor.editor_mode !== 'edit') return;
-
-        var nodeEl = e.target.closest('.drawflow-node');
+        var nodeEl = e.target.closest('.jtk-node');
         if (!nodeEl) return;
 
-        var dfId = parseInt(nodeEl.id.replace('node-', ''));
-        var encId = _dfIdToEncId[dfId];
-        if (!encId) return;
-
-        var currentName = _getNodeLabel(dfId);
+        var encId = nodeEl.id;
+        var currentName = _getNodeLabelById(encId);
 
         Swal.fire({
             title: 'Rename modul',
@@ -443,7 +494,6 @@ const ModuleFlowsCanvas = (function () {
                     _showStatus('error');
                     return;
                 }
-                // Update HTML in-place
                 var nameEl = nodeEl.querySelector('.flow-module-name');
                 if (nameEl) nameEl.textContent = newName;
                 _showSavedStatus();
@@ -506,9 +556,9 @@ const ModuleFlowsCanvas = (function () {
         var moduleId = $('#moduleSelect').val();
         if (!moduleId) return;
 
-        var c = container();
-        var centerX = (c.scrollLeft + c.clientWidth / 2) / editor.zoom;
-        var centerY = (c.scrollTop + c.clientHeight / 2) / editor.zoom;
+        var c = document.getElementById('flow-canvas');
+        var centerX = c.scrollLeft + c.clientWidth / 2;
+        var centerY = c.scrollTop + c.clientHeight / 2;
 
         _showStatus('saving');
         $('#btnAddModule').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Adding...');
@@ -541,24 +591,18 @@ const ModuleFlowsCanvas = (function () {
     var _positionSaveTimer = null;
 
     function _saveAllPositions() {
-        if (!editor) return;
+        if (!jsp) return;
 
-        // Debounce: wait 800ms after last mouseup
         clearTimeout(_positionSaveTimer);
         _positionSaveTimer = setTimeout(function () {
-            var exportData = editor.export();
-            var homeData = (exportData.drawflow && exportData.drawflow.Home)
-                ? exportData.drawflow.Home.data : {};
             var changed = [];
+            var els = document.querySelectorAll('#flow-canvas .jtk-node');
 
-            Object.keys(homeData).forEach(function (dfId) {
-                var node = homeData[dfId];
-                var encId = node.name; // encrypted module id stored as 'name'
-                if (!encId) return;
-
+            els.forEach(function (el) {
+                var encId = el.id;
+                var newX = Math.round(parseInt(el.style.left) || 0);
+                var newY = Math.round(parseInt(el.style.top) || 0);
                 var prev = _lastPositionState[encId];
-                var newX = Math.round(node.pos_x);
-                var newY = Math.round(node.pos_y);
 
                 if (!prev || prev.x !== newX || prev.y !== newY) {
                     _lastPositionState[encId] = { x: newX, y: newY };
@@ -566,7 +610,6 @@ const ModuleFlowsCanvas = (function () {
                 }
             });
 
-            // Send all position updates
             changed.forEach(function (item) {
                 $.post(ENDPOINTS.UPDATE_POSITION + item.encId, {
                     pos_x: item.x,
@@ -590,7 +633,7 @@ const ModuleFlowsCanvas = (function () {
             _availableModules = data.available || [];
 
             _buildProjectIndex();
-            editor.clear();
+            _clearCanvas();
             _renderCanvas();
             _applyFilter();
             _populateProjectFilter();
@@ -614,15 +657,12 @@ const ModuleFlowsCanvas = (function () {
     }
 
     function _applyFilter() {
-        if (!editor) return;
         var filterId = _activeFilter;
+        var els = document.querySelectorAll('#flow-canvas .jtk-node');
 
-        // Dim/show nodes
-        Object.keys(_dfIdToEncId).forEach(function (dfId) {
-            var el = document.getElementById('node-' + dfId);
-            if (!el) return;
-
-            if (!filterId || _dfIdToEncId[dfId] === filterId || _getNodeProjectId(_dfIdToEncId[dfId]) === filterId) {
+        els.forEach(function (el) {
+            var encId = el.id;
+            if (!filterId || encId === filterId || _getNodeProjectId(encId) === filterId) {
                 el.classList.remove('dimmed');
             } else {
                 el.classList.add('dimmed');
@@ -641,10 +681,6 @@ const ModuleFlowsCanvas = (function () {
     // TOOLBAR EVENTS
     // ===========================
     function _bindToolbarEvents() {
-        $('#btnZoomIn').on('click', function () { editor.zoom_in(); });
-        $('#btnZoomOut').on('click', function () { editor.zoom_out(); });
-        $('#btnFitView').on('click', function () { _fitView(); });
-        $('#btnZoomReset').on('click', function () { editor.zoom_refresh(); });
         $('#btnRefresh').on('click', function () { _refreshCanvas(); });
         $('#btnRemoveNode').on('click', function () { _confirmRemoveNode(); });
     }
@@ -704,58 +740,11 @@ const ModuleFlowsCanvas = (function () {
         return $('<div>').text(str || '').html();
     }
 
-    function _injectArrowMarker(rootEl) {
-        var svgNS = 'http://www.w3.org/2000/svg';
-        var defs = document.createElementNS(svgNS, 'defs');
-        var marker = document.createElementNS(svgNS, 'marker');
-        marker.setAttribute('id', 'flow-arrow');
-        marker.setAttribute('viewBox', '0 0 10 10');
-        marker.setAttribute('refX', '9');
-        marker.setAttribute('refY', '5');
-        marker.setAttribute('markerWidth', '5');
-        marker.setAttribute('markerHeight', '5');
-        marker.setAttribute('orient', 'auto');
-        var path = document.createElementNS(svgNS, 'path');
-        path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-        path.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--sap-brand').trim() || '#0D9488');
-        marker.appendChild(path);
-        defs.appendChild(marker);
-        rootEl.appendChild(defs);
-    }
-
-    function _fitView() {
-        if (!editor) return;
-        var exportData = editor.export();
-        var homeData = exportData.drawflow ? exportData.drawflow.Home.data : {};
-        var nodes = Object.keys(homeData);
-        if (!nodes.length) { editor.zoom_refresh(); return; }
-
-        var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        nodes.forEach(function (id) {
-            var n = homeData[id];
-            var nodeEl = document.getElementById('node-' + id);
-            var w = nodeEl ? nodeEl.offsetWidth : 200;
-            var h = nodeEl ? nodeEl.offsetHeight : 80;
-            minX = Math.min(minX, n.pos_x);
-            maxX = Math.max(maxX, n.pos_x + w);
-            minY = Math.min(minY, n.pos_y);
-            maxY = Math.max(maxY, n.pos_y + h);
-        });
-
-        var containerEl = container();
-        var canvasW = containerEl.clientWidth;
-        var canvasH = containerEl.clientHeight;
-        var padding = 80;
-        var scaleX = (canvasW - padding * 2) / (maxX - minX || 1);
-        var scaleY = (canvasH - padding * 2) / (maxY - minY || 1);
-        var zoom = Math.min(scaleX, scaleY, 1.5);
-        zoom = Math.max(zoom, 0.3);
-
-        editor.zoom = zoom;
-        var tx = (canvasW / 2) - ((minX + maxX) / 2) * zoom;
-        var ty = (canvasH / 2) - ((minY + maxY) / 2) * zoom;
-        editor.precanvas.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + zoom + ')';
-        editor.zoom_refresh = editor.zoom_refresh || function () {};
+    function _getNodeLabelById(encId) {
+        var el = document.getElementById(encId);
+        if (!el) return '';
+        var match = el.innerHTML.match(/flow-module-name[^>]*>([^<]+)/);
+        return match ? match[1].trim() : '';
     }
 
     // ===========================

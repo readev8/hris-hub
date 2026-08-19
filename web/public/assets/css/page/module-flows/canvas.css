@@ -1,7 +1,7 @@
 /* ============================================================================
  * MODULE FLOWS — CANVAS STYLES
  * ============================================================================
- * Override Drawflow default CSS (specificity 0,3,0 ≥ vendor 0,2,0)
+ * jsPlumb CE 6.2.10 compatible
  * Theme: --sap-* design tokens | Dark mode: .dark-mode
  * Accessibility: prefers-reduced-motion, touch targets ≥44px
  */
@@ -58,11 +58,12 @@
     margin: 0 4px;
 }
 
-/* ── Canvas Container (override vendor .drawflow) ────── */
-/* specificity: .drawflow .drawflow-node.module = 0,3,0 > vendor 0,2,0 */
-#drawflow-container {
+/* ── Canvas Container ─────────────────────────────────── */
+#flow-canvas {
+    position: relative;
     width: 100%;
     height: calc(100vh - 170px);
+    overflow: auto;
     background: var(--sap-background, #f5f6f7);
     border: 1px solid var(--sap-border, #d9d9d9);
     border-radius: var(--sap-radius, 8px);
@@ -71,15 +72,15 @@
     background-size: 20px 20px;
 }
 
-.dark-mode #drawflow-container {
+.dark-mode #flow-canvas {
     background-color: var(--sap-dark-bg, #121212);
     background-image: radial-gradient(circle, var(--sap-dark-border, #333) 1px, transparent 1px);
     border-color: var(--sap-dark-border, #333);
 }
 
-/* ── Drawflow Node Override (0,3,0 beats vendor 0,2,0) ─ */
-.drawflow .drawflow-node.module {
-    width: auto;
+/* ── Node Styling ─────────────────────────────────────── */
+.jtk-node {
+    position: absolute;
     min-width: 180px;
     max-width: 240px;
     padding: 0;
@@ -89,20 +90,22 @@
     color: var(--sap-text, #32363a);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: move;
+    z-index: 1;
 }
 
-.drawflow .drawflow-node.module:hover {
+.jtk-node:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-color: var(--sap-brand, #0D9488);
 }
 
-.drawflow .drawflow-node.module.selected {
+.jtk-node.selected {
     background: var(--sap-card-bg, #fff);
     border-color: var(--sap-brand, #0D9488);
     box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
 }
 
-.drawflow .drawflow-node.module.dimmed {
+.jtk-node.dimmed {
     opacity: 0.2;
     pointer-events: none;
     filter: grayscale(0.5);
@@ -147,63 +150,49 @@
     padding-left: 14px;
 }
 
-/* ── Drawflow Ports Override ──────────────────────────── */
-.drawflow .drawflow-node.module .input,
-.drawflow .drawflow-node.module .output {
-    width: 14px;
-    height: 14px;
-    background: var(--sap-card-bg, #fff);
-    border: 2px solid var(--sap-brand, #0D9488);
-    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+/* ── jsPlumb Endpoint Override ────────────────────────── */
+.flow-endpoint {
+    width: 14px !important;
+    height: 14px !important;
 }
 
-.drawflow .drawflow-node.module .input:hover,
-.drawflow .drawflow-node.module .output:hover {
-    transform: scale(1.3);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.3);
+.flow-endpoint-inner {
+    background: var(--sap-card-bg, #fff) !important;
+    border: 2px solid var(--sap-brand, #0D9488) !important;
 }
 
-.drawflow .drawflow-node.module .input {
-    left: -28px;
-    top: 50%;
-    transform: translateY(-50%);
+/* ── jsPlumb Connection Override ──────────────────────── */
+.jtk-connector {
+    z-index: 0;
 }
 
-.drawflow .drawflow-node.module .output {
-    right: -3px;
-    top: 50%;
-    transform: translateY(-50%);
+.jtk-connector:hover .jtk-overlay {
+    display: block !important;
 }
 
-.drawflow .drawflow-node.module .input:hover,
-.drawflow .drawflow-node.module .output:hover {
-    transform: translateY(-50%) scale(1.3);
+.flow-connection .jtk-overlay {
+    display: none;
 }
 
-/* ── Connection Lines Override ────────────────────────── */
-.drawflow .connection .main-path {
+.jtk-connector.selected {
+    z-index: 10;
+}
+
+/* Arrow marker override */
+.jtk-connector path {
     stroke: var(--sap-brand, #0D9488);
     stroke-width: 2px;
-    fill: none;
-    stroke-linecap: round;
 }
 
-.drawflow .connection .main-path:hover {
+.jtk-connector:hover path {
     stroke: var(--sap-brand-dark, #0f766e);
     stroke-width: 3px;
     cursor: pointer;
 }
 
-.drawflow .connection .main-path.selected {
+.jtk-connector.selected path {
     stroke: var(--sap-error, #ef4444);
     stroke-width: 2.5px;
-    stroke-dasharray: none;
-}
-
-/* Arrowhead via SVG marker (marker defined in canvas.js) */
-.drawflow .connection .main-path {
-    marker-end: url(#flow-arrow);
 }
 
 /* ── Project Legend ────────────────────────────────────── */
@@ -266,26 +255,24 @@
     background: var(--sap-dark-border, #333);
 }
 
-.dark-mode .drawflow .drawflow-node.module {
+.dark-mode .jtk-node {
     background: var(--sap-dark-card, #1e293b);
     border-color: var(--sap-dark-border, #333);
 }
 
-.dark-mode .drawflow .drawflow-node.module:hover {
+.dark-mode .jtk-node:hover {
     border-color: var(--sap-brand, #0D9488);
 }
 
 .dark-mode .flow-module-name { color: var(--sap-dark-text, #e2e8f0); }
 .dark-mode .flow-module-project { color: var(--sap-dark-text-secondary, #94a3b8); }
 
-.dark-mode .drawflow .connection .main-path { stroke: var(--sap-brand, #0D9488); }
+.dark-mode .jtk-connector path { stroke: var(--sap-brand, #0D9488); }
 
 .dark-mode .project-legend { color: var(--sap-dark-text-secondary, #94a3b8); }
 
 /* ── Reduced Motion ───────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-    .drawflow .drawflow-node.module,
-    .drawflow .drawflow-node.module .input,
-    .drawflow .drawflow-node.module .output,
+    .jtk-node,
     .save-status { transition: none; }
 }

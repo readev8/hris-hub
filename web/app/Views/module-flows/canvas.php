@@ -14,7 +14,7 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/vendor/drawflow/0.0.59/drawflow.min.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= base_url('public/vendor/jsplumb/6.2.10/jsplumb.css?v=' . config('App')->assetVersion) ?>">
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/module-flows/canvas.css?v=' . config('App')->assetVersion) ?>">
 <?= $this->endSection() ?>
 
@@ -45,27 +45,12 @@
 
         <div class="toolbar-separator"></div>
 
-        <div class="toolbar-group btn-group" role="group">
-            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnZoomIn" title="Zoom In">
-                <i class="fas fa-search-plus"></i>
-            </button>
-            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnZoomOut" title="Zoom Out">
-                <i class="fas fa-search-minus"></i>
-            </button>
-            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnFitView" title="Fit to View">
-                <i class="fas fa-expand"></i>
-            </button>
-            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm" id="btnZoomReset" title="Reset Zoom">
-                <i class="fas fa-undo"></i>
-            </button>
-        </div>
-
         <span id="saveStatus" class="save-status"></span>
     </div>
 
     <div id="projectLegend" class="project-legend"></div>
 
-    <div id="drawflow-container"></div>
+    <div id="flow-canvas"></div>
 </div>
 <?= $this->endSection() ?>
 
@@ -79,6 +64,6 @@ window.PageData = <?= json_encode([
     'userPermissions' => session('permissions') ?? [],
 ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;
 </script>
-<script src="<?= base_url('public/vendor/drawflow/0.0.59/drawflow.min.js?v=' . config('App')->assetVersion) ?>"></script>
+<script src="<?= base_url('public/vendor/jsplumb/6.2.10/jsplumb.browser-ui.umd.js?v=' . config('App')->assetVersion) ?>"></script>
 <script src="<?= base_url('public/assets/js/page/module-flows/canvas.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>
