@@ -273,12 +273,7 @@ const ModuleFlowsCanvas = (function () {
 
         document.getElementById('flow-canvas').appendChild(el);
 
-        // Make draggable
-        jsp.draggable(el, {
-            containment: 'parent',
-        });
-
-        // Add endpoints
+        // Add endpoints (jsPlumb CE 6 auto-makes managed elements draggable)
         jsp.addEndpoint(el, {
             anchor: 'Left',
             isTarget: true,
