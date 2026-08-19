@@ -170,6 +170,7 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/module-flows/ajax-canvas',                        'ModuleFlows::ajaxGetCanvas');
     $routes->post('/module-flows/ajax-add-module',                   'ModuleFlows::ajaxAddModule');
     $routes->post('/module-flows/ajax-update-position/(:any)',       'ModuleFlows::ajaxUpdatePosition/$1');
+    $routes->post('/module-flows/ajax-update-module/(:any)',        'ModuleFlows::ajaxUpdateModule/$1');
     $routes->post('/module-flows/ajax-remove-module/(:any)',         'ModuleFlows::ajaxRemoveModule/$1');
     $routes->post('/module-flows/ajax-add-connection',               'ModuleFlows::ajaxAddConnection');
     $routes->post('/module-flows/ajax-delete-connection/(:any)',     'ModuleFlows::ajaxDeleteConnection/$1');

@@ -14,7 +14,7 @@ class FlowCanvas extends BaseApi
 
         // ── Nodes on canvas (modules that have a position) ───────
         $nodes = $db->table(Tables::FLOW_NODE_POSITIONS . ' as p')
-            ->select('p.module_id, p.pos_x, p.pos_y, m.name as module_name, m.master_project_id, mp.name as project_name')
+            ->select('p.module_id, p.label, p.pos_x, p.pos_y, m.name as module_name, m.master_project_id, mp.name as project_name')
             ->join(Tables::MODULES . ' as m', 'm.id = p.module_id AND m.active = 0', 'inner')
             ->join(Tables::MASTER_PROJECTS . ' as mp', 'mp.id = m.master_project_id AND mp.active = 0', 'left')
             ->where('p.active', 0)
@@ -26,7 +26,7 @@ class FlowCanvas extends BaseApi
         foreach ($nodes as $n) {
             $nodesOut[] = [
                 'module_id'       => $this->api->encryptId($n['module_id']),
-                'name'            => $n['module_name'],
+                'name'            => $n['label'] ?: $n['module_name'],
                 'project_id'      => $n['master_project_id'] ? $this->api->encryptId($n['master_project_id']) : null,
                 'project_name'    => $n['project_name'],
                 'pos_x'           => (int) $n['pos_x'],

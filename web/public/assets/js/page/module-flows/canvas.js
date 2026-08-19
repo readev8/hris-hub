@@ -35,6 +35,7 @@ const ModuleFlowsCanvas = (function () {
         LOAD_CANVAS:       site_url + '/module-flows/ajax-canvas',
         ADD_MODULE:        site_url + '/module-flows/ajax-add-module',
         UPDATE_POSITION:   site_url + '/module-flows/ajax-update-position/',
+        UPDATE_LABEL:      site_url + '/module-flows/ajax-update-module/',
         REMOVE_MODULE:     site_url + '/module-flows/ajax-remove-module/',
         ADD_CONNECTION:    site_url + '/module-flows/ajax-add-connection',
         DELETE_CONNECTION: site_url + '/module-flows/ajax-delete-connection/',
@@ -89,6 +90,9 @@ const ModuleFlowsCanvas = (function () {
         editor.start();
 
         editor.on('connectionCreated', _onConnectionCreated);
+
+        // Double-click node → rename label
+        container.addEventListener('dblclick', _onNodeDblClick);
 
         // Inject SVG marker defs for arrowheads
         _injectArrowMarker(container);
@@ -202,7 +206,7 @@ const ModuleFlowsCanvas = (function () {
 
             var dfId = editor.addNode(
                 node.module_id,   // name: store encrypted id
-                1, 1,             // inputs, outputs
+                10, 10,            // inputs, outputs (multi-connection)
                 node.pos_x || 0,  // pos_x
                 node.pos_y || 0,  // pos_y
                 'module',         // CSS class
@@ -398,6 +402,56 @@ const ModuleFlowsCanvas = (function () {
         if (!nodeData) return '';
         var match = (nodeData.html || '').match(/flow-module-name[^>]*>([^<]+)/);
         return match ? match[1].trim() : '';
+    }
+
+    // ===========================
+    // RENAME MODULE (double-click → SweetAlert2 prompt → auto-save)
+    // ===========================
+    function _onNodeDblClick(e) {
+        if (!editor || editor.editor_mode !== 'edit') return;
+
+        var nodeEl = e.target.closest('.drawflow-node');
+        if (!nodeEl) return;
+
+        var dfId = parseInt(nodeEl.id.replace('node-', ''));
+        var encId = _dfIdToEncId[dfId];
+        if (!encId) return;
+
+        var currentName = _getNodeLabel(dfId);
+
+        Swal.fire({
+            title: 'Rename modul',
+            input: 'text',
+            inputValue: currentName,
+            inputPlaceholder: 'Nama modul di kanvas',
+            showCancelButton: true,
+            confirmButtonText: 'Simpan',
+            confirmButtonColor: '#0D9488',
+            cancelButtonColor: '#6b7280',
+            inputValidator: function (value) {
+                if (!value || !value.trim()) return 'Nama tidak boleh kosong';
+            },
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+            var newName = result.value.trim();
+            if (newName === currentName) return;
+
+            _showStatus('saving');
+            $.post(ENDPOINTS.UPDATE_LABEL + encId, { label: newName }, function (res) {
+                if (!res || !res.status) {
+                    toastr.error(res?.data?.message || res?.message || 'Gagal rename modul');
+                    _showStatus('error');
+                    return;
+                }
+                // Update HTML in-place
+                var nameEl = nodeEl.querySelector('.flow-module-name');
+                if (nameEl) nameEl.textContent = newName;
+                _showSavedStatus();
+            }).fail(function () {
+                toastr.error('Gagal terhubung ke server');
+                _showStatus('error');
+            });
+        });
     }
 
     // ===========================

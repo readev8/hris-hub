@@ -74,6 +74,21 @@ class ModuleFlows extends BaseController
         }
     }
 
+    public function ajaxUpdateModule(string $id)
+    {
+        if (!$this->guard('can_update')) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Forbidden']);
+        }
+        try {
+            $post = $this->request->getPost();
+            $result = $this->api->post_data('module-flows/canvas/modules/' . $id . '/label', $post);
+            return $this->response->setJSON($result);
+        } catch (\Throwable $e) {
+            log_message('error', 'ModuleFlows ajaxUpdateModule: ' . $e->getMessage());
+            return $this->response->setJSON(['status' => false, 'message' => 'Gagal memperbarui modul']);
+        }
+    }
+
     public function ajaxRemoveModule(string $id)
     {
         if (!$this->guard('can_delete')) {

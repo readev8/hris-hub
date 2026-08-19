@@ -163,6 +163,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('module-flows/canvas',                            'ModuleFlows\Data\FlowCanvas::get_canvas');
     $routes->post('module-flows/canvas/modules',                   'ModuleFlows\Action\FlowActions::add_module');
     $routes->post('module-flows/canvas/modules/(:any)/position',   'ModuleFlows\Action\FlowActions::update_position/$1');
+    $routes->post('module-flows/canvas/modules/(:any)/label',     'ModuleFlows\Action\FlowActions::update_module/$1');
     $routes->post('module-flows/canvas/modules/(:any)/remove',     'ModuleFlows\Action\FlowActions::remove_module/$1');
     $routes->post('module-flows/connections',                      'ModuleFlows\Action\FlowActions::add_connection');
     $routes->post('module-flows/connections/(:any)/delete',        'ModuleFlows\Action\FlowActions::delete_connection/$1');

@@ -210,6 +210,38 @@ class FlowActions extends BaseApi
         ], 200);
     }
 
+    public function update_module(string $encryptedModuleId): ResponseInterface
+    {
+        if (!$this->checkPermission('module_flows', 'can_update')) {
+            return $this->JSONResponse('Forbidden', null, 403);
+        }
+
+        $moduleId = $this->resolveId($encryptedModuleId);
+        if (!$moduleId) return $this->JSONResponse('ID modul tidak valid', null, 400);
+
+        $post = $this->req->getJSON(true) ?? $this->req->getPost();
+        $label = trim($post['label'] ?? '');
+        if ($label === '') return $this->JSONResponse('Label tidak boleh kosong', null, 400);
+
+        $db = $this->db();
+
+        $row = $db->table(Tables::FLOW_NODE_POSITIONS)
+            ->where('module_id', $moduleId)
+            ->where('active', 0)
+            ->get()
+            ->getRowArray();
+        if (!$row) return $this->JSONResponse('Modul tidak ada di kanvas', null, 404);
+
+        $db->table(Tables::FLOW_NODE_POSITIONS)
+            ->where('id', $row['id'])
+            ->update([
+                'label'      => $label,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+
+        return $this->JSONResponse('OK', ['label' => $label], 200);
+    }
+
     public function delete_connection(string $encryptedConnectionId): ResponseInterface
     {
         if (!$this->checkPermission('module_flows', 'can_delete')) {
