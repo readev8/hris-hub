@@ -32,21 +32,35 @@ class FlowActions extends BaseApi
 
         $existing = $db->table(Tables::FLOW_NODE_POSITIONS)
             ->where('module_id', $moduleId)
-            ->where('active', 0)
             ->get()
             ->getRowArray();
-        if ($existing) return $this->JSONResponse('Modul sudah ada di kanvas', null, 409);
-
-        $now = date('Y-m-d H:i:s');
-        $db->table(Tables::FLOW_NODE_POSITIONS)->insert([
-            'module_id'  => $moduleId,
-            'pos_x'      => $x,
-            'pos_y'      => $y,
-            'created_by' => $this->getCurrentUserId(),
-            'created_at' => $now,
-            'updated_at' => $now,
-            'active'     => 0,
-        ]);
+        if ($existing) {
+            if ((int) $existing['active'] === 0) {
+                return $this->JSONResponse('Modul sudah ada di kanvas', null, 409);
+            }
+            // Reactivate soft-deleted row
+            $now = date('Y-m-d H:i:s');
+            $db->table(Tables::FLOW_NODE_POSITIONS)
+                ->where('id', $existing['id'])
+                ->update([
+                    'pos_x'      => $x,
+                    'pos_y'      => $y,
+                    'created_by' => $this->getCurrentUserId(),
+                    'active'     => 0,
+                    'updated_at' => $now,
+                ]);
+        } else {
+            $now = date('Y-m-d H:i:s');
+            $db->table(Tables::FLOW_NODE_POSITIONS)->insert([
+                'module_id'  => $moduleId,
+                'pos_x'      => $x,
+                'pos_y'      => $y,
+                'created_by' => $this->getCurrentUserId(),
+                'created_at' => $now,
+                'updated_at' => $now,
+                'active'     => 0,
+            ]);
+        }
 
         $projectName = null;
         if ($module['master_project_id']) {
@@ -154,10 +168,23 @@ class FlowActions extends BaseApi
         $dup = $db->table(Tables::FLOW_CONNECTIONS)
             ->where('from_module_id', $fromId)
             ->where('to_module_id', $toId)
-            ->where('active', 0)
             ->get()
             ->getRowArray();
-        if ($dup) return $this->JSONResponse('Koneksi sudah ada', null, 409);
+        if ($dup) {
+            if ((int) $dup['active'] === 0) {
+                return $this->JSONResponse('Koneksi sudah ada', null, 409);
+            }
+            // Reactivate soft-deleted connection
+            $now = date('Y-m-d H:i:s');
+            $db->table(Tables::FLOW_CONNECTIONS)
+                ->where('id', $dup['id'])
+                ->update(['active' => 0, 'created_by' => $this->getCurrentUserId(), 'updated_at' => $now]);
+            return $this->JSONResponse('OK', [
+                'id'   => $this->api->encryptId($dup['id']),
+                'from' => $this->api->encryptId($fromId),
+                'to'   => $this->api->encryptId($toId),
+            ], 200);
+        }
 
         // Both modules must be on canvas
         $onCanvas = $db->table(Tables::FLOW_NODE_POSITIONS)

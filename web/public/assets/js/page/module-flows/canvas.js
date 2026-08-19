@@ -143,7 +143,7 @@ const ModuleFlowsCanvas = (function () {
         _showStatus('loading');
         $.get(ENDPOINTS.LOAD_CANVAS, function (res) {
             if (!res || !res.status) {
-                toastr.error(res?.message || 'Gagal memuat data canvas');
+                toastr.error(res?.data?.message || res?.message || 'Gagal memuat data canvas');
                 _showStatus('error');
                 return;
             }
@@ -267,7 +267,7 @@ const ModuleFlowsCanvas = (function () {
         _showStatus('saving');
         $.post(ENDPOINTS.ADD_CONNECTION, { from: fromEnc, to: toEnc }, function (res) {
             if (!res || !res.status) {
-                toastr.error(res?.message || 'Gagal membuat koneksi');
+                toastr.error(res?.data?.message || res?.message || 'Gagal membuat koneksi');
                 editor.removeSingleConnection(fromDfId, toDfId, 'output_1', 'input_1');
                 _showStatus('error');
                 return;
@@ -325,7 +325,7 @@ const ModuleFlowsCanvas = (function () {
                     toastr.success('Koneksi dihapus');
                 } else {
                     _refreshCanvas();
-                    toastr.error(res?.message || 'Gagal menghapus koneksi');
+                    toastr.error(res?.data?.message || res?.message || 'Gagal menghapus koneksi');
                     _showStatus('error');
                 }
             }).fail(function () {
@@ -383,7 +383,7 @@ const ModuleFlowsCanvas = (function () {
                     toastr.success('Modul dihapus dari kanvas');
                     _refreshCanvas();
                 } else {
-                    toastr.error(res?.message || 'Gagal menghapus modul');
+                    toastr.error(res?.data?.message || res?.message || 'Gagal menghapus modul');
                     _showStatus('error');
                 }
             }).fail(function () {
@@ -465,7 +465,7 @@ const ModuleFlowsCanvas = (function () {
             pos_y: Math.round(centerY - 40)
         }, function (res) {
             if (!res || !res.status) {
-                toastr.error(res?.message || 'Gagal menambahkan modul');
+                toastr.error(res?.data?.message || res?.message || 'Gagal menambahkan modul');
                 _showStatus('error');
                 $('#btnAddModule').prop('disabled', false).html('<i class="fas fa-plus"></i> Add to Canvas');
                 return;
