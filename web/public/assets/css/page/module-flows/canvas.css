@@ -267,6 +267,27 @@
 
 .dark-mode .project-legend { color: var(--sap-dark-text-secondary, #94a3b8); }
 
+.dark-mode .modal-content {
+    background: var(--sap-dark-surface, #1E293B);
+    border-color: var(--sap-dark-border, #334155);
+}
+
+.dark-mode .modal-header,
+.dark-mode .modal-footer {
+    border-color: var(--sap-dark-border, #334155);
+}
+
+.dark-mode .modal-title { color: var(--sap-dark-text, #F1F5F9); }
+.dark-mode .btn-close { filter: invert(1); }
+
+.dark-mode #selectedModuleInfo {
+    background: var(--sap-dark-surface, #1E293B);
+    border-color: var(--sap-dark-border, #334155);
+}
+
+.dark-mode #selectedModuleInfo span { color: var(--sap-dark-text, #F1F5F9); }
+.dark-mode #selectedModuleInfo div { color: var(--sap-dark-text-secondary, #CBD5E1); }
+
 /* ── Reduced Motion ───────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
     .jtk-node,
