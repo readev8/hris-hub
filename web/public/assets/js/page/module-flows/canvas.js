@@ -516,7 +516,7 @@ const ModuleFlowsCanvas = (function () {
             return;
         }
         _populateSelect2();
-        $('#selectedModuleInfo').hide();
+        $('#selectedModuleInfo').addClass('d-none');
         $('#btnAddModule').prop('disabled', true);
         $('#addModuleModal').modal('show');
     }
@@ -549,7 +549,7 @@ const ModuleFlowsCanvas = (function () {
             if (module) {
                 $('#selectedModuleName').text(module.name);
                 $('#selectedModuleProject').text(module.project_name || '');
-                $('#selectedModuleInfo').show();
+                $('#selectedModuleInfo').removeClass('d-none');
                 $('#btnAddModule').prop('disabled', false);
             }
         });
