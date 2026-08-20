@@ -30,7 +30,7 @@
         <button type="button" class="sap-btn sap-btn-primary sap-btn-sm" id="btnOpenAddModule">
             <i class="fas fa-plus me-1"></i> Add Module
         </button>
-        <button type="button" class="sap-btn sap-btn-danger sap-btn-sm" id="btnRemoveNode">
+        <button type="button" class="sap-btn sap-btn-danger sap-btn-sm" id="btnRemoveNode" title="Hapus koneksi / modul terpilih">
             <i class="fas fa-trash"></i>
         </button>
 

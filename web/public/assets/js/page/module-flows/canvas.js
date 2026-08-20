@@ -90,7 +90,8 @@ const ModuleFlowsCanvas = (function () {
             endpointStyle: { fill: '#fff', stroke: '#0D9488', strokeWidth: 2 },
             endpointHoverStyle: { fill: '#0D9488', stroke: '#0f766e', strokeWidth: 2 },
             connectionOverlays: [
-                { type: 'Arrow', options: { width: 10, length: 10, location: 1, foldback: 0.8, paintStyle: { fill: '#0D9488', stroke: '#0D9488' } } }
+                { type: 'Arrow', options: { width: 10, length: 10, location: 1, foldback: 0.8, paintStyle: { fill: '#0D9488', stroke: '#0D9488' } } },
+                { type: 'Custom', options: { id: 'connDelete', location: 0.5, create: _makeDeleteButton } }
             ],
             maxConnections: -1,
         });
@@ -100,6 +101,10 @@ const ModuleFlowsCanvas = (function () {
         jsp.bind('connection', _onConnection);
         jsp.bind('connectionDetached', _onConnectionDetached);
         jsp.bind('click', _onConnectionClick);
+
+        // Hover delete button
+        jsp.bind('connection:mouseover', function (conn) { _setDeleteBtnVisible(conn, true); });
+        jsp.bind('connection:mouseout', function (conn) { _setDeleteBtnVisible(conn, false); });
 
         // Drag stop → save positions
         jsp.bind('drag:stop', function () {
@@ -139,21 +144,10 @@ const ModuleFlowsCanvas = (function () {
         var active = document.activeElement;
         if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
 
-        if (_selectedConnId) {
+        if (_deleteSelection()) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            var conn = jsp.getConnections().find(function (c) { return c.id === _selectedConnId; });
-            if (conn) _confirmDeleteConnection(conn);
-            return;
-        }
-
-        if (_selectedNodeId) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            _confirmRemoveNode();
-            return;
         }
     }
 
@@ -182,6 +176,45 @@ const ModuleFlowsCanvas = (function () {
         _selectedConnId = conn.id;
         var overlayEl = conn.canvas;
         if (overlayEl) overlayEl.classList.add('selected');
+    }
+
+    // ===========================
+    // DELETE BUTTON OVERLAY
+    // ===========================
+    function _makeDeleteButton(conn) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'conn-delete-btn';
+        btn.title = 'Hapus koneksi';
+        btn.innerHTML = '<i class="fas fa-times"></i>';
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            _confirmDeleteConnection(conn);
+        });
+        btn.addEventListener('mouseenter', function () { btn.classList.add('visible'); });
+        btn.addEventListener('mouseleave', function () { btn.classList.remove('visible'); });
+        return btn;
+    }
+
+    function _setDeleteBtnVisible(conn, visible) {
+        var ov = conn.getOverlay('connDelete');
+        if (!ov || !ov.canvas) return;
+        if (visible) {
+            ov.canvas.classList.add('visible');
+        } else {
+            ov.canvas.classList.remove('visible');
+        }
+    }
+
+    function _deleteSelection() {
+        if (_selectedConnId) {
+            var conn = jsp.getConnections().find(function (c) { return c.id === _selectedConnId; });
+            if (conn) { _confirmDeleteConnection(conn); return true; }
+        }
+        if (_selectedNodeId) { _confirmRemoveNode(); return true; }
+        toastr.info('Pilih koneksi atau modul terlebih dahulu (klik pada kanvas)');
+        return false;
     }
 
     // ===========================
@@ -685,7 +718,7 @@ const ModuleFlowsCanvas = (function () {
     // ===========================
     function _bindToolbarEvents() {
         $('#btnRefresh').on('click', function () { _refreshCanvas(); });
-        $('#btnRemoveNode').on('click', function () { _confirmRemoveNode(); });
+        $('#btnRemoveNode').on('click', function () { _deleteSelection(); });
     }
 
     function _renderLegend() {
