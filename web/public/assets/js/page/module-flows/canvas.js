@@ -542,7 +542,7 @@ const ModuleFlowsCanvas = (function () {
             _select2Instance.select2('destroy');
         }
         $('#moduleSelect').html(opts);
-        _select2Instance = $('#moduleSelect').select2({ theme: 'bootstrap-5', width: '100%', placeholder: 'Search...' });
+        _select2Instance = $('#moduleSelect').select2({ theme: 'bootstrap-5', width: '100%', placeholder: 'Search...', dropdownParent: $('#addModuleModal') });
 
         _select2Instance.on('select2:select', function (e) {
             var module = _availableModules.find(function (m) { return m.module_id === e.params.data.id; });
