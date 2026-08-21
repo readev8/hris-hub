@@ -59,7 +59,8 @@ class ApiClient
         $apiU   = env('myhr.api_u');
         $apiP   = env('myhr.api_p');
 
-        $baseUrl = rtrim(env('myhr.auth_url', 'http://localhost:8888/api-authentication/public'), '/');
+        $baseUrl = rtrim(env('myhr.auth_url', 'http://localhost:8888/DEV-PHP8/api-authentication/public'), '/');
+        
         $url = $baseUrl . '/' . ltrim($endpoint, '/') . '?key=' . $apiKey;
 
         // Add key to data (matches myhr/plus format)
@@ -83,6 +84,7 @@ class ApiClient
             CURLOPT_POSTFIELDS     => http_build_query($data),
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_PROXY          => false,
         ]);
 
         $response = curl_exec($ch);
@@ -104,8 +106,74 @@ class ApiClient
 
         // myhr/plus response: {status: bool, token: str, id: str, privilage: [], role_rights: [], message: str}
         // Return full response — caller checks ['status']
+
         $decoded['_http_code'] = $httpCode;
         return $decoded;
+    }
+
+    /**
+     * GET from myhr/plus auth server — matches hr-portal get_data_authentication format.
+     * Used for: authcombine/userdetail, authcombine/divisi, authcombine/departemen
+     * Token + key passed as query parameters, Basic Auth header.
+     */
+    public function getFromMyhrAuth(string $endpoint, string $token, array $params = []): ?array
+    {
+        $apiKey = env('myhr.api_key');
+        $apiU   = env('myhr.api_u');
+        $apiP   = env('myhr.api_p');
+
+        $baseUrl = rtrim(env('myhr.auth_url', 'http://localhost:8888/DEV-PHP8/api-authentication/public'), '/');
+        $url = $baseUrl . '/' . ltrim($endpoint, '/') . '?token=' . $token . '&key=' . $apiKey;
+
+        if (!empty($params)) {
+            foreach ($params as $k => $v) {
+                $url .= '&' . $k . '=' . $v;
+            }
+        }
+
+        $headers = [
+            'Authorization: Basic ' . base64_encode($apiU . ':' . $apiP),
+        ];
+
+        log_message('debug', 'MyhrAuth GET URL: ' . $url);
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_PROXY          => false,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+
+        log_message('debug', 'MyhrAuth GET Response [' . $httpCode . ']: ' . mb_substr($response ?? '', 0, 500));
+
+        if ($error) {
+            log_message('error', 'MyhrAuth GET cURL error: ' . $error . ' | URL: ' . $url);
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        if ($decoded === null) {
+            log_message('error', 'MyhrAuth GET JSON error: ' . json_last_error_msg());
+            return null;
+        }
+
+        // Extract ['data'] wrapper — same as getFromMyhrApi()
+        $result = $decoded['data'] ?? $decoded;
+
+        if (is_array($result)) {
+            $result['_http_code'] = $decoded['statuscode'] ?? 500;
+        } else {
+            // data is a string/integer — wrap in array to satisfy ?array return type
+            $result = ['data' => $result, '_http_code' => $decoded['statuscode'] ?? 500];
+        }
+        return $result;
     }
 
     /**
@@ -139,6 +207,7 @@ class ApiClient
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_PROXY          => false,
         ]);
 
         $response = curl_exec($ch);
@@ -160,7 +229,9 @@ class ApiClient
 
         // myhr/plus returns $decoded["data"] — extract the inner data
         $result = $decoded['data'] ?? $decoded;
-        $result['_http_code'] = $httpCode;
+        if (is_array($result)) {
+            $result['_http_code'] = $httpCode;
+        }
         return $result;
     }
 
@@ -181,6 +252,7 @@ class ApiClient
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_PROXY          => false,
         ]);
 
         if ($method === 'POST') {

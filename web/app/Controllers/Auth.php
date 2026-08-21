@@ -89,27 +89,34 @@ class Auth extends BaseController
 
             log_message('debug', 'Login success: userId=' . $myhrUserId . ', token=' . substr($myhrToken, 0, 10) . '...');
 
-            // Fetch user detail from myhr/plus
-            $userDetail = $this->api->getFromMyhrApi('authcombine/userdetail', $myhrToken, [
-                'token' => $myhrToken,
-            ]);
+            // Fetch user detail from myhr auth server (matches hr-portal flow)
+            $userData = $this->api->getFromMyhrAuth('authcombine/userdetail', $myhrToken);
 
             if (ENVIRONMENT === 'development') {
-                log_message('debug', 'User detail: ' . json_encode($userDetail));
+                log_message('debug', 'User detail: ' . json_encode($userData));
             }
 
-            // Validasi user detail response
-            if (!$userDetail || empty($userDetail['nama'])) {
+            if (!$userData || empty($userData['nama'])) {
                 log_message('error', 'Login: user detail failed — no name returned');
                 return $this->view('auth/login', [
                     'error' => 'Gagal mengambil data user dari server autentikasi',
                 ]);
             }
 
-            $fullName = $userDetail['nama'] ?? $username;
-            $email = $userDetail['email'] ?? ($username . '@external.local');
+            // Fetch divisi from myhr auth server (matches hr-portal flow)
+            $divisiData = $this->api->getFromMyhrAuth('authcombine/divisi', $myhrToken, [
+                'deptId' => $userData['DepartemenId'] ?? '',
+            ]);
 
-            // Find or create user via internal API
+            log_message('debug', 'Divisi data: ' . json_encode($divisiData));
+
+            // Unwrap: API returns {data: "8"} — store raw value in session (matches hr-portal)
+            $divisiValue = is_array($divisiData) ? ($divisiData['data'] ?? $divisiData) : $divisiData;
+
+            $fullName = $userData['nama'] ?? $username;
+            $email = $userData['email'] ?? ($username . '@external.local');
+
+            // Find or create user via internal API (backward compatibility)
             $localUser = $this->api->post_data('auth/local-user', [
                 'user_id'   => $myhrUserId,
                 'full_name' => $fullName,
@@ -126,7 +133,7 @@ class Auth extends BaseController
 
             $user = $localUser['data']['result'];
 
-            // Load permissions via internal API
+            // Load permissions via internal API (backward compatibility)
             $permResult = $this->api->get_data('roles/by-id/' . $user['role_id'] . '/permissions');
             $permMap = [];
 
@@ -138,16 +145,33 @@ class Auth extends BaseController
 
             log_message('debug', 'Permissions loaded: ' . count($permMap) . ' modules');
 
-            // Set session
+            // === Set session (dual-write: backward compat + hr-portal style) ===
             $session = service('session');
-            $user['token'] = $this->api->encrypt($user['id']);
+
+            // Backward compatibility: old session keys (read by 8 files, 15 occurrences)
+            $user['token'] = $myhrToken;
             $user['role_name'] = \App\Config\Enums::roleName((int) $user['role_id']);
             $user['permissions'] = $permMap;
 
             $session->set('user', $user);
-            $session->set('user_id', $user['id']);
+            $session->set('user_id', $myhrUserId);
             $session->set('role_id', $user['role_id']);
             $session->set('permissions', $permMap);
+
+            // hr-portal style session keys (login state)
+            $session->set('token', $myhrToken);
+            $session->set('userId', $myhrUserId);
+            $session->set('perusahaan', $userData['Perusahaan'] ?? '');
+            $session->set('statusKadiv', $userData['StatusKadiv'] ?? '');
+            $session->set('departemen', $userData['DepartemenId'] ?? '');
+            $session->set('penempatan', $userData['Penempatan'] ?? '');
+            $session->set('jabatan', $userData['Jabatan'] ?? '');
+            $session->set('statusLogin', 'login_hris');
+            $session->set('pegawaiId', $userData['pegawaiid'] ?? '');
+            $session->set('nama', $fullName);
+            $session->set('golongan', $userData['golongan'] ?? '');
+            $session->set('deptSummary', $userData['DeptSummary'] ?? '');
+            $session->set('divisi', $divisiValue);
 
             // Regenerate session ID to prevent session fixation
             $session->regenerate(true);
