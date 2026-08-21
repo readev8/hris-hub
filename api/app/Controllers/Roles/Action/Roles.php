@@ -5,6 +5,7 @@ namespace App\Controllers\Roles\Action;
 use App\Controllers\BaseApi;
 use App\Libraries\AuditLogger;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Roles extends BaseApi
 {
@@ -34,11 +35,11 @@ class Roles extends BaseApi
         if (strlen($slug) < 2) return $this->JSONResponse('Slug minimal 2 karakter', null, 400);
         if (!preg_match('/^[a-z0-9_-]+$/', $slug)) return $this->JSONResponse('Slug hanya boleh huruf kecil, angka, dash, underscore', null, 400);
 
-        $exists = $this->db()->table('roles')->where('slug', $slug)->where('active', 0)->countAllResults();
+        $exists = $this->db()->table(Tables::ROLES)->where('slug', $slug)->where('active', 0)->countAllResults();
         if ($exists > 0) return $this->JSONResponse('Slug sudah digunakan', null, 400);
 
         $this->db()->transStart();
-        $this->db()->table('roles')->insert([
+        $this->db()->table(Tables::ROLES)->insert([
             'name'        => $name,
             'slug'        => $slug,
             'description' => $description,
@@ -68,7 +69,7 @@ class Roles extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah role', null, 403);
         }
 
-        $role = $this->db()->table('roles')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $role = $this->db()->table(Tables::ROLES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
         if ($role['is_system']) return $this->JSONResponse('Role sistem tidak dapat diubah', null, 400);
 
@@ -78,7 +79,7 @@ class Roles extends BaseApi
         $isActive = isset($input['is_active']) ? (int) $input['is_active'] : $role['is_active'];
 
         $this->db()->transStart();
-        $this->db()->table('roles')->where('id', $id)->update([
+        $this->db()->table(Tables::ROLES)->where('id', $id)->update([
             'name'        => $name,
             'description' => $description,
             'is_active'   => $isActive,
@@ -102,15 +103,15 @@ class Roles extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus role', null, 403);
         }
 
-        $role = $this->db()->table('roles')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $role = $this->db()->table(Tables::ROLES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
         if ($role['is_system']) return $this->JSONResponse('Role sistem tidak dapat dihapus', null, 400);
 
-        $userCount = $this->db()->table('users')->where('role_id', $id)->countAllResults();
+        $userCount = $this->db()->table(Tables::USERS)->where('role_id', $id)->countAllResults();
         if ($userCount > 0) return $this->JSONResponse('Role masih digunakan oleh ' . $userCount . ' user', null, 400);
 
         $this->db()->transStart();
-        $this->db()->table('roles')->where('id', $id)->update(['active' => 1]);
+        $this->db()->table(Tables::ROLES)->where('id', $id)->update(['active' => 1]);
         $this->audit->log($userId, 'role', $id, 'delete_role', ['name' => $role['name']], null);
         $this->db()->transComplete();
 
@@ -129,7 +130,7 @@ class Roles extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menyimpan permissions', null, 403);
         }
 
-        $role = $this->db()->table('roles')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $role = $this->db()->table(Tables::ROLES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
 
         $input = $this->req->getJSON(true) ?? $this->req->getPost();
@@ -138,14 +139,14 @@ class Roles extends BaseApi
         if (!is_array($permissions)) return $this->JSONResponse('Format permissions tidak valid', null, 400);
 
         $this->db()->transStart();
-        $this->db()->table('role_permissions')->where('role_id', $id)->update(['active' => 1]);
+        $this->db()->table(Tables::ROLE_PERMISSIONS)->where('role_id', $id)->update(['active' => 1]);
 
         $now = date('Y-m-d H:i:s');
         foreach ($permissions as $perm) {
             $moduleSlug = trim($perm['module_slug'] ?? '');
             if (empty($moduleSlug)) continue;
 
-            $this->db()->table('role_permissions')->insert([
+            $this->db()->table(Tables::ROLE_PERMISSIONS)->insert([
                 'role_id'      => $id,
                 'module_slug'  => $moduleSlug,
                 'can_view'     => (int) ($perm['can_view'] ?? 0),
@@ -178,8 +179,8 @@ class Roles extends BaseApi
 
         $permissions = [];
         try {
-            if ($this->db()->tableExists('role_permissions')) {
-                $permissions = $this->db()->table('role_permissions')
+            if ($this->db()->tableExists(Tables::ROLE_PERMISSIONS)) {
+                $permissions = $this->db()->table(Tables::ROLE_PERMISSIONS)
                     ->where('role_id', $id)
                     ->where('active', 0)
                     ->get()
@@ -215,14 +216,14 @@ class Roles extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah status role', null, 403);
         }
 
-        $role = $this->db()->table('roles')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $role = $this->db()->table(Tables::ROLES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$role) return $this->JSONResponse('Role tidak ditemukan', null, 404);
         if ($role['is_system']) return $this->JSONResponse('Role sistem tidak dapat diubah', null, 400);
 
         $newStatus = $role['is_active'] ? 0 : 1;
 
         $this->db()->transStart();
-        $this->db()->table('roles')->where('id', $id)->update([
+        $this->db()->table(Tables::ROLES)->where('id', $id)->update([
             'is_active'  => $newStatus,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);

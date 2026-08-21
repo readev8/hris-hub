@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateAccessModules extends Migration
 {
@@ -17,11 +18,11 @@ class CreateAccessModules extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addUniqueKey('slug');
-        $this->forge->createTable('access_modules');
+        $this->forge->createTable(Tables::ACCESS_MODULES);
     }
 
     public function down()
     {
-        $this->forge->dropTable('access_modules');
+        $this->forge->dropTable(Tables::ACCESS_MODULES);
     }
 }

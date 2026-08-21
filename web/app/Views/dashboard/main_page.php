@@ -1,3 +1,18 @@
+<?php
+/**
+ * ============================================================================
+ * DASHBOARD — MAIN PAGE
+ * ============================================================================
+ *
+ * Description: Halaman dashboard utama dengan KPI cards, charts, approval queue,
+ *              workload, project health, dan recent activity.
+ *
+ * Required: $stats, $logs, $start_date, $end_date, $role_id, $is_approver,
+ *           $is_manager, $is_admin, $role_name
+ * Optional: (none)
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 

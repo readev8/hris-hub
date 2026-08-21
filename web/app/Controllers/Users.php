@@ -2,6 +2,19 @@
 
 namespace App\Controllers;
 
+/**
+ * ============================================================================
+ * USERS CONTROLLER
+ * ============================================================================
+ *
+ * Description: Manages HRIS Hub users mapped from HRIS employee records.
+ *
+ * Responsibilities:
+ * - List users and roles for the management pages and AJAX DataTables
+ * - Look up and search HRIS employees and add them as local users
+ * - Update, toggle, and delete users via API
+ */
+
 class Users extends BaseController
 {
     private function guard(string $action = 'can_view'): bool
@@ -79,8 +92,13 @@ class Users extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Unauthorized']);
         }
 
+        $userId = $this->request->getPost('user_id');
+        if (empty(trim($userId ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Field user_id wajib diisi']);
+        }
+
         $result = $this->api->post_data('users/add-by-userid', [
-            'user_id'   => $this->request->getPost('user_id'),
+            'user_id'   => $userId,
             'full_name' => $this->request->getPost('full_name'),
             'email'     => $this->request->getPost('email'),
             'role_id'   => $this->request->getPost('role_id'),

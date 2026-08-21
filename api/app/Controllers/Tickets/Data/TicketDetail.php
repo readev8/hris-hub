@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Data;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -16,25 +17,25 @@ class TicketDetail extends BaseApi
             return $this->JSONResponse('ID tidak valid', null, 400);
         }
 
-        $rawTicket = $this->db()->table('tickets')
+        $rawTicket = $this->db()->table(Tables::TICKETS)
             ->where('id', $id)
             ->get()
             ->getRowArray();
         log_message('debug', 'TicketDetail: raw ticket exists=' . ($rawTicket ? 'YES (id=' . $rawTicket['id'] . ', page_id=' . var_export($rawTicket['page_id'], true) . ')' : 'NO'));
 
-        $ticket = $this->db()->table('tickets')
-            ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name,
-                      tickets.assignee_id as assignee_raw_id,
+        $ticket = $this->db()->table(Tables::TICKETS)
+            ->select(Tables::TICKETS . '.*, creator.full_name as creator_name, assignee.full_name as assignee_name,
+                      ' . Tables::TICKETS . '.assignee_id as assignee_raw_id,
                       approver.full_name as approver_name,
-                      pages.name as page_name, modules.name as module_name, master_projects.name as project_name,
-                      master_projects.id as project_raw_id')
-            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
-            ->join('users as approver', 'approver.id = tickets.approver_id', 'left')
-            ->join('pages', 'pages.id = tickets.page_id', 'left')
-            ->join('modules', 'modules.id = pages.module_id', 'left')
-            ->join('master_projects', 'master_projects.id = modules.master_project_id', 'left')
-            ->where('tickets.id', $id)
+                      ' . Tables::PAGES . '.name as page_name, ' . Tables::MODULES . '.name as module_name, ' . Tables::MASTER_PROJECTS . '.name as project_name,
+                      ' . Tables::MASTER_PROJECTS . '.id as project_raw_id')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+            ->join(Tables::USERS . ' as assignee', 'assignee.id = ' . Tables::TICKETS . '.assignee_id', 'left')
+            ->join(Tables::USERS . ' as approver', 'approver.id = ' . Tables::TICKETS . '.approver_id', 'left')
+            ->join(Tables::PAGES, Tables::PAGES . '.id = ' . Tables::TICKETS . '.page_id', 'left')
+            ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id', 'left')
+            ->join(Tables::MASTER_PROJECTS, Tables::MASTER_PROJECTS . '.id = ' . Tables::MODULES . '.master_project_id', 'left')
+            ->where(Tables::TICKETS . '.id', $id)
             ->get()
             ->getRowArray();
         log_message('debug', 'TicketDetail: joined query result=' . ($ticket ? 'FOUND' : 'NULL'));
@@ -43,16 +44,16 @@ class TicketDetail extends BaseApi
             return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
         }
 
-        $comments = $this->db()->table('ticket_comments')
-            ->select('ticket_comments.*, users.full_name')
-            ->join('users', 'users.id = ticket_comments.user_id')
-            ->where('ticket_comments.ticket_id', $id)
-            ->where('ticket_comments.active', 0)
-            ->orderBy('ticket_comments.created_at', 'ASC')
+        $comments = $this->db()->table(Tables::TICKET_COMMENTS)
+            ->select(Tables::TICKET_COMMENTS . '.*, ' . Tables::USERS . '.full_name')
+            ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::TICKET_COMMENTS . '.user_id')
+            ->where(Tables::TICKET_COMMENTS . '.ticket_id', $id)
+            ->where(Tables::TICKET_COMMENTS . '.active', 0)
+            ->orderBy(Tables::TICKET_COMMENTS . '.created_at', 'ASC')
             ->get()
             ->getResultArray();
 
-        $allAttachments = $this->db()->table('ticket_attachments')
+        $allAttachments = $this->db()->table(Tables::TICKET_ATTACHMENTS)
             ->select('id, ticket_id, comment_id, filename, stored_name, mime_type, file_size, created_at')
             ->where('ticket_id', $id)
             ->where('active', 0)
@@ -96,12 +97,12 @@ class TicketDetail extends BaseApi
 
         // Load approval history if needs_approval is set
         if ((int) ($ticket['needs_approval'] ?? 0) === 1) {
-            $approvals = $this->db()->table('approval_requests')
-                ->select('approval_requests.*, approver.full_name as approver_name')
-                ->join('users as approver', 'approver.id = approval_requests.approver_id', 'left')
-                ->where('approval_requests.ticket_id', $id)
-                ->where('approval_requests.active', 0)
-                ->orderBy('approval_requests.stage_sequence', 'ASC')
+            $approvals = $this->db()->table(Tables::APPROVAL_REQUESTS)
+                ->select(Tables::APPROVAL_REQUESTS . '.*, approver.full_name as approver_name')
+                ->join(Tables::USERS . ' as approver', 'approver.id = ' . Tables::APPROVAL_REQUESTS . '.approver_id', 'left')
+                ->where(Tables::APPROVAL_REQUESTS . '.ticket_id', $id)
+                ->where(Tables::APPROVAL_REQUESTS . '.active', 0)
+                ->orderBy(Tables::APPROVAL_REQUESTS . '.stage_sequence', 'ASC')
                 ->get()
                 ->getResultArray();
 

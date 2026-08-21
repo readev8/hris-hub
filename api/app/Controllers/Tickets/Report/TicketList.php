@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Report;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -18,40 +19,40 @@ class TicketList extends BaseApi
         $type = $params['type'] ?? '';
         $priority = $params['priority'] ?? '';
         $overdue = $params['overdue'] ?? '';
-        $sort = $params['sort'] ?? 'tickets.id';
+        $sort = $params['sort'] ?? Tables::TICKETS . '.id';
         $order = strtoupper($params['order'] ?? 'DESC');
 
-        $allowedSort = ['tickets.id', 'title', 'status', 'priority', 'created_at', 'updated_at'];
+        $allowedSort = [Tables::TICKETS . '.id', 'title', 'status', 'priority', 'created_at', 'updated_at'];
         if (!in_array($sort, $allowedSort)) {
-            $sort = 'tickets.id';
+            $sort = Tables::TICKETS . '.id';
         }
         $order = in_array($order, ['ASC', 'DESC']) ? $order : 'DESC';
 
-        $builder = $this->db()->table('tickets')
-            ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
-            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
-            ->where('tickets.active', 0);
+        $builder = $this->db()->table(Tables::TICKETS)
+            ->select(Tables::TICKETS . '.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+            ->join(Tables::USERS . ' as assignee', 'assignee.id = ' . Tables::TICKETS . '.assignee_id', 'left')
+            ->where(Tables::TICKETS . '.active', 0);
 
         if (!empty($search)) {
             $builder->groupStart()
-                ->like('tickets.title', $search)
-                ->orLike('tickets.tracking_code', $search)
+                ->like(Tables::TICKETS . '.title', $search)
+                ->orLike(Tables::TICKETS . '.tracking_code', $search)
                 ->groupEnd();
         }
         if ($status !== '') {
-            $builder->where('tickets.status', (int) $status);
+            $builder->where(Tables::TICKETS . '.status', (int) $status);
         }
         if ($type !== '') {
-            $builder->where('tickets.type', (int) $type);
+            $builder->where(Tables::TICKETS . '.type', (int) $type);
         }
         if ($priority !== '') {
-            $builder->where('tickets.priority', (int) $priority);
+            $builder->where(Tables::TICKETS . '.priority', (int) $priority);
         }
         if ($overdue === '1') {
-            $builder->where('tickets.due_date IS NOT NULL', null, false)
-                   ->where('tickets.due_date <', date('Y-m-d'))
-                   ->whereNotIn('tickets.status', [
+            $builder->where(Tables::TICKETS . '.due_date IS NOT NULL', null, false)
+                   ->where(Tables::TICKETS . '.due_date <', date('Y-m-d'))
+                   ->whereNotIn(Tables::TICKETS . '.status', [
                        \App\Config\Enums::TICKET_STATUS_RESOLVED,
                        \App\Config\Enums::TICKET_STATUS_CLOSED,
                        \App\Config\Enums::TICKET_STATUS_REJECTED,
@@ -86,14 +87,14 @@ class TicketList extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $rows = $this->db()->table('tickets')
-            ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
-            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
-            ->where('tickets.active', 0)
-            ->where('tickets.creator_id', $userId)
-            ->orWhere('tickets.assignee_id', $userId)
-            ->orderBy('tickets.id', 'DESC')
+        $rows = $this->db()->table(Tables::TICKETS)
+            ->select(Tables::TICKETS . '.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+            ->join(Tables::USERS . ' as assignee', 'assignee.id = ' . Tables::TICKETS . '.assignee_id', 'left')
+            ->where(Tables::TICKETS . '.active', 0)
+            ->where(Tables::TICKETS . '.creator_id', $userId)
+            ->orWhere(Tables::TICKETS . '.assignee_id', $userId)
+            ->orderBy(Tables::TICKETS . '.id', 'DESC')
             ->limit(50)
             ->get()
             ->getResultArray();
@@ -115,12 +116,12 @@ class TicketList extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $rows = $this->db()->table('tickets')
-            ->select('tickets.*, creator.full_name as creator_name')
-            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->where('tickets.active', 0)
-            ->where('tickets.status', \App\Config\Enums::TICKET_STATUS_OPEN)
-            ->orderBy('tickets.id', 'DESC')
+        $rows = $this->db()->table(Tables::TICKETS)
+            ->select(Tables::TICKETS . '.*, creator.full_name as creator_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+            ->where(Tables::TICKETS . '.active', 0)
+            ->where(Tables::TICKETS . '.status', \App\Config\Enums::TICKET_STATUS_OPEN)
+            ->orderBy(Tables::TICKETS . '.id', 'DESC')
             ->limit(50)
             ->get()
             ->getResultArray();
@@ -150,26 +151,26 @@ class TicketList extends BaseApi
         $status = $params['status'] ?? '';
         $overdue = $params['overdue'] ?? '';
 
-        $builder = $this->db()->table('tickets')
-            ->select('tickets.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
-            ->join('users as creator', 'creator.id = tickets.creator_id', 'left')
-            ->join('users as assignee', 'assignee.id = tickets.assignee_id', 'left')
-            ->where('tickets.active', 0)
-            ->where('tickets.assignee_id', $userId);
+        $builder = $this->db()->table(Tables::TICKETS)
+            ->select(Tables::TICKETS . '.*, creator.full_name as creator_name, assignee.full_name as assignee_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
+            ->join(Tables::USERS . ' as assignee', 'assignee.id = ' . Tables::TICKETS . '.assignee_id', 'left')
+            ->where(Tables::TICKETS . '.active', 0)
+            ->where(Tables::TICKETS . '.assignee_id', $userId);
 
         if (!empty($search)) {
             $builder->groupStart()
-                ->like('tickets.title', $search)
-                ->orLike('tickets.tracking_code', $search)
+                ->like(Tables::TICKETS . '.title', $search)
+                ->orLike(Tables::TICKETS . '.tracking_code', $search)
                 ->groupEnd();
         }
         if ($status !== '') {
-            $builder->where('tickets.status', (int) $status);
+            $builder->where(Tables::TICKETS . '.status', (int) $status);
         }
         if ($overdue === '1') {
-            $builder->where('tickets.due_date IS NOT NULL', null, false)
-                   ->where('tickets.due_date <', date('Y-m-d'))
-                   ->whereNotIn('tickets.status', [
+            $builder->where(Tables::TICKETS . '.due_date IS NOT NULL', null, false)
+                   ->where(Tables::TICKETS . '.due_date <', date('Y-m-d'))
+                   ->whereNotIn(Tables::TICKETS . '.status', [
                        \App\Config\Enums::TICKET_STATUS_RESOLVED,
                        \App\Config\Enums::TICKET_STATUS_CLOSED,
                        \App\Config\Enums::TICKET_STATUS_REJECTED,
@@ -177,7 +178,7 @@ class TicketList extends BaseApi
         }
 
         $total = $builder->countAllResults(false);
-        $rows = $builder->orderBy('tickets.id', 'DESC')
+        $rows = $builder->orderBy(Tables::TICKETS . '.id', 'DESC')
             ->limit($perPage, $offset)
             ->get()
             ->getResultArray();

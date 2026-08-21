@@ -3,10 +3,27 @@
  * Tickets Detail
  * ============================================================================
  *
- * Description: Ticket detail page with actions, comments, approval workflow
- * Date: 2026-07-16
- * Standard: Mini (<400 lines)
+ * Description: Ticket detail page with actions, comments, approval workflow,
+ * resolve modal, and GLightbox for attachments.
+ *
+ * Dependencies: jQuery, Bootstrap, Toastr, SweetAlert2, GLightbox
+ * Date: 2026-08-18
  */
+
+// ===========================
+// CONSTANTS
+// ===========================
+
+var API_ENDPOINTS = {
+    TICKET_BASE: site_url + '/tickets/',
+    USERS_LIST: site_url + '/users/ajax-list'
+};
+
+// ===========================
+// STATE
+// ===========================
+
+var token = window.PageData ? window.PageData.token : '';
 
 // ===========================
 // PUBLIC API (called from onclick in view)
@@ -20,7 +37,7 @@ function copyTrackingCode(code) {
 
 function doAction(action) {
     var btn = event && event.target ? $(event.target).closest('button') : null;
-    $.post(site_url + '/tickets/' + token + '/' + action, {}, function(res) {
+    $.post(API_ENDPOINTS.TICKET_BASE + token + '/' + action, {}, function(res) {
         if (res.status) {
             toastr.success(res.data.message);
             setTimeout(function() { location.reload(); }, 800);
@@ -47,7 +64,7 @@ function promptAction(action, label) {
             var data = {};
             if (action === 'reopen') data.rejection_note = result.value;
             if (action === 'reject') data.rejection_note = result.value;
-            $.post(site_url + '/tickets/' + token + '/' + action, data, function(res) {
+            $.post(API_ENDPOINTS.TICKET_BASE + token + '/' + action, data, function(res) {
                 if (res.status) {
                     toastr.success(res.data.message);
                     setTimeout(function() { location.reload(); }, 800);
@@ -62,7 +79,7 @@ function promptAction(action, label) {
 }
 
 function showAssignModal() {
-    $.get(site_url + '/users/ajax-list', function(res) {
+    $.get(API_ENDPOINTS.USERS_LIST, function(res) {
         var users = res.data || [];
         var options = '<option value="">Select user...</option>';
         for (var i = 0; i < users.length; i++) {
@@ -85,7 +102,7 @@ function showAssignModal() {
             }
         }).then(function(result) {
             if (result.isConfirmed && result.value) {
-                $.post(site_url + '/tickets/' + token + '/assign', {assignee_id: result.value}, function(res) {
+                $.post(API_ENDPOINTS.TICKET_BASE + token + '/assign', {assignee_id: result.value}, function(res) {
                     if (res.status) {
                         toastr.success('Ticket assigned');
                         setTimeout(function() { location.reload(); }, 800);
@@ -113,7 +130,7 @@ function confirmDelete() {
         cancelButtonColor: '#758CA4',
     }).then(function(result) {
         if (result.isConfirmed) {
-            $.post(site_url + '/tickets/' + token + '/delete', {}, function(res) {
+            $.post(API_ENDPOINTS.TICKET_BASE + token + '/delete', {}, function(res) {
                 if (res.status) {
                     toastr.success('Ticket deleted');
                     setTimeout(function() { window.location.href = site_url + '/tickets'; }, 800);
@@ -129,7 +146,7 @@ function confirmDelete() {
 
 function doApproval(action) {
     var btn = event && event.target ? $(event.target).closest('button') : null;
-    $.post(site_url + '/tickets/' + token + '/' + action, {}, function(res) {
+    $.post(API_ENDPOINTS.TICKET_BASE + token + '/' + action, {}, function(res) {
         if (res.status) {
             toastr.success(res.data.message);
             setTimeout(function() { location.reload(); }, 800);
@@ -152,7 +169,7 @@ function promptRejectApproval() {
         cancelButtonColor: '#758CA4',
     }).then(function(result) {
         if (result.isConfirmed && result.value) {
-            $.post(site_url + '/tickets/' + token + '/reject-approval', { notes: result.value }, function(res) {
+            $.post(API_ENDPOINTS.TICKET_BASE + token + '/reject-approval', { notes: result.value }, function(res) {
                 if (res.status) {
                     toastr.success(res.data.message);
                     setTimeout(function() { location.reload(); }, 800);
@@ -165,6 +182,10 @@ function promptRejectApproval() {
         }
     });
 }
+
+// ===========================
+// RESOLVE (FORMDATA UPLOAD)
+// ===========================
 
 function submitResolve() {
     var note = $('#resolveNote').val();
@@ -192,7 +213,7 @@ function submitResolve() {
 
     var formData = new FormData($('#resolveForm')[0]);
     $.ajax({
-        url: site_url + '/tickets/' + token + '/resolve',
+        url: API_ENDPOINTS.TICKET_BASE + token + '/resolve',
         type: 'POST',
         data: formData,
         processData: false,
@@ -222,12 +243,6 @@ function submitResolve() {
 }
 
 // ===========================
-// STATE
-// ===========================
-
-var token = window.PageData ? window.PageData.token : '';
-
-// ===========================
 // INITIALIZATION
 // ===========================
 
@@ -251,6 +266,7 @@ $(function() {
         }
     });
 
+    // Comment form (FormData upload)
     $('#commentForm').on('submit', function(e) {
         e.preventDefault();
         var text = $('#commentText').val();
@@ -258,7 +274,7 @@ $(function() {
         var btn = $(this).find('[type="submit"]');
         var formData = new FormData(this);
         $.ajax({
-            url: site_url + '/tickets/' + token + '/comments',
+            url: API_ENDPOINTS.TICKET_BASE + token + '/comments',
             type: 'POST',
             data: formData,
             processData: false,

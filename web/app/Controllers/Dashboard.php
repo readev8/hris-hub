@@ -2,6 +2,18 @@
 
 namespace App\Controllers;
 
+/**
+ * ============================================================================
+ * DASHBOARD CONTROLLER
+ * ============================================================================
+ *
+ * Description: Halaman utama — ringkasan statistik dan audit log.
+ *
+ * Responsibilities:
+ * - Render halaman dashboard dengan statistik global
+ * - Proxy data statistik dan audit log dari API
+ * - Sediakan data konteks role untuk rendering menu dan aksi
+ */
 class Dashboard extends BaseController
 {
     public function index(): string

@@ -3,13 +3,14 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class AddIsAnonymousToTickets extends Migration
 {
     public function up()
     {
-        if (!$this->db->fieldExists('is_anonymous', 'tickets')) {
-            $this->forge->addColumn('tickets', [
+        if (!$this->db->fieldExists('is_anonymous', Tables::TICKETS)) {
+            $this->forge->addColumn(Tables::TICKETS, [
                 'is_anonymous' => [
                     'type'       => 'TINYINT',
                     'constraint' => 1,
@@ -19,15 +20,15 @@ class AddIsAnonymousToTickets extends Migration
                     'after'      => 'creator_id',
                 ],
             ]);
-            $this->db->query('ALTER TABLE tickets ADD INDEX idx_anon_active (is_anonymous, active)');
+            $this->db->query('ALTER TABLE ' . Tables::TICKETS . ' ADD INDEX idx_anon_active (is_anonymous, active)');
         }
     }
 
     public function down()
     {
-        if ($this->db->fieldExists('is_anonymous', 'tickets')) {
-            $this->db->query('ALTER TABLE tickets DROP INDEX idx_anon_active');
-            $this->forge->dropColumn('tickets', 'is_anonymous');
+        if ($this->db->fieldExists('is_anonymous', Tables::TICKETS)) {
+            $this->db->query('ALTER TABLE ' . Tables::TICKETS . ' DROP INDEX idx_anon_active');
+            $this->forge->dropColumn(Tables::TICKETS, 'is_anonymous');
         }
     }
 }

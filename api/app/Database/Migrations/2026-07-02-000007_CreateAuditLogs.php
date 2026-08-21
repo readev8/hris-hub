@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateAuditLogs extends Migration
 {
@@ -21,12 +22,12 @@ class CreateAuditLogs extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey(['user_id']);
         $this->forge->addKey(['entity_type', 'entity_id']);
-        $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('audit_logs');
+        $this->forge->addForeignKey('user_id', Tables::USERS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::AUDIT_LOGS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('audit_logs');
+        $this->forge->dropTable(Tables::AUDIT_LOGS);
     }
 }

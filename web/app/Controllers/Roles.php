@@ -2,6 +2,19 @@
 
 namespace App\Controllers;
 
+/**
+ * ============================================================================
+ * ROLES CONTROLLER
+ * ============================================================================
+ *
+ * Description: Manages roles and their per-module permission matrix.
+ *
+ * Responsibilities:
+ * - List roles for the management page and AJAX DataTables
+ * - Create, update, delete, and toggle role active status via API
+ * - Display and save role permission assignments per module
+ */
+
 class Roles extends BaseController
 {
     private function guard(string $action = 'can_view'): bool
@@ -43,6 +56,11 @@ class Roles extends BaseController
         }
 
         $post = $this->request->getPost();
+
+        if (empty(trim($post['name'] ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Field name wajib diisi']);
+        }
+
         $result = $this->api->post_data('roles/create', $post);
         return $this->response->setJSON($result);
     }

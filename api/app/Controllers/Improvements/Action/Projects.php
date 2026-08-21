@@ -6,6 +6,7 @@ use App\Controllers\BaseApi;
 use App\Config\Enums;
 use App\Libraries\AuditLogger;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Projects extends BaseApi
 {
@@ -45,7 +46,7 @@ class Projects extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('projects')->insert([
+        $this->db()->table(Tables::PROJECTS)->insert([
             'name'                => $name,
             'description'         => $description,
             'business_case'       => $businessCase,
@@ -79,7 +80,7 @@ class Projects extends BaseApi
                     'created_at'   => date('Y-m-d H:i:s'),
                 ];
             }
-            $this->db()->table('project_user_types')->insertBatch($insertBatch);
+                $this->db()->table(Tables::PROJECT_USER_TYPES)->insertBatch($insertBatch);
         }
 
         $this->audit->log($userId, 'project', $projectId, 'create_improvement', null, [
@@ -104,7 +105,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah improvement', null, 403);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::PROJECTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $role = $this->getCurrentUserRole();
@@ -141,10 +142,10 @@ class Projects extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('projects')->update($update, ['id' => $id]);
+        $this->db()->table(Tables::PROJECTS)->update($update, ['id' => $id]);
 
         if (array_key_exists('user_type_ids', $input)) {
-            $this->db()->table('project_user_types')->where('project_id', $id)->delete();
+            $this->db()->table(Tables::PROJECT_USER_TYPES)->where('project_id', $id)->delete();
             $userTypeIds = $input['user_type_ids'] ?? [];
             if (!empty($userTypeIds) && is_array($userTypeIds)) {
                 $insertBatch = [];
@@ -155,7 +156,7 @@ class Projects extends BaseApi
                         'created_at'   => date('Y-m-d H:i:s'),
                     ];
                 }
-                $this->db()->table('project_user_types')->insertBatch($insertBatch);
+            $this->db()->table(Tables::PROJECT_USER_TYPES)->insertBatch($insertBatch);
             }
         }
 
@@ -179,7 +180,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus improvement', null, 403);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::PROJECTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $role = $this->getCurrentUserRole();
@@ -192,7 +193,7 @@ class Projects extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('projects')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::PROJECTS)->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'project', $id, 'delete_improvement', ['status' => $project['status']], null);
         $this->db()->transComplete();
 
@@ -210,12 +211,12 @@ class Projects extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk approve improvement', null, 403);
         }
         return $this->approvalAction($encryptedId, Enums::STAGE_PENDING_DEPT, function ($project, $userId) {
-            $this->db()->table('projects')->update([
+            $this->db()->table(Tables::PROJECTS)->update([
                 'status'     => Enums::PROJECT_STATUS_APPROVED,
                 'updated_at' => date('Y-m-d H:i:s'),
             ], ['id' => $project['id']]);
 
-            $this->db()->table('approval_requests')->insert([
+            $this->db()->table(Tables::APPROVAL_REQUESTS)->insert([
                 'project_id'      => $project['id'],
                 'requester_id'    => $project['created_by'],
                 'approver_id'     => $userId,
@@ -252,7 +253,7 @@ class Projects extends BaseApi
             return $this->JSONResponse('Alasan penolakan wajib diisi', null, 400);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::PROJECTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         if (!in_array((int) $project['status'], [Enums::PROJECT_STATUS_DRAFT, Enums::PROJECT_STATUS_PENDING], true)) {
@@ -276,12 +277,12 @@ class Projects extends BaseApi
         $stageSeq = Enums::STAGE_PENDING_DEPT;
 
         $this->db()->transStart();
-        $this->db()->table('projects')->update([
+        $this->db()->table(Tables::PROJECTS)->update([
             'status'     => Enums::PROJECT_STATUS_REJECTED,
             'updated_at' => date('Y-m-d H:i:s'),
         ], ['id' => $id]);
 
-        $this->db()->table('approval_requests')->insert([
+        $this->db()->table(Tables::APPROVAL_REQUESTS)->insert([
             'project_id'      => $id,
             'requester_id'    => $project['created_by'],
             'approver_id'     => $userId,
@@ -310,7 +311,7 @@ class Projects extends BaseApi
         $description = trim($input['description'] ?? '');
         $businessCase = trim($input['business_case'] ?? '');
 
-        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::PROJECTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         if ((int) $project['status'] !== Enums::PROJECT_STATUS_REJECTED) {
@@ -328,7 +329,7 @@ class Projects extends BaseApi
         if (!empty($businessCase)) $update['business_case'] = $businessCase;
 
         $this->db()->transStart();
-        $this->db()->table('projects')->update($update, ['id' => $id]);
+        $this->db()->table(Tables::PROJECTS)->update($update, ['id' => $id]);
 
         $this->audit->log($userId, 'project', $id, 'resubmit', null, $update);
         $this->db()->transComplete();
@@ -355,11 +356,11 @@ class Projects extends BaseApi
             return $this->JSONResponse('Komentar tidak boleh kosong', null, 400);
         }
 
-        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::PROJECTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('project_comments')->insert([
+        $this->db()->table(Tables::PROJECT_COMMENTS)->insert([
             'project_id' => $id,
             'user_id'    => $userId,
             'content'    => $content,
@@ -382,7 +383,7 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        $project = $this->db()->table('projects')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::PROJECTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$project) return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
 
         $role = $this->getCurrentUserRole();
@@ -417,7 +418,7 @@ class Projects extends BaseApi
 
     public function get_user_types(): ResponseInterface
     {
-        $userTypes = $this->db()->table('master_user_types')
+        $userTypes = $this->db()->table(Tables::MASTER_USER_TYPES)
             ->select('id, name, description')
             ->where('active', 1)
             ->orderBy('id', 'ASC')

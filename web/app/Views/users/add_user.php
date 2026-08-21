@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * Users - Add User
+ * ============================================================================
+ *
+ * Description: Search HRIS user and assign a role
+ *
+ * Required: $roles
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -91,5 +104,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- MOVE to page JS file -->
 <script src="<?= base_url('public/assets/js/page/users/add_user.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

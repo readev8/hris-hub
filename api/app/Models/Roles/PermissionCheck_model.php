@@ -2,6 +2,8 @@
 
 namespace App\Models\Roles;
 
+use Config\Tables;
+
 class PermissionCheck_model
 {
     private \CodeIgniter\Database\BaseConnection $db;
@@ -13,10 +15,10 @@ class PermissionCheck_model
 
     public function getUserPermissions(int $userId): array
     {
-        $user = $this->db->table('users')->where('id', $userId)->get()->getRowArray();
+        $user = $this->db->table(Tables::USERS)->where('id', $userId)->get()->getRowArray();
         if (!$user || empty($user['role_id'])) return [];
 
-        $permissions = $this->db->table('role_permissions')
+        $permissions = $this->db->table(Tables::ROLE_PERMISSIONS)
             ->where('active', 0)
             ->where('role_id', $user['role_id'])
             ->get()

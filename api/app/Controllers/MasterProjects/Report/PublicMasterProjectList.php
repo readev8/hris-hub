@@ -3,13 +3,14 @@
 namespace App\Controllers\MasterProjects\Report;
 
 use App\Controllers\BaseApi;
+use Config\Tables;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class PublicMasterProjectList extends BaseApi
 {
     public function get_active(): ResponseInterface
     {
-        $projects = $this->db()->table('master_projects')
+        $projects = $this->db()->table(Tables::MASTER_PROJECTS)
             ->select('id, name')
             ->where('status', 1)
             ->where('active', 0)
@@ -33,7 +34,7 @@ class PublicMasterProjectList extends BaseApi
         $projectId = $this->resolveId($encryptedProjectId);
         if (!$projectId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $modules = $this->db()->table('modules')
+        $modules = $this->db()->table(Tables::MODULES)
             ->select('id, name')
             ->where('master_project_id', $projectId)
             ->where('active', 0)
@@ -57,7 +58,7 @@ class PublicMasterProjectList extends BaseApi
         $moduleId = $this->resolveId($encryptedModuleId);
         if (!$moduleId) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $pages = $this->db()->table('pages')
+        $pages = $this->db()->table(Tables::PAGES)
             ->select('id, name')
             ->where('module_id', $moduleId)
             ->where('active', 0)

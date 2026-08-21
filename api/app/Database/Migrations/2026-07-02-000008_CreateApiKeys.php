@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateApiKeys extends Migration
 {
@@ -17,11 +18,11 @@ class CreateApiKeys extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addUniqueKey('api_key');
-        $this->forge->createTable('api_keys');
+        $this->forge->createTable(Tables::API_KEYS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('api_keys');
+        $this->forge->dropTable(Tables::API_KEYS);
     }
 }

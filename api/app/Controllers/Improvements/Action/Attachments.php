@@ -4,6 +4,7 @@ namespace App\Controllers\Improvements\Action;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Attachments extends BaseApi
 {
@@ -19,7 +20,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
-        $project = $this->db()->table('projects')->where('id', $projectId)->where('active', 0)->get()->getRowArray();
+        $project = $this->db()->table(Tables::PROJECTS)->where('id', $projectId)->where('active', 0)->get()->getRowArray();
         if (!$project) {
             return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
         }
@@ -34,7 +35,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Data lampiran tidak lengkap', null, 400);
         }
 
-        $this->db()->table('project_attachments')->insert([
+        $this->db()->table(Tables::PROJECT_ATTACHMENTS)->insert([
             'project_id'  => $projectId,
             'uploaded_by' => $userId,
             'filename'    => $filename,
@@ -60,12 +61,12 @@ class Attachments extends BaseApi
             return $this->JSONResponse('ID tidak valid', null, 400);
         }
 
-        $attachment = $this->db()->table('project_attachments')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $attachment = $this->db()->table(Tables::PROJECT_ATTACHMENTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$attachment) {
             return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);
         }
 
-        $this->db()->table('project_attachments')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::PROJECT_ATTACHMENTS)->update(['active' => 1], ['id' => $id]);
 
         return $this->JSONResponse('Lampiran dihapus', [
             'stored_name' => $attachment['stored_name'],

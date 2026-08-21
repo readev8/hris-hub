@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * Improvements - Edit
+ * ============================================================================
+ *
+ * Description: Edit existing improvement proposal form
+ *
+ * Required: $improvement, $token, $users, $userTypes
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
@@ -167,6 +180,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>window.PageData = <?= json_encode(['token' => $token]) ?>;</script>
+<!-- MOVE to page JS file -->
+<script>window.PageData = <?= json_encode(['token' => $token], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
 <script src="<?= base_url('public/assets/js/page/improvements/edit.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

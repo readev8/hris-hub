@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateBlueprintAttachments extends Migration
 {
@@ -25,14 +26,14 @@ class CreateBlueprintAttachments extends Migration
         $this->forge->addKey('blueprint_id');
         $this->forge->addKey('module_id');
         $this->forge->addKey('section_type');
-        $this->forge->addForeignKey('blueprint_id', 'blueprints', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('module_id', 'blueprint_modules', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('uploaded_by', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('blueprint_attachments');
+        $this->forge->addForeignKey('blueprint_id', Tables::BLUEPRINTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('module_id', Tables::BLUEPRINT_MODULES, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('uploaded_by', Tables::USERS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::BLUEPRINT_ATTACHMENTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('blueprint_attachments');
+        $this->forge->dropTable(Tables::BLUEPRINT_ATTACHMENTS);
     }
 }

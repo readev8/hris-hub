@@ -3,6 +3,7 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
+use Config\Tables;
 
 class RoleSeeder extends Seeder
 {
@@ -19,7 +20,7 @@ class RoleSeeder extends Seeder
         foreach ($roles as $role) {
             $role['created_at'] = date('Y-m-d H:i:s');
             $role['updated_at'] = date('Y-m-d H:i:s');
-            $this->db->table('roles')->insert($role);
+            $this->db->table(Tables::ROLES)->insert($role);
         }
     }
 }

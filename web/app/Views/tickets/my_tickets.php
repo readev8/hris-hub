@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * TICKETS - MY TICKETS
+ * ============================================================================
+ *
+ * Description: Personal ticket dashboard with summary cards and DataTable
+ *
+ * Required: none
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="d-flex justify-content-between align-items-center mb-4">

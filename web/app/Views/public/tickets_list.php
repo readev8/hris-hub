@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * PUBLIC TICKETS - LIST
+ * ============================================================================
+ *
+ * Description: Public ticket listing with status filter and pagination (public access)
+ *
+ * Required: none
+ * Optional: none
+ * Template: template/anonymous
+ */
+?>
 <?= $this->extend('template/anonymous') ?>
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/public/_shared/anonymous-layout.css') ?>?v=<?= config('App')->assetVersion ?>">
@@ -52,6 +65,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>window.PageData = <?= json_encode(['ajaxBaseUrl' => site_url('public/tickets')]) ?>;</script>
+<script>window.PageData = <?= json_encode(['ajaxBaseUrl' => site_url('public/tickets')], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
 <script src="<?= base_url('public/assets/js/page/public/tickets_list.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

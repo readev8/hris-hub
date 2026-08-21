@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateBlueprints extends Migration
 {
@@ -22,14 +23,14 @@ class CreateBlueprints extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey('status');
         $this->forge->addUniqueKey(['improvement_id']);
-        $this->forge->addForeignKey('improvement_id', 'projects', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('approver_id', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->addForeignKey('created_by', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->createTable('blueprints');
+        $this->forge->addForeignKey('improvement_id', Tables::PROJECTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('approver_id', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->addForeignKey('created_by', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->createTable(Tables::BLUEPRINTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('blueprints');
+        $this->forge->dropTable(Tables::BLUEPRINTS);
     }
 }

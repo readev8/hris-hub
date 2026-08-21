@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateProjects extends Migration
 {
@@ -27,12 +28,12 @@ class CreateProjects extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey('status');
         $this->forge->addKey('priority');
-        $this->forge->addForeignKey('created_by', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->createTable('projects');
+        $this->forge->addForeignKey('created_by', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->createTable(Tables::PROJECTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('projects');
+        $this->forge->dropTable(Tables::PROJECTS);
     }
 }

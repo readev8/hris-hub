@@ -1,96 +1,136 @@
 /**
- * Tickets Edit Page
+ * ============================================================================
+ * Tickets Edit
+ * ============================================================================
  *
- * @package    App\Views\tickets
- * @file       edit.js
- * @version    1.0.0
+ * Description: Ticket edit page with cascading project/module/page dropdowns,
+ * form submission, attachment upload, and lightbox preview.
+ * Single cohesive module — all parts tightly coupled around the edit form state.
+ *
+ * Dependencies: jQuery, Bootstrap, Toastr, SweetAlert2, GLightbox
+ * Date: 2026-08-18
  */
 
-/* global $, site_url, toastr, Swal, GLightbox */
+const TicketEdit = {
 
-var TicketEdit = (function () {
-    'use strict';
+    // ===========================
+    // CONSTANTS
+    // ===========================
 
-    // ── Page Data ──────────────────────────────────────────────
-    var pageData        = window.PageData || {};
-    var token           = pageData.token || '';
-    var currentPageId   = pageData.currentPageId || '';
-    var currentAssigneeId = pageData.currentAssigneeId || '';
+    API_ENDPOINTS: {
+        UPDATE: site_url + '/tickets/',
+        UPLOAD: site_url + '/tickets/',
+        DELETE_ATTACHMENT: site_url + '/attachments/',
+        USERS_LIST: site_url + '/users/ajax-list',
+        PROJECTS: site_url + '/master-projects/active',
+        MODULES: site_url + '/master-projects/',
+        PAGES: site_url + '/modules/'
+    },
 
-    // ── State ──────────────────────────────────────────────────
-    var projectsCache   = null;
-    var activeModuleReq = null;
-    var activePageReq   = null;
+    // ===========================
+    // STATE
+    // ===========================
 
-    // ── DOM Ready ──────────────────────────────────────────────
-    $(function () {
-        bindPriorityControl();
-        loadAssignees();
-        bindTicketTypeChange();
-        bindProjectChange();
-        bindModuleChange();
-        bindPageChange();
-        bindDropzone();
-        bindImageInput();
-        bindTicketForm();
-        initExistingAttachments();
+    pageData: null,
+    token: '',
+    currentPageId: '',
+    currentAssigneeId: '',
+    projectsCache: null,
+    activeModuleReq: null,
+    activePageReq: null,
+
+    // ===========================
+    // INITIALIZATION
+    // ===========================
+
+    init: function () {
+        this.pageData = window.PageData || {};
+        this.token = this.pageData.token || '';
+        this.currentPageId = this.pageData.currentPageId || '';
+        this.currentAssigneeId = this.pageData.currentAssigneeId || '';
+
+        this.bindPriorityControl();
+        this.loadAssignees();
+        this.bindTicketTypeChange();
+        this.bindProjectChange();
+        this.bindModuleChange();
+        this.bindPageChange();
+        this.bindDropzone();
+        this.bindImageInput();
+        this.bindTicketForm();
+        this.initExistingAttachments();
 
         if (['0', '3', '4', '5'].includes($('#ticketType').val())) {
-            loadProjects();
+            this.loadProjects();
         }
 
-        initLightbox();
-    });
+        this.initLightbox();
+    },
 
-    // ── Priority Segmented Control ─────────────────────────────
-    function bindPriorityControl() {
+    // ===========================
+    // PRIORITY CONTROL
+    // ===========================
+
+    bindPriorityControl: function () {
         $('#prioritySegments .seg-option').on('click', function () {
             $('#prioritySegments .seg-option').removeClass('active');
             $(this).addClass('active');
             $('#priorityValue').val($(this).data('value'));
         });
-    }
+    },
 
-    // ── Assignees ──────────────────────────────────────────────
-    function loadAssignees() {
+    // ===========================
+    // ASSIGNEES
+    // ===========================
+
+    loadAssignees: function () {
+        var self = this;
         $.ajax({
-            url: site_url + '/users/ajax-list',
+            url: this.API_ENDPOINTS.USERS_LIST,
             type: 'GET',
             timeout: 10000,
             success: function (res) {
                 var users = res.data || [];
                 var html = '<option value="">Unassigned</option>';
                 for (var i = 0; i < users.length; i++) {
-                    var selected = (String(users[i].id) === String(currentAssigneeId)) ? ' selected' : '';
+                    var selected = (String(users[i].id) === String(self.currentAssigneeId)) ? ' selected' : '';
                     html += '<option value="' + users[i].id + '"' + selected + '>' + (users[i].full_name || users[i].name) + '</option>';
                 }
                 $('#assigneeSelect').html(html);
             }
         });
-    }
+    },
 
-    // ── Ticket Type Change ─────────────────────────────────────
-    function bindTicketTypeChange() {
+    // ===========================
+    // TICKET TYPE CHANGE
+    // ===========================
+
+    bindTicketTypeChange: function () {
+        var self = this;
         $('#ticketType').on('change', function () {
             if (['0', '3', '4', '5'].includes($(this).val())) {
                 $('#bugTraceSection').slideDown(200);
-                loadProjects();
+                self.loadProjects();
             } else {
                 $('#bugTraceSection').slideUp(200);
                 $('#pageIdValue').val('');
             }
         });
-    }
+    },
 
-    // ── Project → Module → Page Cascading ──────────────────────
-    function loadProjects() {
-        if (projectsCache) {
-            populateProjects(projectsCache);
+    // ===========================
+    // CASCADING DROPDOWNS
+    // ===========================
+
+    loadProjects: function () {
+        var self = this;
+        if (this.projectsCache) {
+            this.populateProjects(this.projectsCache);
             return;
         }
         $('#projectSelect').prop('disabled', true).html('<option value="">Loading...</option>');
         $.ajax({
-            url: site_url + '/master-projects/active',
+            url: this.API_ENDPOINTS.PROJECTS,
             type: 'GET',
             timeout: 10000,
             success: function (res) {
@@ -98,48 +138,49 @@ var TicketEdit = (function () {
                     $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false);
                     return;
                 }
-                projectsCache = res;
-                populateProjects(res);
-                if (currentPageId) resolveBugLocation();
+                self.projectsCache = res;
+                self.populateProjects(res);
+                if (self.currentPageId) self.resolveBugLocation();
             },
             error: function () {
                 toastr.error('Failed to load projects');
                 $('#projectSelect').html('<option value="">Select Project...</option>').prop('disabled', false);
             }
         });
-    }
+    },
 
-    function populateProjects(res) {
+    populateProjects: function (res) {
         var html = '<option value="">Select Project...</option>';
         for (var i = 0; i < res.length; i++) {
             html += '<option value="' + res[i].id + '">' + res[i].name + '</option>';
         }
         $('#projectSelect').html(html).prop('disabled', false);
-    }
+    },
 
-    function resolveBugLocation() {
-        if (!currentPageId || !projectsCache) return;
-        for (var p of projectsCache) {
+    resolveBugLocation: function () {
+        var self = this;
+        if (!this.currentPageId || !this.projectsCache) return;
+        for (var p of this.projectsCache) {
             $.ajax({
-                url: site_url + '/master-projects/' + p.id + '/modules',
+                url: this.API_ENDPOINTS.MODULES + p.id + '/modules',
                 type: 'GET', timeout: 10000,
                 success: function (modules) {
                     if (!Array.isArray(modules)) return;
                     for (var m of modules) {
                         $.ajax({
-                            url: site_url + '/modules/' + m.id + '/pages',
+                            url: self.API_ENDPOINTS.PAGES + m.id + '/pages',
                             type: 'GET', timeout: 10000,
                             success: function (pages) {
                                 pages = Array.isArray(pages) ? pages : (pages && Array.isArray(pages.pages)) ? pages.pages : [];
                                 if (!pages.length) return;
                                 for (var pg of pages) {
-                                    if (String(pg.id) === String(currentPageId)) {
+                                    if (String(pg.id) === String(self.currentPageId)) {
                                         $('#projectSelect').val(p.id).trigger('change');
                                         setTimeout(function () {
                                             $('#moduleSelect').val(m.id).trigger('change');
                                             setTimeout(function () {
-                                                $('#pageSelect').val(currentPageId);
-                                                $('#pageIdValue').val(currentPageId);
+                                                $('#pageSelect').val(self.currentPageId);
+                                                $('#pageIdValue').val(self.currentPageId);
                                             }, 300);
                                         }, 300);
                                     }
@@ -150,9 +191,10 @@ var TicketEdit = (function () {
                 }
             });
         }
-    }
+    },
 
-    function bindProjectChange() {
+    bindProjectChange: function () {
+        var self = this;
         $('#projectSelect').on('change', function () {
             var pid = $(this).val();
             if (!pid) {
@@ -161,10 +203,10 @@ var TicketEdit = (function () {
                 $('#pageIdValue').val('');
                 return;
             }
-            if (activeModuleReq) activeModuleReq.abort();
+            if (self.activeModuleReq) self.activeModuleReq.abort();
             $('#moduleSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-            activeModuleReq = $.ajax({
-                url: site_url + '/master-projects/' + pid + '/modules',
+            self.activeModuleReq = $.ajax({
+                url: self.API_ENDPOINTS.MODULES + pid + '/modules',
                 type: 'GET', timeout: 10000,
                 success: function (res) {
                     if (!Array.isArray(res)) {
@@ -184,9 +226,10 @@ var TicketEdit = (function () {
                 }
             });
         });
-    }
+    },
 
-    function bindModuleChange() {
+    bindModuleChange: function () {
+        var self = this;
         $('#moduleSelect').on('change', function () {
             var mid = $(this).val();
             if (!mid) {
@@ -194,10 +237,10 @@ var TicketEdit = (function () {
                 $('#pageIdValue').val('');
                 return;
             }
-            if (activePageReq) activePageReq.abort();
+            if (self.activePageReq) self.activePageReq.abort();
             $('#pageSelect').prop('disabled', true).html('<option value="">Loading...</option>');
-            activePageReq = $.ajax({
-                url: site_url + '/modules/' + mid + '/pages',
+            self.activePageReq = $.ajax({
+                url: self.API_ENDPOINTS.PAGES + mid + '/pages',
                 type: 'GET', timeout: 10000,
                 success: function (res) {
                     var pages = Array.isArray(res) ? res : (res && Array.isArray(res.pages)) ? res.pages : [];
@@ -216,16 +259,19 @@ var TicketEdit = (function () {
                 }
             });
         });
-    }
+    },
 
-    function bindPageChange() {
+    bindPageChange: function () {
         $('#pageSelect').on('change', function () {
             $('#pageIdValue').val($(this).val());
         });
-    }
+    },
 
-    // ── Dropzone ───────────────────────────────────────────────
-    function bindDropzone() {
+    // ===========================
+    // FILE UPLOAD
+    // ===========================
+
+    bindDropzone: function () {
         $('#dropzone').on('dragover', function (e) {
             e.preventDefault();
             $(this).css('border-color', 'var(--sap-brand)').css('background', 'var(--sap-brand-hover)');
@@ -241,10 +287,9 @@ var TicketEdit = (function () {
                 $(input).trigger('change');
             }
         });
-    }
+    },
 
-    // ── Image Input ────────────────────────────────────────────
-    function bindImageInput() {
+    bindImageInput: function () {
         $('#ticketForm input[name="images[]"]').on('change', function () {
             var preview = $('#imagePreview');
             preview.empty();
@@ -262,10 +307,14 @@ var TicketEdit = (function () {
                 reader.readAsDataURL(files[i]);
             }
         });
-    }
+    },
 
-    // ── Form Submit ────────────────────────────────────────────
-    function bindTicketForm() {
+    // ===========================
+    // FORM SUBMISSION
+    // ===========================
+
+    bindTicketForm: function () {
+        var self = this;
         $('#ticketForm').on('submit', function (e) {
             e.preventDefault();
             var btn = $(this).find('[type="submit"]');
@@ -283,7 +332,7 @@ var TicketEdit = (function () {
             };
 
             $.ajax({
-                url: site_url + '/tickets/' + token + '/update',
+                url: self.API_ENDPOINTS.UPDATE + self.token + '/update',
                 type: 'POST',
                 data: JSON.stringify(formData),
                 contentType: 'application/json',
@@ -292,10 +341,10 @@ var TicketEdit = (function () {
                     if (res.status) {
                         var files = $('#ticketForm input[name="images[]"]')[0].files;
                         if (files.length > 0) {
-                            uploadAttachments(files, 0, btn);
+                            self.uploadAttachments(files, 0, btn);
                         } else {
                             toastr.success('Ticket updated');
-                            setTimeout(function () { window.location.href = site_url + '/tickets/' + token; }, 500);
+                            setTimeout(function () { window.location.href = site_url + '/tickets/' + self.token; }, 500);
                         }
                     } else {
                         var msg = res.message || 'Failed to update';
@@ -319,25 +368,29 @@ var TicketEdit = (function () {
                 }
             });
         });
-    }
+    },
 
-    // ── Attachment Upload (recursive) ──────────────────────────
-    function uploadAttachments(files, index, btn) {
+    // ===========================
+    // ATTACHMENT UPLOAD
+    // ===========================
+
+    uploadAttachments: function (files, index, btn) {
+        var self = this;
         if (index >= files.length) {
             toastr.success('Ticket updated');
-            setTimeout(function () { window.location.href = site_url + '/tickets/' + token; }, 500);
+            setTimeout(function () { window.location.href = site_url + '/tickets/' + self.token; }, 500);
             return;
         }
         var fd = new FormData();
         fd.append('images[]', files[index]);
         $.ajax({
-            url: site_url + '/tickets/' + token + '/upload-attachment',
+            url: self.API_ENDPOINTS.UPLOAD + self.token + '/upload-attachment',
             type: 'POST',
             data: fd,
             processData: false,
             contentType: false,
             success: function () {
-                uploadAttachments(files, index + 1, btn);
+                self.uploadAttachments(files, index + 1, btn);
             },
             error: function (xhr) {
                 var res = null;
@@ -347,13 +400,16 @@ var TicketEdit = (function () {
                     return;
                 }
                 toastr.warning('Some images failed to upload');
-                uploadAttachments(files, index + 1, btn);
+                self.uploadAttachments(files, index + 1, btn);
             }
         });
-    }
+    },
 
-    // ── Remove Existing Attachment ─────────────────────────────
-    function removeAttachment(id, el) {
+    // ===========================
+    // EXISTING ATTACHMENTS
+    // ===========================
+
+    removeAttachment: function (id, el) {
         Swal.fire({
             title: 'Remove this attachment?',
             icon: 'warning',
@@ -364,7 +420,7 @@ var TicketEdit = (function () {
         }).then(function (result) {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: site_url + '/attachments/' + id + '/delete',
+                    url: TicketEdit.API_ENDPOINTS.DELETE_ATTACHMENT + id + '/delete',
                     type: 'POST',
                     success: function (res) {
                         if (res.status) {
@@ -386,23 +442,25 @@ var TicketEdit = (function () {
                 });
             }
         });
-    }
+    },
 
-    // ── Existing Attachments Lightbox ──────────────────────────
-    function initExistingAttachments() {
-        // Bind remove buttons for existing attachments
+    initExistingAttachments: function () {
+        var self = this;
         $('.btn-remove-attachment').each(function () {
             var btn = $(this);
             var attId = btn.closest('.attachment-item').data('id');
             btn.attr('onclick', '');
             btn.on('click', function () {
-                removeAttachment(attId, this);
+                self.removeAttachment(attId, this);
             });
         });
-    }
+    },
 
-    // ── Lightbox ───────────────────────────────────────────────
-    function initLightbox() {
+    // ===========================
+    // LIGHTBOX
+    // ===========================
+
+    initLightbox: function () {
         GLightbox({
             selector: '.edit-attachment-link',
             touchNavigation: true,
@@ -411,9 +469,14 @@ var TicketEdit = (function () {
             preload: true
         });
     }
+};
 
-    // ── Public API ─────────────────────────────────────────────
-    return {
-        removeAttachment: removeAttachment
-    };
-})();
+// ===========================
+// BOOTSTRAP
+// ===========================
+
+$(function () {
+    TicketEdit.init();
+});
+
+window.TicketEdit = TicketEdit;

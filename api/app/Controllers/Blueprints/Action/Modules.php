@@ -5,6 +5,7 @@ namespace App\Controllers\Blueprints\Action;
 use App\Controllers\BaseApi;
 use App\Libraries\AuditLogger;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Modules extends BaseApi
 {
@@ -34,13 +35,13 @@ class Modules extends BaseApi
             return $this->JSONResponse('Nama module wajib diisi', null, 400);
         }
 
-        $blueprint = $this->db()->table('blueprints')->where('id', $blueprintId)->where('active', 0)->get()->getRowArray();
+        $blueprint = $this->db()->table(Tables::BLUEPRINTS)->where('id', $blueprintId)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_modules')->where('blueprint_id', $blueprintId)->where('active', 0)->countAllResults();
+        $maxSort = $this->db()->table(Tables::BLUEPRINT_MODULES)->where('blueprint_id', $blueprintId)->where('active', 0)->countAllResults();
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_modules')->insert([
+        $this->db()->table(Tables::BLUEPRINT_MODULES)->insert([
             'blueprint_id' => $blueprintId,
             'name'         => $name,
             'description'  => trim($input['description'] ?? ''),
@@ -70,7 +71,7 @@ class Modules extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::BLUEPRINT_MODULES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -85,7 +86,7 @@ class Modules extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_modules')->update($update, ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_MODULES)->update($update, ['id' => $id]);
         $this->audit->log($userId, 'blueprint_module', $id, 'update', null, $update);
         $this->db()->transComplete();
 
@@ -106,11 +107,11 @@ class Modules extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::BLUEPRINT_MODULES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_modules')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_MODULES)->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint_module', $id, 'delete', null, ['name' => $module['name']]);
         $this->db()->transComplete();
 

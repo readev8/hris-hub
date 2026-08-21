@@ -1,3 +1,8 @@
+<?php
+/**
+ * FOOTER — Bar footer bawah dengan copyright dan versi aplikasi.
+ */
+?>
 <footer class="app-footer">
     <div class="footer-left">
         <span>HRIS-Hub</span>

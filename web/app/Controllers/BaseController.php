@@ -7,6 +7,18 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * ============================================================================
+ * BASE CONTROLLER
+ * ============================================================================
+ *
+ * Description: Base class untuk semua web controller di HRIS-Hub.
+ *
+ * Responsibilities:
+ * - Inisialisasi ApiClient, session userId, dan helper autoloading
+ * - Menyediakan view() wrapper otomatis inject base_url & site_url
+ * - Ekspos properti $api (ApiClient) dan $userId ke child controllers
+ */
 abstract class BaseController extends Controller
 {
     protected \App\Libraries\ApiClient $api;

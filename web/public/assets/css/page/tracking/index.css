@@ -1,0 +1,207 @@
+        body {
+            background: var(--sap-bg, #f5f6f7);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: '72', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .track-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 24px;
+        }
+        .track-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .track-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--sap-text, #32363a);
+            margin-bottom: 8px;
+        }
+        .track-header p {
+            font-size: 14px;
+            color: var(--sap-text-secondary, #6a6d70);
+        }
+        .track-search {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        .track-search input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--sap-border, #d9d9d9);
+            border-radius: var(--sap-radius, 8px);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .track-search input:focus {
+            border-color: var(--sap-brand, #0070f2);
+        }
+        .track-search button {
+            padding: 12px 24px;
+            background: var(--sap-brand, #0070f2);
+            color: #fff;
+            border: none;
+            border-radius: var(--sap-radius, 8px);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .track-search button:hover {
+            background: var(--sap-brand-hover, #0058b3);
+        }
+        .track-search button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .track-result {
+            display: none;
+        }
+        .track-ticket-card {
+            background: #fff;
+            border-radius: var(--sap-radius, 8px);
+            border: 1px solid var(--sap-border, #d9d9d9);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .track-ticket-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .track-ticket-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--sap-text, #32363a);
+        }
+        .track-ticket-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .track-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .track-badge .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .track-badge.open { background: #e8f4fd; color: #0070f2; }
+        .track-badge.open .badge-dot { background: #0070f2; }
+        .track-badge.approved { background: #e6f9ee; color: #256f3a; }
+        .track-badge.approved .badge-dot { background: #256f3a; }
+        .track-badge.in-progress { background: #fef3e2; color: #e76500; }
+        .track-badge.in-progress .badge-dot { background: #e76500; }
+        .track-badge.resolved { background: #e8f4fd; color: #0070f2; }
+        .track-badge.resolved .badge-dot { background: #0070f2; }
+        .track-badge.closed { background: #f0f0f0; color: #6a6d70; }
+        .track-badge.closed .badge-dot { background: #6a6d70; }
+        .track-badge.rejected { background: #fde7e7; color: #aa0808; }
+        .track-badge.rejected .badge-dot { background: #aa0808; }
+        .track-meta-item {
+            font-size: 13px;
+            color: var(--sap-text-secondary, #6a6d70);
+        }
+        .track-meta-item strong {
+            color: var(--sap-text, #32363a);
+        }
+        .track-timeline {
+            background: #fff;
+            border-radius: var(--sap-radius, 8px);
+            border: 1px solid var(--sap-border, #d9d9d9);
+            padding: 24px;
+        }
+        .track-timeline h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--sap-text, #32363a);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .timeline-list {
+            position: relative;
+            padding-left: 24px;
+        }
+        .timeline-list::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--sap-border, #d9d9d9);
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--sap-brand, #0070f2);
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px var(--sap-brand, #0070f2);
+        }
+        .timeline-item:first-child .timeline-dot {
+            background: var(--sap-success, #256f3a);
+            box-shadow: 0 0 0 2px var(--sap-success, #256f3a);
+        }
+        .timeline-action {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--sap-text, #32363a);
+            margin-bottom: 2px;
+        }
+        .timeline-status {
+            font-size: 12px;
+            color: var(--sap-text-secondary, #6a6d70);
+        }
+        .timeline-time {
+            font-size: 12px;
+            color: var(--sap-text-muted, #999);
+        }
+        .track-empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--sap-text-secondary, #6a6d70);
+        }
+        .track-empty i {
+            font-size: 48px;
+            color: var(--sap-text-muted, #d9d9d9);
+            margin-bottom: 16px;
+            display: block;
+        }
+        .track-error {
+            text-align: center;
+            padding: 32px 24px;
+            color: var(--sap-error, #aa0808);
+            display: none;
+        }
+        .track-error i {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }

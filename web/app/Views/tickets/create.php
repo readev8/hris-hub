@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * TICKETS - CREATE
+ * ============================================================================
+ *
+ * Description: Ticket creation form with page search and referral modals
+ *
+ * Required: none
+ * Optional: $users
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="container" style="max-width:800px">
@@ -118,44 +131,14 @@
                 </div>
             </form>
 
-            <!-- Page Search Modal -->
-            <div class="modal fade" id="pageModal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title"><i class="fas fa-search me-2"></i>Select Affected Page</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="text" id="pageSearch" class="sap-input mb-3" placeholder="Search by page name, module, or project...">
-                            <div id="pageList" style="max-height:400px;overflow-y:auto"></div>
-                            <div id="pagePagination" class="d-flex justify-content-center mt-3 gap-2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Referral Search Modal -->
-            <div class="modal fade" id="referralModal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title"><i class="fas fa-search me-2"></i>Select Referral Ticket</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="text" id="referralSearch" class="sap-input mb-3" placeholder="Search by tracking code or title..." autofocus>
-                            <div id="referralTicketList" style="max-height:400px;overflow-y:auto">
-                                <!-- Rendered by JS -->
-                            </div>
-                            <div id="referralPagination" class="d-flex justify-content-center mt-3 gap-2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
+<?= $this->include('tickets/_modal_page_search') ?>
+<?= $this->include('tickets/_modal_referral_search') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>

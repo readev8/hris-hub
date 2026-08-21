@@ -1,29 +1,73 @@
 /**
- * Anonymous Ticket Create Page
- * @package App\Views\public
- * @file    tickets_create.js
+ * ============================================================================
+ * Public Ticket Create
+ * ============================================================================
+ *
+ * Description: Anonymous ticket creation form with cascading dropdowns,
+ * file upload with preview, and priority segmented control.
+ *
+ * Dependencies: jQuery, Toastr, TrackingStore
+ * Date: 2026-08-18
  */
-/* global $, site_url, toastr, TrackingStore */
 
-(function () {
-    'use strict';
+const TicketPublicCreate = {
 
-    var pageData = window.PageData || {};
-    var baseUrl  = pageData.ajaxBaseUrl || site_url + '/public/tickets';
+    // ===========================
+    // STATE
+    // ===========================
 
-    var projectsCache   = null;
-    var activeModuleReq = null;
-    var activePageReq   = null;
+    pageData: null,
+    baseUrl: '',
+    projectsCache: null,
+    activeModuleReq: null,
+    activePageReq: null,
 
-    $(function () {
-        bindPrioritySegments();
-        bindTypeToggle();
-        bindCascadingDropdowns();
-        bindDropzone();
-        bindFormSubmit();
-    });
+    // ===========================
+    // INITIALIZATION
+    // ===========================
 
-    function bindPrioritySegments() {
+    init: function () {
+        this.pageData = window.PageData || {};
+        this.baseUrl = this.pageData.ajaxBaseUrl || site_url + '/public/tickets';
+
+        this.bindPrioritySegments();
+        this.bindTypeToggle();
+        this.bindCascadingDropdowns();
+        this.bindDropzone();
+        this.bindFormSubmit();
+    },
+
+    // ===========================
+    // HELPERS
+    // ===========================
+
+    escHtml: function (s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    },
+
+    clearFieldErrors: function () {
+        $('.anon-field-error').text('');
+        $('.anon-input, .anon-select').removeClass('is-invalid');
+    },
+
+    showFieldErrors: function (errors) {
+        var firstField = null;
+        for (var field in errors) {
+            $('[data-field="' + field + '"]').text(errors[field]);
+            var $input = $('[name="' + field + '"]');
+            if ($input.length) {
+                $input.addClass('is-invalid');
+                if (!firstField) firstField = $input;
+            }
+        }
+        if (firstField) firstField.focus();
+    },
+
+    // ===========================
+    // PRIORITY SEGMENTS
+    // ===========================
+
+    bindPrioritySegments: function () {
         var $options = $('#prioritySegments .seg-option');
         $options.on('click', function () {
             var val = $(this).data('value');
@@ -48,14 +92,19 @@
                 $options.eq(next).focus().trigger('click');
             }
         });
-    }
+    },
 
-    function bindTypeToggle() {
+    // ===========================
+    // TYPE TOGGLE
+    // ===========================
+
+    bindTypeToggle: function () {
+        var self = this;
         $('#ticketType').on('change', function () {
             var val = $(this).val();
             if (['0', '3', '4', '5'].indexOf(val) !== -1) {
                 $('#bugTraceSection').slideDown(200);
-                loadProjects();
+                self.loadProjects();
             } else {
                 $('#bugTraceSection').slideUp(200);
                 $('#moduleSelect').prop('disabled', true).html('<option value="">-- Select Module --</option>');
@@ -63,39 +112,46 @@
                 $('#pageIdValue').val('');
             }
         });
-    }
+    },
 
-    function loadProjects() {
-        if (projectsCache) { populateProjects(projectsCache); return; }
-        $.get(baseUrl + '/ajax/projects', function (res) {
-            projectsCache = res || [];
-            populateProjects(projectsCache);
+    // ===========================
+    // CASCADING DROPDOWNS
+    // ===========================
+
+    loadProjects: function () {
+        var self = this;
+        if (this.projectsCache) { this.populateProjects(this.projectsCache); return; }
+        $.get(this.baseUrl + '/ajax/projects', function (res) {
+            self.projectsCache = res || [];
+            self.populateProjects(self.projectsCache);
         }).fail(function () {
             toastr.error('Gagal memuat proyek');
         });
-    }
+    },
 
-    function populateProjects(res) {
+    populateProjects: function (res) {
         var $sel = $('#projectSelect').empty().append('<option value="">-- Select Project --</option>');
         for (var i = 0; i < res.length; i++) {
-            $sel.append('<option value="' + res[i].id + '">' + escHtml(res[i].name) + '</option>');
+            $sel.append('<option value="' + res[i].id + '">' + this.escHtml(res[i].name) + '</option>');
         }
         $sel.prop('disabled', false);
-    }
+    },
 
-    function bindCascadingDropdowns() {
+    bindCascadingDropdowns: function () {
+        var self = this;
+
         $('#projectSelect').on('change', function () {
             var pid = $(this).val();
             $('#moduleSelect').prop('disabled', true).html('<option value="">Loading...</option>');
             $('#pageSelect').prop('disabled', true).html('<option value="">-- Select Page --</option>');
             $('#pageIdValue').val('');
             if (!pid) return;
-            if (activeModuleReq) activeModuleReq.abort();
-            activeModuleReq = $.get(baseUrl + '/ajax/modules/' + pid, function (res) {
+            if (self.activeModuleReq) self.activeModuleReq.abort();
+            self.activeModuleReq = $.get(self.baseUrl + '/ajax/modules/' + pid, function (res) {
                 var $sel = $('#moduleSelect').empty().append('<option value="">-- Select Module --</option>');
                 var items = res || [];
                 for (var i = 0; i < items.length; i++) {
-                    $sel.append('<option value="' + items[i].id + '">' + escHtml(items[i].name) + '</option>');
+                    $sel.append('<option value="' + items[i].id + '">' + self.escHtml(items[i].name) + '</option>');
                 }
                 $sel.prop('disabled', false);
             });
@@ -106,12 +162,12 @@
             $('#pageSelect').prop('disabled', true).html('<option value="">Loading...</option>');
             $('#pageIdValue').val('');
             if (!mid) return;
-            if (activePageReq) activePageReq.abort();
-            activePageReq = $.get(baseUrl + '/ajax/pages/' + mid, function (res) {
+            if (self.activePageReq) self.activePageReq.abort();
+            self.activePageReq = $.get(self.baseUrl + '/ajax/pages/' + mid, function (res) {
                 var $sel = $('#pageSelect').empty().append('<option value="">-- Select Page --</option>');
                 var items = Array.isArray(res) ? res : (res && res.pages ? res.pages : []);
                 for (var i = 0; i < items.length; i++) {
-                    $sel.append('<option value="' + items[i].id + '">' + escHtml(items[i].name) + '</option>');
+                    $sel.append('<option value="' + items[i].id + '">' + self.escHtml(items[i].name) + '</option>');
                 }
                 $sel.prop('disabled', false);
             });
@@ -120,9 +176,14 @@
         $('#pageSelect').on('change', function () {
             $('#pageIdValue').val($(this).val());
         });
-    }
+    },
 
-    function bindDropzone() {
+    // ===========================
+    // FILE UPLOAD
+    // ===========================
+
+    bindDropzone: function () {
+        var self = this;
         var $dz = $('#dropzone');
         var $fi = $('#fileInput');
 
@@ -153,11 +214,12 @@
                     return;
                 }
             }
-            renderPreviews(files);
+            self.renderPreviews(files);
         });
-    }
+    },
 
-    function renderPreviews(files) {
+    renderPreviews: function (files) {
+        var self = this;
         var $grid = $('#imagePreview').empty();
         for (var i = 0; i < files.length; i++) {
             var file = files[i];
@@ -168,17 +230,22 @@
             var reader = new FileReader();
             reader.onload = (function (f) {
                 return function (e) {
-                    $grid.append('<div class="anon-preview-item"><img src="' + e.target.result + '" alt="' + escHtml(f.name) + '"></div>');
+                    $grid.append('<div class="anon-preview-item"><img src="' + e.target.result + '" alt="' + self.escHtml(f.name) + '"></div>');
                 };
             })(file);
             reader.readAsDataURL(file);
         }
-    }
+    },
 
-    function bindFormSubmit() {
+    // ===========================
+    // FORM SUBMISSION
+    // ===========================
+
+    bindFormSubmit: function () {
+        var self = this;
         $('#ticketForm').on('submit', function (e) {
             e.preventDefault();
-            clearFieldErrors();
+            self.clearFieldErrors();
 
             var type = $('#ticketType').val();
             var pageId = $('#pageIdValue').val();
@@ -193,7 +260,7 @@
 
             var formData = new FormData(this);
             $.ajax({
-                url: baseUrl + '/create',
+                url: self.baseUrl + '/create',
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -202,11 +269,11 @@
                     if (res.status && res.redirect) {
                         if (res.tracking_code) TrackingStore.addCode(res.tracking_code);
                         toastr.success('Ticket berhasil dibuat!');
-                        setTimeout(function () { window.location.href = baseUrl; }, 1200);
+                        setTimeout(function () { window.location.href = self.baseUrl; }, 1200);
                     } else {
                         $btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit Ticket');
                         if (res.errors) {
-                            showFieldErrors(res.errors);
+                            self.showFieldErrors(res.errors);
                         } else {
                             toastr.error(res.message || 'Gagal membuat ticket');
                         }
@@ -225,26 +292,14 @@
             });
         });
     }
+};
 
-    function clearFieldErrors() {
-        $('.anon-field-error').text('');
-        $('.anon-input, .anon-select').removeClass('is-invalid');
-    }
+// ===========================
+// BOOTSTRAP
+// ===========================
 
-    function showFieldErrors(errors) {
-        var firstField = null;
-        for (var field in errors) {
-            $('[data-field="' + field + '"]').text(errors[field]);
-            var $input = $('[name="' + field + '"]');
-            if ($input.length) {
-                $input.addClass('is-invalid');
-                if (!firstField) firstField = $input;
-            }
-        }
-        if (firstField) firstField.focus();
-    }
+$(function () {
+    TicketPublicCreate.init();
+});
 
-    function escHtml(s) {
-        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-})();
+window.TicketPublicCreate = TicketPublicCreate;

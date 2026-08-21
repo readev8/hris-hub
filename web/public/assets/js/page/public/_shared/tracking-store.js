@@ -1,22 +1,37 @@
 /**
- * TrackingStore — localStorage utility for anonymous ticket tracking codes
- * @package App\Views\public
- * @file    tracking-store.js
+ * ============================================================================
+ * TrackingStore
+ * ============================================================================
+ *
+ * localStorage utility for anonymous ticket tracking codes.
+ * Manages add, remove, lookup, and persistence of tracking codes.
+ *
+ * Dependencies: none
+ * Date: 2026-08-18
  */
-var TrackingStore = (function () {
-    'use strict';
-    var KEY = 'anon_tickets';
 
-    function getCodes() {
+const TrackingStore = {
+
+    // ===========================
+    // CONSTANTS
+    // ===========================
+
+    STORAGE_KEY: 'anon_tickets',
+
+    // ===========================
+    // PUBLIC API
+    // ===========================
+
+    getCodes: function () {
         try {
-            var raw = localStorage.getItem(KEY);
+            var raw = localStorage.getItem(this.STORAGE_KEY);
             return raw ? JSON.parse(raw) : [];
         } catch (e) {
             return [];
         }
-    }
+    },
 
-    function saveCodes(arr) {
+    saveCodes: function (arr) {
         var unique = [];
         var seen = {};
         for (var i = 0; i < arr.length; i++) {
@@ -26,44 +41,37 @@ var TrackingStore = (function () {
                 unique.push(code);
             }
         }
-        localStorage.setItem(KEY, JSON.stringify(unique));
-    }
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(unique));
+    },
 
-    function addCode(code) {
+    addCode: function (code) {
         code = String(code).trim().toUpperCase();
         if (!code) return false;
-        var codes = getCodes();
+        var codes = this.getCodes();
         if (codes.indexOf(code) !== -1) return false;
         codes.push(code);
-        saveCodes(codes);
+        this.saveCodes(codes);
         return true;
-    }
+    },
 
-    function removeCode(code) {
+    removeCode: function (code) {
         code = String(code).trim().toUpperCase();
-        var codes = getCodes();
+        var codes = this.getCodes();
         var filtered = [];
         for (var i = 0; i < codes.length; i++) {
             if (codes[i] !== code) filtered.push(codes[i]);
         }
-        saveCodes(filtered);
-    }
+        this.saveCodes(filtered);
+    },
 
-    function hasCode(code) {
+    hasCode: function (code) {
         code = String(code).trim().toUpperCase();
-        return getCodes().indexOf(code) !== -1;
-    }
+        return this.getCodes().indexOf(code) !== -1;
+    },
 
-    function clearAll() {
-        localStorage.removeItem(KEY);
+    clearAll: function () {
+        localStorage.removeItem(this.STORAGE_KEY);
     }
+};
 
-    return {
-        getCodes: getCodes,
-        saveCodes: saveCodes,
-        addCode: addCode,
-        removeCode: removeCode,
-        hasCode: hasCode,
-        clearAll: clearAll
-    };
-})();
+window.TrackingStore = TrackingStore;

@@ -4,6 +4,21 @@ namespace App\Controllers;
 
 use CodeIgniter\HTTP\UploadedFile;
 
+/**
+ * ============================================================================
+ * PUBLIC TICKETS CONTROLLER
+ * ============================================================================
+ *
+ * Description: Guest-facing ticket portal to submit and track tickets without
+ * authentication.
+ *
+ * Responsibilities:
+ * - Render public ticket pages (list, create, detail)
+ * - Submit public tickets with optional file attachments
+ * - Look up tickets by tracking code (single and batch)
+ * - Close public tickets by tracking code
+ * - Serve public master data (projects, modules, pages) and attachment files
+ */
 class PublicTickets extends BaseController
 {
     public function list(): string
@@ -51,82 +66,87 @@ class PublicTickets extends BaseController
 
     public function ajaxCreate()
     {
-        $post = $this->request->getPost();
+        try {
+            $post = $this->request->getPost();
 
-        $post['type']     = (string) ($post['type'] ?? '');
-        $post['priority'] = (string) ($post['priority'] ?? '');
+            $post['type']     = (string) ($post['type'] ?? '');
+            $post['priority'] = (string) ($post['priority'] ?? '');
 
-        $rules = [
-            'title'       => 'required|min_length[5]|max_length[255]',
-            'description' => 'required|min_length[10]',
-            'type'        => 'required|in_list[0,1,2,3,4,5]',
-            'priority'    => 'required|in_list[0,1,2,3]',
-        ];
-        if (in_array($post['type'] ?? '', ['0', '3', '4', '5'], true)) {
-            $rules['page_id'] = 'required';
-        }
-        if (!$this->validate($rules)) {
-            return $this->response->setJSON([
-                'status'  => false,
-                'message' => 'Validation failed',
-                'errors'  => $this->validator->getErrors(),
-            ]);
-        }
-
-        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-        });
-
-        $savedFiles = [];
-        if (!empty($files)) {
-            $error = $this->validateUploadedFiles($files, 3, 2 * 1024 * 1024);
-            if ($error) {
-                return $this->response->setJSON(['status' => false, 'message' => $error]);
+            $rules = [
+                'title'       => 'required|min_length[5]|max_length[255]',
+                'description' => 'required|min_length[10]',
+                'type'        => 'required|in_list[0,1,2,3,4,5]',
+                'priority'    => 'required|in_list[0,1,2,3]',
+            ];
+            if (in_array($post['type'] ?? '', ['0', '3', '4', '5'], true)) {
+                $rules['page_id'] = 'required';
             }
-            $savedFiles = $this->saveUploadedFiles($files);
-        }
+            if (!$this->validate($rules)) {
+                return $this->response->setJSON([
+                    'status'  => false,
+                    'message' => 'Validation failed',
+                    'errors'  => $this->validator->getErrors(),
+                ]);
+            }
 
-        $result = $this->api->post_data('tickets/public/create', $post);
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
 
-        if (!$result) {
-            return $this->response->setJSON([
-                'status'  => false,
-                'message' => 'Server API tidak terjangkau',
-            ]);
-        }
+            $savedFiles = [];
+            if (!empty($files)) {
+                $error = $this->validateUploadedFiles($files, 3, 2 * 1024 * 1024);
+                if ($error) {
+                    return $this->response->setJSON(['status' => false, 'message' => $error]);
+                }
+                $savedFiles = $this->saveUploadedFiles($files);
+            }
 
-        if ($result['status'] ?? false) {
-            $ticketId     = $result['data']['result']['id'] ?? null;
-            $trackingCode = $result['data']['result']['tracking_code'] ?? null;
+            $result = $this->api->post_data('tickets/public/create', $post);
 
-            if ($ticketId && !empty($savedFiles)) {
-                foreach ($savedFiles as $sf) {
-                    $attResult = $this->api->post_data('tickets/public/' . $ticketId . '/attachments', $sf);
-                    if (!$attResult || !($attResult['status'] ?? false)) {
-                        $this->deleteUploadedFiles($savedFiles);
-                        return $this->response->setJSON([
-                            'status'  => false,
-                            'message' => 'Gagal menyimpan metadata lampiran',
-                        ]);
+            if (!$result) {
+                return $this->response->setJSON([
+                    'status'  => false,
+                    'message' => 'Server API tidak terjangkau',
+                ]);
+            }
+
+            if ($result['status'] ?? false) {
+                $ticketId     = $result['data']['result']['id'] ?? null;
+                $trackingCode = $result['data']['result']['tracking_code'] ?? null;
+
+                if ($ticketId && !empty($savedFiles)) {
+                    foreach ($savedFiles as $sf) {
+                        $attResult = $this->api->post_data('tickets/public/' . $ticketId . '/attachments', $sf);
+                        if (!$attResult || !($attResult['status'] ?? false)) {
+                            $this->deleteUploadedFiles($savedFiles);
+                            return $this->response->setJSON([
+                                'status'  => false,
+                                'message' => 'Gagal menyimpan metadata lampiran',
+                            ]);
+                        }
                     }
                 }
+
+                return $this->response->setJSON([
+                    'status'        => true,
+                    'redirect'      => site_url('public/tickets'),
+                    'tracking_code' => $trackingCode,
+                ]);
+            }
+
+            if (!empty($savedFiles)) {
+                $this->deleteUploadedFiles($savedFiles);
             }
 
             return $this->response->setJSON([
-                'status'        => true,
-                'redirect'      => site_url('public/tickets'),
-                'tracking_code' => $trackingCode,
+                'status'  => false,
+                'message' => $result['data']['message'] ?? 'Gagal membuat ticket',
             ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'PublicTickets ajaxCreate exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
         }
-
-        if (!empty($savedFiles)) {
-            $this->deleteUploadedFiles($savedFiles);
-        }
-
-        return $this->response->setJSON([
-            'status'  => false,
-            'message' => $result['data']['message'] ?? 'Gagal membuat ticket',
-        ]);
     }
 
     public function ajaxLookup(string $code)

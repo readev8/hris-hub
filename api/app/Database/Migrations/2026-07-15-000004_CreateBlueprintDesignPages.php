@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateBlueprintDesignPages extends Migration
 {
@@ -19,12 +20,12 @@ class CreateBlueprintDesignPages extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addKey('module_id');
-        $this->forge->addForeignKey('module_id', 'blueprint_modules', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('blueprint_design_pages');
+        $this->forge->addForeignKey('module_id', Tables::BLUEPRINT_MODULES, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::BLUEPRINT_DESIGN_PAGES);
     }
 
     public function down()
     {
-        $this->forge->dropTable('blueprint_design_pages');
+        $this->forge->dropTable(Tables::BLUEPRINT_DESIGN_PAGES);
     }
 }

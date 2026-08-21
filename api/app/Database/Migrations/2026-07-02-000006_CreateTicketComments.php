@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateTicketComments extends Migration
 {
@@ -17,12 +18,12 @@ class CreateTicketComments extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addKey(['ticket_id']);
-        $this->forge->addForeignKey('ticket_id', 'tickets', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('ticket_comments');
+        $this->forge->addForeignKey('ticket_id', Tables::TICKETS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::TICKET_COMMENTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('ticket_comments');
+        $this->forge->dropTable(Tables::TICKET_COMMENTS);
     }
 }

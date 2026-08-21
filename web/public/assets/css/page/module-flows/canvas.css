@@ -1,0 +1,333 @@
+/* ============================================================================
+ * MODULE FLOWS — CANVAS STYLES
+ * ============================================================================
+ * jsPlumb CE 6.2.10 compatible
+ * Theme: --sap-* design tokens | Dark mode: .dark-mode
+ * Accessibility: prefers-reduced-motion, touch targets ≥44px
+ */
+
+/* ── Page Layout ─────────────────────────────────────── */
+.flow-page-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.flow-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.flow-page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--sap-text, #32363a);
+    margin-bottom: 2px;
+}
+
+.flow-page-header p {
+    font-size: 13px;
+    color: var(--sap-text-secondary, #6a6d70);
+    margin-bottom: 0;
+}
+
+/* ── Toolbar ──────────────────────────────────────────── */
+.flow-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--sap-card-bg, #fff);
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    min-height: 48px;
+    flex-wrap: wrap;
+}
+
+.flow-toolbar .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.flow-toolbar .toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--sap-border, #d9d9d9);
+    margin: 0 4px;
+}
+
+/* ── Canvas Container ─────────────────────────────────── */
+#flow-canvas {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 170px);
+    overflow: auto;
+    background: var(--sap-background, #f5f6f7);
+    border: 1px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    margin-top: 8px;
+    background-image: radial-gradient(circle, var(--sap-border, #d9d9d9) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.dark-mode #flow-canvas {
+    background-color: var(--sap-dark-bg, #121212);
+    background-image: radial-gradient(circle, var(--sap-dark-border, #333) 1px, transparent 1px);
+    border-color: var(--sap-dark-border, #333);
+}
+
+/* ── Node Styling ─────────────────────────────────────── */
+.jtk-node {
+    position: absolute;
+    min-width: 180px;
+    max-width: 240px;
+    padding: 0;
+    background: var(--sap-card-bg, #fff);
+    border: 1.5px solid var(--sap-border, #d9d9d9);
+    border-radius: var(--sap-radius, 8px);
+    color: var(--sap-text, #32363a);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: move;
+    z-index: 1;
+}
+
+.jtk-node:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--sap-brand, #0D9488);
+}
+
+.jtk-node.selected {
+    background: var(--sap-card-bg, #fff);
+    border-color: var(--sap-brand, #0D9488);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+}
+
+.jtk-node.dimmed {
+    opacity: 0.2;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+/* ── Module Node Content ──────────────────────────────── */
+.flow-module {
+    padding: 10px 14px;
+}
+
+.flow-module-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.flow-project-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.flow-module-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sap-text, #32363a);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.flow-module-project {
+    font-size: 11px;
+    color: var(--sap-text-secondary, #6a6d70);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 14px;
+}
+
+/* ── jsPlumb Endpoint Override ────────────────────────── */
+.jtk-endpoint {
+    z-index: 2;
+}
+
+.flow-endpoint {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.flow-endpoint-inner {
+    background: var(--sap-card-bg, #fff) !important;
+    border: 2px solid var(--sap-brand, #0D9488) !important;
+}
+
+/* ── jsPlumb Connection Override ──────────────────────── */
+.jtk-connector {
+    z-index: 0;
+}
+
+.jtk-connector.selected {
+    z-index: 10;
+}
+
+/* Arrow marker override */
+.jtk-connector path {
+    stroke: var(--sap-brand, #0D9488);
+    stroke-width: 2px;
+}
+
+.jtk-connector:hover path {
+    stroke: var(--sap-brand-dark, #0f766e);
+    stroke-width: 3px;
+    cursor: pointer;
+}
+
+.jtk-connector.selected path {
+    stroke: var(--sap-error, #ef4444);
+    stroke-width: 2.5px;
+}
+
+/* ── Project Legend ────────────────────────────────────── */
+.project-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--sap-text-secondary, #6a6d70);
+}
+
+.project-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.project-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ── Save Status Indicator ────────────────────────────── */
+.save-status {
+    font-size: 12px;
+    color: var(--sap-text-secondary, #6a6d70);
+    margin-left: auto;
+    transition: opacity 0.3s ease;
+    min-width: 80px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.save-status.saving { color: var(--sap-text-secondary, #6a6d70); }
+.save-status.saved { color: var(--sap-success, #10b981); }
+.save-status.error { color: var(--sap-error, #ef4444); }
+
+/* ── Select2 Dropdown Above Modal ─────────────────────── */
+.select2-dropdown {
+    z-index: 10070 !important;
+}
+
+.select2-container--open {
+    z-index: 10070 !important;
+}
+
+/* ── Dark Mode Overrides ──────────────────────────────── */
+.dark-mode .flow-page-header h1 { color: var(--sap-dark-text, #e2e8f0); }
+.dark-mode .flow-page-header p { color: var(--sap-dark-text-secondary, #94a3b8); }
+
+.dark-mode .flow-toolbar {
+    background: var(--sap-dark-card, #1e293b);
+    border-color: var(--sap-dark-border, #333);
+}
+
+.dark-mode .flow-toolbar .toolbar-separator {
+    background: var(--sap-dark-border, #333);
+}
+
+.dark-mode .jtk-node {
+    background: var(--sap-dark-card, #1e293b);
+    border-color: var(--sap-dark-border, #333);
+}
+
+.dark-mode .jtk-node:hover {
+    border-color: var(--sap-brand, #0D9488);
+}
+
+.dark-mode .flow-module-name { color: var(--sap-dark-text, #e2e8f0); }
+.dark-mode .flow-module-project { color: var(--sap-dark-text-secondary, #94a3b8); }
+
+.dark-mode .jtk-connector path { stroke: var(--sap-brand, #0D9488); }
+
+.dark-mode .project-legend { color: var(--sap-dark-text-secondary, #94a3b8); }
+
+.dark-mode .modal-content {
+    background: var(--sap-dark-surface, #1E293B);
+    border-color: var(--sap-dark-border, #334155);
+}
+
+.dark-mode .modal-header,
+.dark-mode .modal-footer {
+    border-color: var(--sap-dark-border, #334155);
+}
+
+.dark-mode .modal-title { color: var(--sap-dark-text, #F1F5F9); }
+.dark-mode .btn-close { filter: invert(1); }
+
+.dark-mode #selectedModuleInfo {
+    background: var(--sap-dark-surface, #1E293B);
+    border-color: var(--sap-dark-border, #334155);
+}
+
+.dark-mode #selectedModuleInfo span { color: var(--sap-dark-text, #F1F5F9); }
+.dark-mode #selectedModuleInfo div { color: var(--sap-dark-text-secondary, #CBD5E1); }
+
+/* ── Connection Delete Button ──────────────────────────── */
+.conn-delete-btn {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, visibility 0.15s;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--sap-error, #DC2626);
+    color: #fff;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 0;
+    z-index: 3;
+}
+
+.conn-delete-btn.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.conn-delete-btn:hover {
+    background: #B91C1C;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+.dark-mode .conn-delete-btn {
+    border-color: var(--sap-dark-surface, #1E293B);
+}
+
+/* ── Reduced Motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .jtk-node,
+    .save-status { transition: none; }
+}

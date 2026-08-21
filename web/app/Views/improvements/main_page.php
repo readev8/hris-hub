@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * Improvements - Main Page
+ * ============================================================================
+ *
+ * Description: List all improvements with DataTable
+ *
+ * Required: none
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -36,6 +49,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- MOVE to page JS file -->
 <script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
 <script src="<?= base_url('public/assets/js/page/improvements/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
 <?= $this->endSection() ?>

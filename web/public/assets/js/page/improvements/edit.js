@@ -3,66 +3,76 @@
  * Improvements Edit
  * ============================================================================
  *
- * Description: Edit improvement form with AJAX submission
- * Date: 2026-07-16
- * Standard: Mini (<400 lines)
+ * Edit improvement form with AJAX submission.
+ *
+ * Dependencies: jQuery, Bootstrap, Toastr, Select2
+ * Date: 2026-08-18
  */
 
 // ===========================
-// UI
+// INITIALIZATION
 // ===========================
 
-function clearFieldErrors() {
-    $('.field-error').removeClass('visible').text('');
-    $('.sap-input, .sap-select').removeClass('is-invalid');
-}
+const ImprovementEdit = {
 
-// ===========================
-// EVENTS
-// ===========================
+    // ===========================
+    // STATE
+    // ===========================
 
-$(function() {
-    var data = window.PageData || {};
+    _token: '',
 
-    $('#userTypeSelect').select2({
-        placeholder: 'Pilih target pengguna...',
-        allowClear: true,
-        width: '100%'
-    });
+    // ===========================
+    // UI
+    // ===========================
 
-    // Toggle conditional fields for "Ada Data Dianalisa?"
-    $('input[name="ada_data_dianalisa"]').on('change', function() {
-        if ($(this).val() === '1') {
-            $('#dataAnalisaSection').slideDown(200);
-        } else {
-            $('#dataAnalisaSection').slideUp(200);
-            $('#dataAnalisaSection input').val('');
-        }
-    });
+    clearFieldErrors: function () {
+        $('.field-error').removeClass('visible').text('');
+        $('.sap-input, .sap-select').removeClass('is-invalid');
+    },
 
-    $('[name="name"], [name="description"], [name="business_case"], [name="priority"]').on('input change', function() {
-        $(this).removeClass('is-invalid');
-        var fieldName = $(this).attr('name');
-        $('#error-' + fieldName).removeClass('visible').text('');
-    });
+    // ===========================
+    // EVENTS
+    // ===========================
 
-    $('#improvementForm').on('submit', function(e) {
-        e.preventDefault();
-        clearFieldErrors();
-        var btn = $(this).find('[type="submit"]');
-        btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Updating...');
+    init: function () {
+        var self = ImprovementEdit;
+        var data = window.PageData || {};
+        self._token = data.token || '';
 
-        $.ajax({
-            url: site_url + '/improvements/' + data.token + '/update',
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function(res) {
+        $('#userTypeSelect').select2({
+            placeholder: 'Pilih target pengguna...',
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('input[name="ada_data_dianalisa"]').on('change', function () {
+            if ($(this).val() === '1') {
+                $('#dataAnalisaSection').slideDown(200);
+            } else {
+                $('#dataAnalisaSection').slideUp(200);
+                $('#dataAnalisaSection input').val('');
+            }
+        });
+
+        $('[name="name"], [name="description"], [name="business_case"], [name="priority"]').on('input change', function () {
+            $(this).removeClass('is-invalid');
+            var fieldName = $(this).attr('name');
+            $('#error-' + fieldName).removeClass('visible').text('');
+        });
+
+        $('#improvementForm').on('submit', function (e) {
+            e.preventDefault();
+            self.clearFieldErrors();
+            var btn = $(this).find('[type="submit"]');
+            btn.prop('disabled', true).html('<span class="sap-spinner sap-spinner-sm"></span> Updating...');
+
+            $.post(site_url + '/improvements/' + self._token + '/update', $(this).serialize(), function (res) {
                 if (res.status) {
                     toastr.success('Improvement updated');
-                    setTimeout(function() { window.location.href = site_url + '/improvements/' + data.token; }, 500);
+                    setTimeout(function () { window.location.href = site_url + '/improvements/' + self._token; }, 500);
                 } else {
                     if (res.errors && typeof res.errors === 'object') {
-                        Object.keys(res.errors).forEach(function(field) {
+                        Object.keys(res.errors).forEach(function (field) {
                             var input = $('[name="' + field + '"]');
                             if (input.length) {
                                 input.addClass('is-invalid');
@@ -75,10 +85,9 @@ $(function() {
                     }
                     btn.prop('disabled', false).html('<i class="fas fa-save"></i> Update');
                 }
-            },
-            error: function(xhr) {
+            }).fail(function (xhr) {
                 var res = null;
-                try { res = JSON.parse(xhr.responseText); } catch(e) {}
+                try { res = JSON.parse(xhr.responseText); } catch (e) { /* ignore */ }
                 if (res && res.redirect) {
                     window.location.href = res.redirect;
                     return;
@@ -86,7 +95,21 @@ $(function() {
                 var msg = res && res.message ? res.message : 'Request failed (HTTP ' + xhr.status + ')';
                 toastr.error(msg);
                 btn.prop('disabled', false).html('<i class="fas fa-save"></i> Update');
-            }
+            });
         });
-    });
+    }
+};
+
+// ===========================
+// AUTO-INITIALIZATION
+// ===========================
+
+$(function () {
+    ImprovementEdit.init();
 });
+
+// ===========================
+// EXPORTS
+// ===========================
+
+window.ImprovementEdit = ImprovementEdit;

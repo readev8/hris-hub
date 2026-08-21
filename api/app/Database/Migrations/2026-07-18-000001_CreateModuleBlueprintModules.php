@@ -3,6 +3,7 @@
 namespace App\Database\Migration;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateModuleBlueprintModules extends Migration
 {
@@ -19,20 +20,20 @@ class CreateModuleBlueprintModules extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey('module_id');
         $this->forge->addKey('blueprint_module_id');
-        $this->forge->addForeignKey('module_id', 'modules', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('blueprint_module_id', 'blueprint_modules', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('module_blueprint_modules');
+        $this->forge->addForeignKey('module_id', Tables::MODULES, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('blueprint_module_id', Tables::BLUEPRINT_MODULES, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable(Tables::MODULE_BLUEPRINT_MODULES);
 
         $db->query('
-            INSERT INTO module_blueprint_modules (module_id, blueprint_module_id, created_at)
+            INSERT INTO ' . Tables::MODULE_BLUEPRINT_MODULES . ' (module_id, blueprint_module_id, created_at)
             SELECT id, blueprint_module_id, NOW()
-            FROM modules
+            FROM ' . Tables::MODULES . '
             WHERE blueprint_module_id IS NOT NULL AND active = 0
         ');
     }
 
     public function down()
     {
-        $this->forge->dropTable('module_blueprint_modules');
+        $this->forge->dropTable(Tables::MODULE_BLUEPRINT_MODULES);
     }
 }

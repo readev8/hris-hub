@@ -5,6 +5,7 @@ namespace App\Controllers\Blueprints\Action;
 use App\Controllers\BaseApi;
 use App\Libraries\AuditLogger;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class DesignPages extends BaseApi
 {
@@ -35,13 +36,13 @@ class DesignPages extends BaseApi
             return $this->JSONResponse('Judul wajib diisi', null, 400);
         }
 
-        $module = $this->db()->table('blueprint_modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::BLUEPRINT_MODULES)->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_design_pages')->where('module_id', $moduleId)->where('active', 0)->countAllResults();
+        $maxSort = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->where('module_id', $moduleId)->where('active', 0)->countAllResults();
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_design_pages')->insert([
+        $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->insert([
             'module_id'   => $moduleId,
             'title'       => $title,
             'description' => $this->sanitizeRichText($rawInput['description'] ?? ''),
@@ -71,7 +72,7 @@ class DesignPages extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $designPage = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$designPage) return $this->JSONResponse('Design page tidak ditemukan', null, 404);
 
         $rawInput = $this->req->getJSON(true) ?? $this->req->getPost();
@@ -82,7 +83,7 @@ class DesignPages extends BaseApi
         $update['updated_at'] = date('Y-m-d H:i:s');
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_design_pages')->update($update, ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->update($update, ['id' => $id]);
         $this->audit->log($userId, 'blueprint_design_page', $id, 'update', null, $update);
         $this->db()->transComplete();
 
@@ -103,11 +104,11 @@ class DesignPages extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $designPage = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$designPage) return $this->JSONResponse('Design page tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_design_pages')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint_design_page', $id, 'delete', null, ['title' => $designPage['title']]);
         $this->db()->transComplete();
 

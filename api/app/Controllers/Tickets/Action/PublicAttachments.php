@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Action;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -14,7 +15,7 @@ class PublicAttachments extends BaseApi
             return $this->JSONResponse('ID tidak valid', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')
+        $ticket = $this->db()->table(Tables::TICKETS)
             ->where('id', $ticketId)
             ->where('is_anonymous', 1)
             ->where('active', 0)
@@ -30,7 +31,7 @@ class PublicAttachments extends BaseApi
             return $this->JSONResponse('Data lampiran tidak valid', null, 400);
         }
 
-        $this->db()->table('ticket_attachments')->insert([
+        $this->db()->table(Tables::TICKET_ATTACHMENTS)->insert([
             'ticket_id'  => $ticketId,
             'comment_id' => null,
             'filename'   => $this->cleanInput($input['filename']),

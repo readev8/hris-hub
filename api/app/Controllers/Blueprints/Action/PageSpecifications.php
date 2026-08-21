@@ -5,6 +5,7 @@ namespace App\Controllers\Blueprints\Action;
 use App\Controllers\BaseApi;
 use App\Libraries\AuditLogger;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class PageSpecifications extends BaseApi
 {
@@ -47,13 +48,13 @@ class PageSpecifications extends BaseApi
             return $this->JSONResponse('Control type tidak valid', null, 400);
         }
 
-        $designPage = $this->db()->table('blueprint_design_pages')->where('id', $designPageId)->where('active', 0)->get()->getRowArray();
+        $designPage = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->where('id', $designPageId)->where('active', 0)->get()->getRowArray();
         if (!$designPage) return $this->JSONResponse('Design page tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('blueprint_page_specifications')->where('design_page_id', $designPageId)->where('active', 0)->countAllResults();
+        $maxSort = $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)->where('design_page_id', $designPageId)->where('active', 0)->countAllResults();
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_page_specifications')->insert([
+        $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)->insert([
             'design_page_id' => $designPageId,
             'module_id'      => $designPage['module_id'],
             'field_name'     => $fieldName,
@@ -91,7 +92,7 @@ class PageSpecifications extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $spec = $this->db()->table('blueprint_page_specifications')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $spec = $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$spec) return $this->JSONResponse('Page specification tidak ditemukan', null, 404);
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -117,7 +118,7 @@ class PageSpecifications extends BaseApi
         }
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_page_specifications')->update($update, ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)->update($update, ['id' => $id]);
         $this->audit->log($userId, 'blueprint_page_spec', $id, 'update', null, $update);
         $this->db()->transComplete();
 
@@ -138,11 +139,11 @@ class PageSpecifications extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin', null, 403);
         }
 
-        $spec = $this->db()->table('blueprint_page_specifications')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $spec = $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$spec) return $this->JSONResponse('Page specification tidak ditemukan', null, 404);
 
         $this->db()->transStart();
-        $this->db()->table('blueprint_page_specifications')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::BLUEPRINT_PAGE_SPECIFICATIONS)->update(['active' => 1], ['id' => $id]);
         $this->audit->log($userId, 'blueprint_page_spec', $id, 'delete', null, ['field_name' => $spec['field_name']]);
         $this->db()->transComplete();
 

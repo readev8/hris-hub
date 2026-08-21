@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * TICKETS - EDIT
+ * ============================================================================
+ *
+ * Description: Ticket edit form with page tree selectors and existing attachments
+ *
+ * Required: $ticket, $token
+ * Optional: $users
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="container" style="max-width:800px">

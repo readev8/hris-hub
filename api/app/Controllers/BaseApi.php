@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use Config\Tables;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Config\Enums;
@@ -108,7 +109,7 @@ abstract class BaseApi extends ResourceController
     {
         $userId = $this->getCurrentUserId();
         if (!$userId) return null;
-        $user = $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
+        $user = $this->db()->table(Tables::USERS)->where('id', $userId)->get()->getRowArray();
         return $user ? (int)($user['role_id'] ?? $user['role']) : null;
     }
 
@@ -116,7 +117,7 @@ abstract class BaseApi extends ResourceController
     {
         $userId = $this->getCurrentUserId();
         if (!$userId) return null;
-        return $this->db()->table('users')->where('id', $userId)->get()->getRowArray();
+        return $this->db()->table(Tables::USERS)->where('id', $userId)->get()->getRowArray();
     }
 
     protected function checkPermission(string $module, string $action = 'can_view'): bool
@@ -134,7 +135,7 @@ abstract class BaseApi extends ResourceController
         $userId = $this->getCurrentUserId();
         if (!$userId) return false;
 
-        $ticket = $this->db()->table('tickets')->where('id', $ticketId)->where('active', 0)->get()->getRowArray();
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $ticketId)->where('active', 0)->get()->getRowArray();
         if (!$ticket) return false;
 
         $role = $this->getCurrentUserRole();

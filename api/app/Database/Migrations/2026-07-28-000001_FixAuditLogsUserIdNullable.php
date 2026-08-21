@@ -3,12 +3,13 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class FixAuditLogsUserIdNullable extends Migration
 {
     public function up()
     {
-        $this->forge->modifyColumn('audit_logs', [
+        $this->forge->modifyColumn(Tables::AUDIT_LOGS, [
             'user_id' => [
                 'type'       => 'BIGINT',
                 'unsigned'   => true,
@@ -20,7 +21,7 @@ class FixAuditLogsUserIdNullable extends Migration
 
     public function down()
     {
-        $this->forge->modifyColumn('audit_logs', [
+        $this->forge->modifyColumn(Tables::AUDIT_LOGS, [
             'user_id' => [
                 'type'       => 'BIGINT',
                 'unsigned'   => true,

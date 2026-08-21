@@ -4,6 +4,7 @@ namespace App\Controllers\AuditLog\Report;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class LogList extends BaseApi
 {
@@ -14,18 +15,18 @@ class LogList extends BaseApi
         $dateStart = $params['start_date'] ?? null;
         $dateEnd   = $params['end_date'] ?? null;
 
-        $builder = $this->db()->table('audit_logs')
-            ->select('audit_logs.*, users.full_name as user_name')
-            ->join('users', 'users.id = audit_logs.user_id', 'left');
+        $builder = $this->db()->table(Tables::AUDIT_LOGS)
+            ->select(Tables::AUDIT_LOGS . '.*, ' . Tables::USERS . '.full_name as user_name')
+            ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::AUDIT_LOGS . '.user_id', 'left');
 
         if ($dateStart) {
-            $builder->where('audit_logs.created_at >=', $dateStart . ' 00:00:00');
+            $builder->where(Tables::AUDIT_LOGS . '.created_at >=', $dateStart . ' 00:00:00');
         }
         if ($dateEnd) {
-            $builder->where('audit_logs.created_at <=', $dateEnd . ' 23:59:59');
+            $builder->where(Tables::AUDIT_LOGS . '.created_at <=', $dateEnd . ' 23:59:59');
         }
 
-        $logs = $builder->orderBy('audit_logs.created_at', 'DESC')
+        $logs = $builder->orderBy(Tables::AUDIT_LOGS . '.created_at', 'DESC')
             ->limit($limit)
             ->get()
             ->getResultArray();
@@ -53,12 +54,12 @@ class LogList extends BaseApi
             return $this->JSONResponse('Entity ID tidak valid', null, 400);
         }
 
-        $logs = $this->db()->table('audit_logs')
-            ->select('audit_logs.*, users.full_name as user_name')
-            ->join('users', 'users.id = audit_logs.user_id', 'left')
-            ->where('audit_logs.entity_type', $entityType)
-            ->where('audit_logs.entity_id', $realId)
-            ->orderBy('audit_logs.created_at', 'DESC')
+        $logs = $this->db()->table(Tables::AUDIT_LOGS)
+            ->select(Tables::AUDIT_LOGS . '.*, ' . Tables::USERS . '.full_name as user_name')
+            ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::AUDIT_LOGS . '.user_id', 'left')
+            ->where(Tables::AUDIT_LOGS . '.entity_type', $entityType)
+            ->where(Tables::AUDIT_LOGS . '.entity_id', $realId)
+            ->orderBy(Tables::AUDIT_LOGS . '.created_at', 'DESC')
             ->limit(100)
             ->get()
             ->getResultArray();

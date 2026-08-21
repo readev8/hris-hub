@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * BLUEPRINTS - DETAIL
+ * ============================================================================
+ *
+ * Description: Detail view for a single blueprint with modules, scenarios, design pages, and actions
+ *
+ * Required: $token, $blueprint, $userPermissions
+ * Optional: none
+ * Template: template/index
+ */
+?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
 <div class="container-fluid" style="max-width:1400px">
@@ -25,52 +38,9 @@
             <p class="blueprint-description"><?= nl2br(esc($blueprint['description'])) ?></p>
             <?php endif; ?>
         </div>
-        <a href="<?= site_url('blueprints') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
-    </div>
-
-    <div class="sap-card mb-4">
-        <div class="sap-card-body">
-            <div class="approval-stepper">
-                <?php
-                $st = (int) ($blueprint['status'] ?? -1);
-                $steps = [
-                    ['label' => 'Draft',      'key' => 'draft'],
-                    ['label' => 'IT Manager',  'key' => 'it'],
-                    ['label' => 'Dept Head',   'key' => 'dept'],
-                    ['label' => 'Approved',    'key' => 'final'],
-                ];
-                $stepStates = ['draft' => 'completed'];
-                if ($st === 0) { $stepStates['it'] = 'active'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                elseif ($st === 1) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'active'; $stepStates['final'] = ''; }
-                elseif ($st === 2 || $st === 4) { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'completed'; $stepStates['final'] = 'active'; }
-                elseif ($st === 3) {
-                    $history = $blueprint['approval_history'] ?? [];
-                    $rejectedStage = 0;
-                    foreach ($history as $h) {
-                        if ((int)($h['status'] ?? 0) === 2) {
-                            $rejectedStage = (int)($h['stage_sequence'] ?? 0);
-                            break;
-                        }
-                    }
-                    if ($rejectedStage <= 1) { $stepStates['it'] = 'rejected'; $stepStates['dept'] = ''; $stepStates['final'] = ''; }
-                    else { $stepStates['it'] = 'completed'; $stepStates['dept'] = 'rejected'; $stepStates['final'] = ''; }
-                }
-                $icons = ['draft' => 'fa-pencil-alt', 'it' => 'fa-laptop', 'dept' => 'fa-users', 'final' => 'fa-check-double'];
-                foreach ($steps as $i => $s):
-                    $state = $stepStates[$s['key']] ?? '';
-                    $icon = $icons[$s['key']];
-                ?>
-                <div class="stepper-step <?= esc($state, 'attr') ?>">
-                    <div class="stepper-node">
-                        <?php if ($state === 'completed'): ?><i class="fas fa-check"></i>
-                        <?php elseif ($state === 'rejected'): ?><i class="fas fa-times"></i>
-                        <?php else: ?><?= $i + 1 ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="stepper-label"><?= esc($s['label']) ?></div>
-                </div>
-                <?php endforeach; ?>
-            </div>
+        <div class="d-flex gap-2">
+            <a href="<?= site_url('blueprints') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+            <button id="btnExportPdf" class="sap-btn sap-btn-primary sap-btn-sm" onclick="BlueprintDetail.exportPdf()"><i class="fas fa-download"></i> Download PDF</button>
         </div>
     </div>
 
@@ -191,24 +161,10 @@
                 <div id="blueprintActions" class="sap-card-body d-flex flex-column gap-2">
                     <?php
                     $bpPerms = (session('permissions') ?? [])['blueprints'] ?? [];
-                    $bpCanApprove = !empty($bpPerms['can_approve']);
-                    $bpCanCreate  = !empty($bpPerms['can_create']);
                     $bpCanUpdate  = !empty($bpPerms['can_update']);
                     $bpCanDelete  = !empty($bpPerms['can_delete']);
                     ?>
-                    <?php if ($st === 0 && $bpCanApprove): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="BlueprintDetail.doAction('approve-it')"><i class="fas fa-check"></i> Approve (IT)</button>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="BlueprintDetail.promptReject()"><i class="fas fa-times"></i> Reject</button>
-                    <?php endif; ?>
-                    <?php if ($st === 1 && $bpCanApprove): ?>
-                        <button class="sap-btn sap-btn-success sap-btn-sm" onclick="BlueprintDetail.doAction('approve-dept')"><i class="fas fa-check"></i> Approve (Dept)</button>
-                        <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="BlueprintDetail.promptReject()"><i class="fas fa-times"></i> Reject</button>
-                    <?php endif; ?>
-                    <?php if ($st === 3 && $bpCanCreate): ?>
-                        <button class="sap-btn sap-btn-warning sap-btn-sm" onclick="BlueprintDetail.doAction('resubmit')"><i class="fas fa-undo"></i> Resubmit</button>
-                    <?php endif; ?>
-                    <hr class="my-1">
-                    <?php if (($st === -1 || $st === 0) && ($bpCanUpdate || $bpCanDelete)): ?>
+                    <?php if ($bpCanUpdate || $bpCanDelete): ?>
                     <?php if ($bpCanUpdate): ?>
                     <a href="<?= site_url('blueprints/' . $token . '/edit') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>
                     <?php endif; ?>
@@ -315,157 +271,9 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('modals') ?>
-
-<!-- Add Module Modal -->
-<div class="modal fade sap-modal" id="moduleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-puzzle-piece me-2"></i>Add Module</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="moduleForm">
-                <div class="modal-body">
-                    <input type="hidden" name="module_id" id="moduleFormId">
-                    <div class="mb-3">
-                        <label class="sap-label">Module Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="sap-input" id="moduleNameInput" required placeholder="e.g., Authentication Module">
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--sap-border)">
-                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Scenario Modal -->
-<div class="modal fade sap-modal" id="scenarioModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-briefcase me-2"></i>Add Business Scenario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="scenarioForm">
-                <div class="modal-body scenario-grid">
-                    <input type="hidden" name="scenario_id" id="scenarioFormId">
-                    <input type="hidden" name="blueprint_token" value="<?= esc($token, 'attr') ?>">
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="sap-label">Title <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="sap-input" id="scenarioTitleInput" required placeholder="e.g., User Login">
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label class="sap-label">Description</label>
-                            <textarea name="description" class="sap-input" rows="4" id="scenarioDescInput" placeholder="Describe the business scenario..." style="min-height:100px"></textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Actors</label>
-                            <textarea name="actors" class="sap-input" rows="2" placeholder="e.g., System Admin, Department Head, User"></textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Frequency</label>
-                            <select name="frequency" class="sap-select">
-                                <option value="">-- Select --</option>
-                                <option value="Daily">Daily</option>
-                                <option value="Weekly">Weekly</option>
-                                <option value="Monthly">Monthly</option>
-                                <option value="Quarterly">Quarterly</option>
-                                <option value="Yearly">Yearly</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Pre Condition</label>
-                            <textarea name="pre_condition" class="sap-input" rows="2" placeholder="Conditions before this scenario starts..."></textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Post Condition</label>
-                            <textarea name="post_condition" class="sap-input" rows="2" placeholder="State after the scenario completes..."></textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Normal Course</label>
-                            <textarea name="normal_course" class="sap-input" rows="2" placeholder="Step-by-step description of the main flow..."></textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Exception</label>
-                            <textarea name="exception" class="sap-input" rows="2" placeholder="Error conditions and how they are handled..."></textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Notes</label>
-                            <textarea name="notes" class="sap-input" rows="2" placeholder="Additional notes..."></textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="sap-label">Issue (Business Rules / Assumptions)</label>
-                            <textarea name="issue" class="sap-input" rows="2" placeholder="Business rules, assumptions..."></textarea>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label class="sap-label">Attachments <span style="font-weight:400;color:var(--sap-text-muted)">(optional, max 5)</span></label>
-                            <div style="border:2px dashed var(--sap-border);border-radius:var(--sap-radius);padding:16px;text-align:center;cursor:pointer" id="scenarioDropzone">
-                                <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--sap-text-muted);display:block;margin-bottom:4px"></i>
-                                <p class="mb-0 text-secondary" style="font-size:12px">Drop files here or click to browse</p>
-                                <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm mt-2" onclick="event.stopPropagation(); $(this).closest('.mb-3').find('input[type=file]').click();">
-                                    <i class="fas fa-upload"></i> Pilih File
-                                </button>
-                                <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" multiple hidden>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2 mt-2" id="scenarioFilePreview"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--sap-border)">
-                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Design Page Modal -->
-<div class="modal fade sap-modal" id="designPageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-palette me-2"></i>Add Design Page</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="designPageForm">
-                <div class="modal-body">
-                    <input type="hidden" name="design_page_id" id="designPageFormId">
-                    <input type="hidden" name="blueprint_token" value="<?= esc($token, 'attr') ?>">
-                    <div class="mb-3">
-                        <label class="sap-label">Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="sap-input" id="designPageTitleInput" required placeholder="e.g., Login Page">
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Description</label>
-                        <textarea name="description" class="sap-input" rows="4" id="designPageDescInput" placeholder="Describe the design page..." style="min-height:100px"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="sap-label">Images <span style="font-weight:400;color:var(--sap-text-muted)">(optional, max 10, JPG/PNG/WebP)</span></label>
-                        <div style="border:2px dashed var(--sap-border);border-radius:var(--sap-radius);padding:16px;text-align:center;cursor:pointer" id="designPageDropzone">
-                            <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--sap-text-muted);display:block;margin-bottom:4px"></i>
-                            <p class="mb-0 text-secondary" style="font-size:12px">Drop images here or click to browse</p>
-                            <button type="button" class="sap-btn sap-btn-secondary sap-btn-sm mt-2" onclick="event.stopPropagation(); $(this).closest('.mb-3').find('input[type=file]').click();">
-                                <i class="fas fa-image"></i> Pilih Gambar
-                            </button>
-                            <input type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple hidden>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2 mt-2" id="designPageFilePreview"></div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--sap-border)">
-                    <button type="button" class="sap-btn sap-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="sap-btn sap-btn-primary"><i class="fas fa-save"></i> Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
+<?= $this->include('blueprints/_modal_add_module') ?>
+<?= $this->include('blueprints/_modal_add_scenario') ?>
+<?= $this->include('blueprints/_modal_add_design_page') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -479,7 +287,12 @@
     'userPermissions'  => $userPermissions,
     'currentModuleId'  => $blueprint['modules'][0]['id'] ?? null,
     'modules'          => $blueprint['modules'] ?? [],
-]) ?>;</script>
+], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
+<script src="<?= base_url('public/assets/js/page/blueprints/detail-ui.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/assets/js/page/blueprints/detail-dropzones.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/assets/js/page/blueprints/detail-crud.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/assets/js/page/blueprints/detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/vendor/html-to-pdfmake/2.5.20/html-to-pdfmake.browser.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/assets/js/page/blueprints/export.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/vendor/summernote/0.9.1/summernote-bs5.min.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

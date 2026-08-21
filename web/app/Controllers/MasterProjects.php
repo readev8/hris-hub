@@ -2,6 +2,22 @@
 
 namespace App\Controllers;
 
+/**
+ * ============================================================================
+ * MASTER PROJECTS CONTROLLER
+ * ============================================================================
+ *
+ * Description: Manages master projects and their module/page hierarchy,
+ * including blueprint assignments and design page imports.
+ *
+ * Responsibilities:
+ * - Render master project list, create, edit, detail, module, and page views
+ * - Serve project/module/page data for DataTables via AJAX
+ * - Create, update, and delete projects, modules, and pages through the API
+ * - Assign/unassign blueprint modules and design pages
+ * - Import design pages into modules
+ * - Serve cascading dropdown, kanban board, and bug list data
+ */
 class MasterProjects extends BaseController
 {
     private function guard(string $action = 'can_view'): bool
@@ -46,6 +62,11 @@ class MasterProjects extends BaseController
 
         if ($this->request->getMethod() === 'POST') {
             $post = $this->request->getPost();
+
+            if (empty(trim($post['name'] ?? ''))) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Field name wajib diisi']);
+            }
+
             $result = $this->api->post_data('master-projects/create', $post);
 
             if ($result && ($result['status'] ?? false)) {
@@ -86,7 +107,6 @@ class MasterProjects extends BaseController
             return redirect()->to('/dashboard');
         }
 
-        // Fetch project for breadcrumb and header
         $projectResult = $this->api->get_data('master-projects/' . $encryptedProjectId);
         $project = $projectResult['data']['result'] ?? null;
 
@@ -94,7 +114,6 @@ class MasterProjects extends BaseController
             return redirect()->to('/master-projects');
         }
 
-        // Fetch module detail from new API endpoint
         $moduleResult = $this->api->get_data('modules/' . $encryptedModuleId);
         $module = $moduleResult['data']['result'] ?? null;
 
@@ -201,6 +220,11 @@ class MasterProjects extends BaseController
         }
 
         $post = $this->request->getPost();
+
+        if (empty(trim($post['name'] ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Field name wajib diisi']);
+        }
+
         $result = $this->api->post_data('master-projects/' . $encryptedProjectId . '/modules', $post);
         return $this->response->setJSON($result);
     }
@@ -292,6 +316,11 @@ class MasterProjects extends BaseController
         }
 
         $post = $this->request->getPost();
+
+        if (empty(trim($post['name'] ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Field name wajib diisi']);
+        }
+
         $result = $this->api->post_data('modules/' . $encryptedModuleId . '/pages', $post);
         return $this->response->setJSON($result);
     }
@@ -356,7 +385,6 @@ class MasterProjects extends BaseController
         return $this->response->setJSON($result['data']['result'] ?? []);
     }
 
-    // Cascading dropdown data
     public function getDetail(string $encryptedId)
     {
         if (!$this->guard()) {

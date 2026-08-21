@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use Config\Tables;
+
 class AuditLogger
 {
     private $db;
@@ -19,7 +21,7 @@ class AuditLogger
         ?array $oldValues = null,
         ?array $newValues = null
     ): void {
-        $this->db->table('audit_logs')->insert([
+        $this->db->table(Tables::AUDIT_LOGS)->insert([
             'user_id'     => $userId,
             'entity_type' => $entityType,
             'entity_id'   => $entityId,

@@ -2,6 +2,18 @@
 
 namespace App\Controllers;
 
+/**
+ * ============================================================================
+ * APPROVALS CONTROLLER
+ * ============================================================================
+ *
+ * Description: Halaman pusat approval — menampilkan daftar item
+ *   yang menunggu persetujuan dari user yang login.
+ *
+ * Responsibilities:
+ * - Render halaman approval center
+ * - Proxy data pending approval dari API (tickets & improvements)
+ */
 class Approvals extends BaseController
 {
     private function guard(string $action = 'can_view'): bool

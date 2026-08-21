@@ -1,3 +1,16 @@
+<?php
+/**
+ * ============================================================================
+ * PUBLIC TICKETS - DETAIL
+ * ============================================================================
+ *
+ * Description: Anonymous ticket detail view with tracking code (public access)
+ *
+ * Required: $tracking_code
+ * Optional: none
+ * Template: template/anonymous
+ */
+?>
 <?= $this->extend('template/anonymous') ?>
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/public/_shared/anonymous-layout.css') ?>?v=<?= config('App')->assetVersion ?>">
@@ -134,6 +147,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>window.PageData = <?= json_encode(['ajaxBaseUrl' => site_url('public/tickets'), 'trackingCode' => $tracking_code]) ?>;</script>
+<script>window.PageData = <?= json_encode(['ajaxBaseUrl' => site_url('public/tickets'), 'trackingCode' => $tracking_code], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
 <script src="<?= base_url('public/assets/js/page/public/tickets_detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>

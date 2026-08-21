@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateRoles extends Migration
 {
@@ -21,11 +22,11 @@ class CreateRoles extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addUniqueKey('slug');
         $this->forge->addKey('is_active');
-        $this->forge->createTable('roles');
+        $this->forge->createTable(Tables::ROLES);
     }
 
     public function down()
     {
-        $this->forge->dropTable('roles');
+        $this->forge->dropTable(Tables::ROLES);
     }
 }

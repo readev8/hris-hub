@@ -5,6 +5,7 @@ namespace App\Controllers\MasterProjects\Action;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class Pages extends BaseApi
 {
@@ -27,17 +28,17 @@ class Pages extends BaseApi
             return $this->JSONResponse('Nama halaman wajib diisi', null, 400);
         }
 
-        $module = $this->db()->table('modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::MODULES)->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Modul tidak ditemukan', null, 404);
 
-        $maxSort = $this->db()->table('pages')
+        $maxSort = $this->db()->table(Tables::PAGES)
             ->selectMax('sort_order')
             ->where('module_id', $moduleId)
             ->where('active', 0)
             ->get()
             ->getRowArray();
 
-        $this->db()->table('pages')->insert([
+        $this->db()->table(Tables::PAGES)->insert([
             'module_id'   => $moduleId,
             'name'        => $name,
             'url_path'    => trim($input['url_path'] ?? ''),
@@ -67,7 +68,7 @@ class Pages extends BaseApi
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
 
-        $this->db()->table('pages')->update([
+        $this->db()->table(Tables::PAGES)->update([
             'name'        => trim($input['name'] ?? ''),
             'url_path'    => trim($input['url_path'] ?? ''),
             'description' => trim($input['description'] ?? ''),
@@ -89,7 +90,7 @@ class Pages extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus halaman', null, 403);
         }
 
-        $this->db()->table('pages')->update(['active' => 1], ['id' => $id]);
+        $this->db()->table(Tables::PAGES)->update(['active' => 1], ['id' => $id]);
         return $this->JSONResponse('Halaman berhasil dihapus');
     }
 
@@ -108,15 +109,15 @@ class Pages extends BaseApi
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $designPageId = !empty($input['blueprint_design_page_id']) ? $this->resolveId($input['blueprint_design_page_id']) : null;
 
-        $page = $this->db()->table('pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $page = $this->db()->table(Tables::PAGES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$page) return $this->JSONResponse('Halaman tidak ditemukan', null, 404);
 
         if ($designPageId) {
-            $designPage = $this->db()->table('blueprint_design_pages')->where('id', $designPageId)->where('active', 0)->get()->getRowArray();
+            $designPage = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)->where('id', $designPageId)->where('active', 0)->get()->getRowArray();
             if (!$designPage) return $this->JSONResponse('Blueprint design page tidak ditemukan', null, 404);
         }
 
-        $this->db()->table('pages')->update([
+        $this->db()->table(Tables::PAGES)->update([
             'blueprint_design_page_id' => $designPageId,
             'updated_at'               => date('Y-m-d H:i:s'),
         ], ['id' => $id]);
@@ -136,10 +137,10 @@ class Pages extends BaseApi
             return $this->JSONResponse('Anda tidak memiliki izin untuk mengubah halaman', null, 403);
         }
 
-        $page = $this->db()->table('pages')->where('id', $id)->where('active', 0)->get()->getRowArray();
+        $page = $this->db()->table(Tables::PAGES)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$page) return $this->JSONResponse('Halaman tidak ditemukan', null, 404);
 
-        $this->db()->table('pages')->update([
+        $this->db()->table(Tables::PAGES)->update([
             'blueprint_design_page_id' => null,
             'updated_at'               => date('Y-m-d H:i:s'),
         ], ['id' => $id]);
@@ -166,7 +167,7 @@ class Pages extends BaseApi
             return $this->JSONResponse('Pilih minimal satu design page', null, 400);
         }
 
-        $module = $this->db()->table('modules')->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
+        $module = $this->db()->table(Tables::MODULES)->where('id', $moduleId)->where('active', 0)->get()->getRowArray();
         if (!$module) return $this->JSONResponse('Module tidak ditemukan', null, 404);
 
         $imported = 0;
@@ -177,18 +178,18 @@ class Pages extends BaseApi
             $designPageId = $this->resolveId($encryptedDesignPageId);
             if (!$designPageId) { $skipped++; continue; }
 
-            $designPage = $this->db()->table('blueprint_design_pages')
+            $designPage = $this->db()->table(Tables::BLUEPRINT_DESIGN_PAGES)
                 ->where('id', $designPageId)->where('active', 0)->get()->getRowArray();
             if (!$designPage) { $skipped++; continue; }
 
             // Skip if already imported
-            $existing = $this->db()->table('pages')
+            $existing = $this->db()->table(Tables::PAGES)
                 ->where('module_id', $moduleId)
                 ->where('blueprint_design_page_id', $designPageId)
                 ->where('active', 0)->get()->getRowArray();
             if ($existing) { $skipped++; continue; }
 
-            $this->db()->table('pages')->insert([
+            $this->db()->table(Tables::PAGES)->insert([
                 'module_id'                => $moduleId,
                 'blueprint_design_page_id' => $designPageId,
                 'name'                     => $designPage['title'],

@@ -3,17 +3,23 @@
  * My Taken Tickets
  * ============================================================================
  *
- * Description: DataTable with summary cards, filters, tracking modal for ticket codes
- * Date: 2026-07-29
- * Standard: Mini (<400 lines)
+ * Description: DataTable with summary cards, filters, tracking modal
+ * for tickets assigned to the current user.
+ *
+ * Dependencies: jQuery, DataTables, Toastr
+ * Date: 2026-08-18
  */
 
 // ===========================
 // CONSTANTS
 // ===========================
 
-var statusMap = { 0: 'Open', 1: 'Approved', 2: 'In Progress', 3: 'Resolved', 4: 'Closed', 5: 'Rejected' };
-var priorityMap = { 0: 'Low', 1: 'Medium', 2: 'High', 3: 'Critical' };
+var API_ENDPOINTS = {
+    MY_TICKETS_LIST: site_url + '/my-tickets/ajax-list'
+};
+
+var STATUS_MAP = { 0: 'Open', 1: 'Approved', 2: 'In Progress', 3: 'Resolved', 4: 'Closed', 5: 'Rejected' };
+var PRIORITY_MAP = { 0: 'Low', 1: 'Medium', 2: 'High', 3: 'Critical' };
 
 // ===========================
 // TRACKING MODAL
@@ -58,7 +64,6 @@ $(function() {
         if (e.key === 'Escape') closeTrackingModal();
     });
 
-    // Load summary cards
     loadSummaryCards();
 
     var table = $('#myTicketsTable').DataTable({
@@ -72,7 +77,7 @@ $(function() {
             }
         },
         ajax: {
-            url: site_url + '/my-tickets/ajax-list',
+            url: API_ENDPOINTS.MY_TICKETS_LIST,
             data: function (d) {
                 var status = $('#statusFilter').val();
                 var overdue = $('#overdueFilter').is(':checked') ? 1 : '';
@@ -165,6 +170,7 @@ $(function() {
         }
     });
 
+    // Column search headers
     $('#myTicketsTable thead tr').clone(true).appendTo('#myTicketsTable thead');
     $('#myTicketsTable thead tr:last th').each(function(i) {
         if (i === 8) {
@@ -178,6 +184,7 @@ $(function() {
         table.column($(this).data('col')).search(this.value).draw();
     });
 
+    // Row click navigation
     $('#myTicketsTable tbody').on('click', 'tr', function() {
         var data = table.row(this).data();
         if (data && data.id) {
@@ -185,7 +192,10 @@ $(function() {
         }
     });
 
-    // Status/Overdue filter
+    // ===========================
+    // FILTERS
+    // ===========================
+
     $('#statusFilter, #overdueFilter').on('change', function () {
         table.ajax.reload();
         updateFilterUrl();
@@ -214,7 +224,7 @@ $(function() {
 // ===========================
 
 function loadSummaryCards() {
-    $.get(site_url + '/my-tickets/ajax-list', { per_page: 1000 }, function(res) {
+    $.get(API_ENDPOINTS.MY_TICKETS_LIST, { per_page: 1000 }, function(res) {
         updateSummaryCards(res.data || []);
     });
 }

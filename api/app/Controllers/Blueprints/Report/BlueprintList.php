@@ -4,6 +4,7 @@ namespace App\Controllers\Blueprints\Report;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class BlueprintList extends BaseApi
 {
@@ -15,16 +16,16 @@ class BlueprintList extends BaseApi
         $offset = ($page - 1) * $perPage;
         $status = $params['status'] ?? '';
 
-        $builder = $this->db()->table('blueprints')
-            ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name')
-            ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
-            ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
-            ->where('blueprints.active', 0);
+        $builder = $this->db()->table(Tables::BLUEPRINTS)
+            ->select(Tables::BLUEPRINTS . '.*, p.name as improvement_name, creator.full_name as creator_name')
+            ->join(Tables::PROJECTS . ' as p', 'p.id = ' . Tables::BLUEPRINTS . '.improvement_id AND p.active = 0', 'left')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::BLUEPRINTS . '.created_by', 'left')
+            ->where(Tables::BLUEPRINTS . '.active', 0);
 
-        if ($status !== '') $builder->where('blueprints.status', (int) $status);
+        if ($status !== '') $builder->where(Tables::BLUEPRINTS . '.status', (int) $status);
 
         $total = $builder->countAllResults(false);
-        $rows = $builder->orderBy('blueprints.id', 'DESC')
+        $rows = $builder->orderBy(Tables::BLUEPRINTS . '.id', 'DESC')
             ->limit($perPage, $offset)
             ->get()
             ->getResultArray();
@@ -32,7 +33,7 @@ class BlueprintList extends BaseApi
         foreach ($rows as &$r) {
             $r['id'] = $this->api->encryptId($r['id']);
             $r['status_name'] = \App\Config\Enums::projectStatusName($r['status']);
-            $moduleCount = $this->db()->table('blueprint_modules')->where('blueprint_id', $r['id'])->where('active', 0)->countAllResults();
+            $moduleCount = $this->db()->table(Tables::BLUEPRINT_MODULES)->where('blueprint_id', $r['id'])->where('active', 0)->countAllResults();
             $r['module_count'] = $moduleCount;
         }
 
@@ -55,26 +56,26 @@ class BlueprintList extends BaseApi
         $blueprints = [];
 
         if ($role === \App\Config\Enums::IT_MANAGER || $role === \App\Config\Enums::ADMIN) {
-            $draft = $this->db()->table('blueprints')
-                ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name')
-                ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
-                ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
-                ->where('blueprints.status', \App\Config\Enums::PROJECT_STATUS_DRAFT)
-                ->where('blueprints.active', 0)
-                ->orderBy('blueprints.id', 'DESC')
+            $draft = $this->db()->table(Tables::BLUEPRINTS)
+                ->select(Tables::BLUEPRINTS . '.*, p.name as improvement_name, creator.full_name as creator_name')
+                ->join(Tables::PROJECTS . ' as p', 'p.id = ' . Tables::BLUEPRINTS . '.improvement_id AND p.active = 0', 'left')
+                ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::BLUEPRINTS . '.created_by', 'left')
+                ->where(Tables::BLUEPRINTS . '.status', \App\Config\Enums::PROJECT_STATUS_DRAFT)
+                ->where(Tables::BLUEPRINTS . '.active', 0)
+                ->orderBy(Tables::BLUEPRINTS . '.id', 'DESC')
                 ->get()
                 ->getResultArray();
             $blueprints = array_merge($blueprints, $draft);
         }
 
         if ($role === \App\Config\Enums::DEPT_HEAD || $role === \App\Config\Enums::ADMIN) {
-            $pending = $this->db()->table('blueprints')
-                ->select('blueprints.*, p.name as improvement_name, creator.full_name as creator_name')
-                ->join('projects as p', 'p.id = blueprints.improvement_id AND p.active = 0', 'left')
-                ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
-                ->where('blueprints.status', \App\Config\Enums::PROJECT_STATUS_PENDING)
-                ->where('blueprints.active', 0)
-                ->orderBy('blueprints.id', 'DESC')
+            $pending = $this->db()->table(Tables::BLUEPRINTS)
+                ->select(Tables::BLUEPRINTS . '.*, p.name as improvement_name, creator.full_name as creator_name')
+                ->join(Tables::PROJECTS . ' as p', 'p.id = ' . Tables::BLUEPRINTS . '.improvement_id AND p.active = 0', 'left')
+                ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::BLUEPRINTS . '.created_by', 'left')
+                ->where(Tables::BLUEPRINTS . '.status', \App\Config\Enums::PROJECT_STATUS_PENDING)
+                ->where(Tables::BLUEPRINTS . '.active', 0)
+                ->orderBy(Tables::BLUEPRINTS . '.id', 'DESC')
                 ->get()
                 ->getResultArray();
             $blueprints = array_merge($blueprints, $pending);

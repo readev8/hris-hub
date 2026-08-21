@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Tickets\Data;
 
+use Config\Tables;
 use App\Controllers\BaseApi;
 use App\Config\Enums;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -15,7 +16,7 @@ class PublicTicketDetail extends BaseApi
             return $this->JSONResponse('Kode pelacakan wajib diisi', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')
+        $ticket = $this->db()->table(Tables::TICKETS)
             ->where('tracking_code', $code)
             ->where('is_anonymous', 1)
             ->where('active', 0)
@@ -28,7 +29,7 @@ class PublicTicketDetail extends BaseApi
 
         $ticketId = (int) $ticket['id'];
 
-        $allAttachments = $this->db()->table('ticket_attachments')
+        $allAttachments = $this->db()->table(Tables::TICKET_ATTACHMENTS)
             ->select('id, ticket_id, comment_id, filename, stored_name, mime_type, file_size, created_at')
             ->where('ticket_id', $ticketId)
             ->where('active', 0)
@@ -47,12 +48,12 @@ class PublicTicketDetail extends BaseApi
             }
         }
 
-        $comments = $this->db()->table('ticket_comments')
-            ->select('ticket_comments.id, ticket_comments.content, ticket_comments.created_at, users.full_name')
-            ->join('users', 'users.id = ticket_comments.user_id', 'left')
-            ->where('ticket_comments.ticket_id', $ticketId)
-            ->where('ticket_comments.active', 0)
-            ->orderBy('ticket_comments.created_at', 'ASC')
+        $comments = $this->db()->table(Tables::TICKET_COMMENTS)
+            ->select(Tables::TICKET_COMMENTS . '.id, ' . Tables::TICKET_COMMENTS . '.content, ' . Tables::TICKET_COMMENTS . '.created_at, ' . Tables::USERS . '.full_name')
+            ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::TICKET_COMMENTS . '.user_id', 'left')
+            ->where(Tables::TICKET_COMMENTS . '.ticket_id', $ticketId)
+            ->where(Tables::TICKET_COMMENTS . '.active', 0)
+            ->orderBy(Tables::TICKET_COMMENTS . '.created_at', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -63,9 +64,9 @@ class PublicTicketDetail extends BaseApi
         }
         unset($c);
 
-        $resolvedLog = $this->db()->table('audit_logs al')
+        $resolvedLog = $this->db()->table(Tables::AUDIT_LOGS . ' al')
             ->select('al.created_at as resolved_at, u.full_name as resolver_name')
-            ->join('users u', 'u.id = al.user_id', 'left')
+            ->join(Tables::USERS . ' u', 'u.id = al.user_id', 'left')
             ->where('al.entity_type', 'ticket')
             ->where('al.entity_id', $ticketId)
             ->where('al.action', 'resolve_ticket')
@@ -73,7 +74,7 @@ class PublicTicketDetail extends BaseApi
             ->get()
             ->getRowArray();
 
-        $logs = $this->db()->table('audit_logs')
+        $logs = $this->db()->table(Tables::AUDIT_LOGS)
             ->select('action, new_values, created_at')
             ->where('entity_type', 'ticket')
             ->where('entity_id', $ticketId)
@@ -134,7 +135,7 @@ class PublicTicketDetail extends BaseApi
             return $this->JSONResponse('Kode pelacakan wajib diisi', null, 400);
         }
 
-        $ticket = $this->db()->table('tickets')
+        $ticket = $this->db()->table(Tables::TICKETS)
             ->where('tracking_code', $code)
             ->where('is_anonymous', 1)
             ->where('active', 0)
@@ -152,13 +153,13 @@ class PublicTicketDetail extends BaseApi
         $ticketId = (int) $ticket['id'];
         $now = date('Y-m-d H:i:s');
 
-        $this->db()->table('tickets')->where('id', $ticketId)->update([
+        $this->db()->table(Tables::TICKETS)->where('id', $ticketId)->update([
             'status'     => Enums::TICKET_STATUS_CLOSED,
             'closed_at'  => $now,
             'updated_at' => $now,
         ]);
 
-        $this->db()->table('audit_logs')->insert([
+        $this->db()->table(Tables::AUDIT_LOGS)->insert([
             'entity_type' => 'ticket',
             'entity_id'   => $ticketId,
             'user_id'     => null,
@@ -178,16 +179,16 @@ class PublicTicketDetail extends BaseApi
         $offset = ($page - 1) * $perPage;
         $search = $params['search'] ?? '';
         $status = $params['status'] ?? '';
-        $sort = $params['sort'] ?? 'tickets.id';
+        $sort = $params['sort'] ?? Tables::TICKETS . '.id';
         $order = strtoupper($params['order'] ?? 'DESC');
 
-        $allowedSort = ['tickets.id', 'title', 'status', 'priority', 'created_at'];
+        $allowedSort = [Tables::TICKETS . '.id', 'title', 'status', 'priority', 'created_at'];
         if (!in_array($sort, $allowedSort)) {
-            $sort = 'tickets.id';
+            $sort = Tables::TICKETS . '.id';
         }
         $order = in_array($order, ['ASC', 'DESC']) ? $order : 'DESC';
 
-        $builder = $this->db()->table('tickets')
+        $builder = $this->db()->table(Tables::TICKETS)
             ->select('tracking_code, title, status, type, priority, created_at')
             ->where('is_anonymous', 1)
             ->where('active', 0);
@@ -246,7 +247,7 @@ class PublicTicketDetail extends BaseApi
             return $this->JSONResponse('OK', [], 200);
         }
 
-        $tickets = $this->db()->table('tickets')
+        $tickets = $this->db()->table(Tables::TICKETS)
             ->select('tracking_code, title, status, type, priority, created_at')
             ->whereIn('tracking_code', $codes)
             ->where('is_anonymous', 1)

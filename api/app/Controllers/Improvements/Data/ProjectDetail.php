@@ -4,6 +4,7 @@ namespace App\Controllers\Improvements\Data;
 
 use App\Controllers\BaseApi;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Tables;
 
 class ProjectDetail extends BaseApi
 {
@@ -12,13 +13,13 @@ class ProjectDetail extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
 
-        $project = $this->db()->table('projects')
-            ->select('projects.*, creator.full_name as creator_name, assignee.full_name as assignee_name, approver.full_name as approver_name')
-            ->join('users as creator', 'creator.id = projects.created_by', 'left')
-            ->join('users as assignee', 'assignee.id = projects.assignee_id', 'left')
-            ->join('users as approver', 'approver.id = projects.approver_id', 'left')
-            ->where('projects.id', $id)
-            ->where('projects.active', 0)
+        $project = $this->db()->table(Tables::PROJECTS)
+            ->select(Tables::PROJECTS . '.*, creator.full_name as creator_name, assignee.full_name as assignee_name, approver.full_name as approver_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::PROJECTS . '.created_by', 'left')
+            ->join(Tables::USERS . ' as assignee', 'assignee.id = ' . Tables::PROJECTS . '.assignee_id', 'left')
+            ->join(Tables::USERS . ' as approver', 'approver.id = ' . Tables::PROJECTS . '.approver_id', 'left')
+            ->where(Tables::PROJECTS . '.id', $id)
+            ->where(Tables::PROJECTS . '.active', 0)
             ->get()
             ->getRowArray();
 
@@ -28,13 +29,13 @@ class ProjectDetail extends BaseApi
 
         // Scope (page -> module -> project)
         if (!empty($project['page_id'])) {
-            $page = $this->db()->table('pages')
-                ->select('pages.name as page_name, modules.name as module_name, mp.name as project_name')
-                ->join('modules', 'modules.id = pages.module_id', 'left')
-                ->join('master_projects as mp', 'mp.id = modules.master_project_id', 'left')
-                ->where('pages.id', $project['page_id'])
-                ->where('pages.active', 0)
-                ->where('modules.active', 0)
+            $page = $this->db()->table(Tables::PAGES)
+                ->select(Tables::PAGES . '.name as page_name, ' . Tables::MODULES . '.name as module_name, mp.name as project_name')
+                ->join(Tables::MODULES, Tables::MODULES . '.id = ' . Tables::PAGES . '.module_id', 'left')
+                ->join(Tables::MASTER_PROJECTS . ' as mp', 'mp.id = ' . Tables::MODULES . '.master_project_id', 'left')
+                ->where(Tables::PAGES . '.id', $project['page_id'])
+                ->where(Tables::PAGES . '.active', 0)
+                ->where(Tables::MODULES . '.active', 0)
                 ->where('mp.active', 0)
                 ->get()
                 ->getRowArray();
@@ -46,7 +47,7 @@ class ProjectDetail extends BaseApi
         }
 
         // Attachments
-        $attachments = $this->db()->table('project_attachments')
+        $attachments = $this->db()->table(Tables::PROJECT_ATTACHMENTS)
             ->where('project_id', $id)
             ->where('active', 0)
             ->orderBy('created_at', 'ASC')
@@ -68,30 +69,30 @@ class ProjectDetail extends BaseApi
             $project['page_id'] = $this->api->encryptId($project['page_id']);
         }
 
-        $approvals = $this->db()->table('approval_requests')
-            ->select('approval_requests.*, approver.full_name as approver_name')
-            ->join('users as approver', 'approver.id = approval_requests.approver_id', 'left')
-            ->where('approval_requests.project_id', $id)
-            ->where('approval_requests.active', 0)
-            ->orderBy('approval_requests.stage_sequence', 'ASC')
+        $approvals = $this->db()->table(Tables::APPROVAL_REQUESTS)
+            ->select(Tables::APPROVAL_REQUESTS . '.*, approver.full_name as approver_name')
+            ->join(Tables::USERS . ' as approver', 'approver.id = ' . Tables::APPROVAL_REQUESTS . '.approver_id', 'left')
+            ->where(Tables::APPROVAL_REQUESTS . '.project_id', $id)
+            ->where(Tables::APPROVAL_REQUESTS . '.active', 0)
+            ->orderBy(Tables::APPROVAL_REQUESTS . '.stage_sequence', 'ASC')
             ->get()
             ->getResultArray();
 
-        $comments = $this->db()->table('project_comments')
-            ->select('project_comments.*, users.full_name')
-            ->join('users', 'users.id = project_comments.user_id')
-            ->where('project_comments.project_id', $id)
-            ->where('project_comments.active', 0)
-            ->orderBy('project_comments.created_at', 'ASC')
+        $comments = $this->db()->table(Tables::PROJECT_COMMENTS)
+            ->select(Tables::PROJECT_COMMENTS . '.*, ' . Tables::USERS . '.full_name')
+            ->join(Tables::USERS, Tables::USERS . '.id = ' . Tables::PROJECT_COMMENTS . '.user_id')
+            ->where(Tables::PROJECT_COMMENTS . '.project_id', $id)
+            ->where(Tables::PROJECT_COMMENTS . '.active', 0)
+            ->orderBy(Tables::PROJECT_COMMENTS . '.created_at', 'ASC')
             ->get()
             ->getResultArray();
 
-        $blueprints = $this->db()->table('blueprints')
-            ->select('blueprints.id, blueprints.name, blueprints.status, blueprints.created_at, creator.full_name as creator_name')
-            ->join('users as creator', 'creator.id = blueprints.created_by', 'left')
-            ->where('blueprints.improvement_id', $id)
-            ->where('blueprints.active', 0)
-            ->orderBy('blueprints.created_at', 'DESC')
+        $blueprints = $this->db()->table(Tables::BLUEPRINTS)
+            ->select(Tables::BLUEPRINTS . '.id, ' . Tables::BLUEPRINTS . '.name, ' . Tables::BLUEPRINTS . '.status, ' . Tables::BLUEPRINTS . '.created_at, creator.full_name as creator_name')
+            ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::BLUEPRINTS . '.created_by', 'left')
+            ->where(Tables::BLUEPRINTS . '.improvement_id', $id)
+            ->where(Tables::BLUEPRINTS . '.active', 0)
+            ->orderBy(Tables::BLUEPRINTS . '.created_at', 'DESC')
             ->get()
             ->getResultArray();
         foreach ($blueprints as &$bp) {
@@ -101,11 +102,11 @@ class ProjectDetail extends BaseApi
         unset($bp);
         $project['blueprints'] = $blueprints;
 
-        $userTypes = $this->db()->table('master_user_types')
-            ->select('master_user_types.id, master_user_types.name')
-            ->join('project_user_types', 'project_user_types.user_type_id = master_user_types.id')
-            ->where('project_user_types.project_id', $id)
-            ->where('master_user_types.active', 1)
+        $userTypes = $this->db()->table(Tables::MASTER_USER_TYPES)
+            ->select(Tables::MASTER_USER_TYPES . '.id, ' . Tables::MASTER_USER_TYPES . '.name')
+            ->join(Tables::PROJECT_USER_TYPES, Tables::PROJECT_USER_TYPES . '.user_type_id = ' . Tables::MASTER_USER_TYPES . '.id')
+            ->where(Tables::PROJECT_USER_TYPES . '.project_id', $id)
+            ->where(Tables::MASTER_USER_TYPES . '.active', 1)
             ->get()
             ->getResultArray();
         $project['user_types'] = $userTypes;

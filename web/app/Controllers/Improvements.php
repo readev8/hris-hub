@@ -4,6 +4,22 @@ namespace App\Controllers;
 
 use CodeIgniter\HTTP\Files\UploadedFile;
 
+/**
+ * ============================================================================
+ * IMPROVEMENTS CONTROLLER
+ * ============================================================================
+ *
+ * Description: Manages improvement proposals, including CRUD operations,
+ * approval workflow, comments, and file attachments.
+ *
+ * Responsibilities:
+ * - Render improvement list, create, edit, and detail pages
+ * - Serve improvement data for DataTables via AJAX
+ * - Create, update, and delete improvements through the API
+ * - Handle approval workflow (department approval, reject, resubmit)
+ * - Upload, validate, serve, and delete file attachments
+ * - Add comments to improvements
+ */
 class Improvements extends BaseController
 {
     private function guard(string $action = 'can_view'): bool
@@ -246,38 +262,43 @@ class Improvements extends BaseController
         if (!$this->guard('can_update')) {
             return $this->denyResponse();
         }
-        $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
-            return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
-        });
-        if (empty($files)) {
-            return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
-        }
-
-        $error = $this->validateUploadedFiles($files);
-        if ($error) {
-            return $this->response->setJSON(['status' => false, 'message' => $error]);
-        }
-
-        $savedFiles = $this->saveUploadedFiles($files);
-        $attachmentIds = [];
-
-        foreach ($savedFiles as $sf) {
-            $attResult = $this->api->post_data('improvements/' . $encryptedId . '/attachments', $sf);
-            if ($attResult && ($attResult['status'] ?? false)) {
-                $attachmentIds[] = $attResult['data']['result']['id'] ?? null;
-            } else {
-                $this->deleteUploadedFiles($savedFiles);
-                return $this->response->setJSON([
-                    'status'  => false,
-                    'message' => 'Gagal menyimpan metadata lampiran',
-                ]);
+        try {
+            $files = array_filter($this->request->getFileMultiple('images') ?? [], function ($f) {
+                return $f instanceof UploadedFile && $f->getError() !== UPLOAD_ERR_NO_FILE;
+            });
+            if (empty($files)) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Tidak ada file yang diunggah']);
             }
-        }
 
-        return $this->response->setJSON([
-            'status' => true,
-            'data'   => ['ids' => $attachmentIds, 'files' => $savedFiles],
-        ]);
+            $error = $this->validateUploadedFiles($files);
+            if ($error) {
+                return $this->response->setJSON(['status' => false, 'message' => $error]);
+            }
+
+            $savedFiles = $this->saveUploadedFiles($files);
+            $attachmentIds = [];
+
+            foreach ($savedFiles as $sf) {
+                $attResult = $this->api->post_data('improvements/' . $encryptedId . '/attachments', $sf);
+                if ($attResult && ($attResult['status'] ?? false)) {
+                    $attachmentIds[] = $attResult['data']['result']['id'] ?? null;
+                } else {
+                    $this->deleteUploadedFiles($savedFiles);
+                    return $this->response->setJSON([
+                        'status'  => false,
+                        'message' => 'Gagal menyimpan metadata lampiran',
+                    ]);
+                }
+            }
+
+            return $this->response->setJSON([
+                'status' => true,
+                'data'   => ['ids' => $attachmentIds, 'files' => $savedFiles],
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Improvements uploadAttachment exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan server']);
+        }
     }
 
     public function serveFile(string $filename)

@@ -3,49 +3,81 @@
  * Blueprints Page Specifications
  * ============================================================================
  *
- * Description: Modal-based specification CRUD with UX image upload
- * Date: 2026-07-18
- * Standard: Mini (<400 lines)
+ * Modal-based specification CRUD with UX image upload
+ *
+ * Dependencies: jQuery, Bootstrap, Toastr, SweetAlert2
+ * Date: 2026-08-18
  */
 
 /* global $, site_url, toastr, Swal */
 
-var PageSpecs = (function () {
-    'use strict';
+const PageSpecs = {
 
-    var data = window.PageData || {};
-    var pageData = data.designPage || {};
-    var baseUrl = site_url + '/uploads/blueprints/';
+    // ===========================
+    // API_ENDPOINTS
+    // ===========================
 
-    // UX image upload state
-    var uxFile       = null;
-    var uxRemoveFlag = false;
-    var isEditMode   = false;
+    API_ENDPOINTS: {
+        DELETE: function (specId) { return site_url + '/blueprints/page-specifications/' + specId + '/delete'; },
+        UPDATE: function (specId) { return site_url + '/blueprints/page-specifications/' + specId + '/update'; },
+        CREATE: function (token) { return site_url + '/blueprints/design-pages/' + token + '/page-specifications'; }
+    },
+
+    // ===========================
+    // STATE
+    // ===========================
+
+    data: window.PageData || {},
+    uxFile: null,
+    uxRemoveFlag: false,
+    isEditMode: false,
+
+    get pageData() {
+        return this.data.designPage || {};
+    },
+
+    get baseUrl() {
+        return site_url + '/uploads/blueprints/';
+    },
+
+    get token() {
+        return this.data.token || '';
+    },
+
+    // ===========================
+    // INITIALIZATION
+    // ===========================
+
+    init: function () {
+        this.bindSpecUxDropzone();
+        this.initFormHandlers();
+        this.initModalDismiss();
+    },
 
     // ===========================
     // PUBLIC API
     // ===========================
 
-    function showAddSpec() {
-        isEditMode = false;
-        uxFile = null;
-        uxRemoveFlag = false;
+    showAddSpec: function () {
+        this.isEditMode = false;
+        this.uxFile = null;
+        this.uxRemoveFlag = false;
         $('#specForm')[0].reset();
         $('#specFormId').val('');
         $('#specFormExistingAttId').val('');
         $('#specModalTitle').html('<i class="fas fa-list-alt me-2"></i>Add Page Specification');
         $('#specSubmitText').text('Save');
-        renderUxPreview();
+        this.renderUxPreview();
         $('#specModal').modal('show');
-    }
+    },
 
-    function editSpec(el) {
-        isEditMode = true;
-        uxFile = null;
-        uxRemoveFlag = false;
+    editSpec: function (el) {
+        this.isEditMode = true;
+        this.uxFile = null;
+        this.uxRemoveFlag = false;
         var row = $(el).closest('tr');
         var specId = row.data('spec-id');
-        var spec = findSpec(specId);
+        var spec = this.findSpec(specId);
         if (!spec) { toastr.error('Specification not found'); return; }
 
         $('#specFormId').val(specId);
@@ -62,11 +94,12 @@ var PageSpecs = (function () {
 
         $('#specModalTitle').html('<i class="fas fa-pencil-alt me-2"></i>Edit Specification');
         $('#specSubmitText').text('Update');
-        renderUxPreview();
+        this.renderUxPreview();
         $('#specModal').modal('show');
-    }
+    },
 
-    function deleteSpec(el) {
+    deleteSpec: function (el) {
+        var self = this;
         var row = $(el).closest('tr');
         var specId = row.data('spec-id');
         Swal.fire({
@@ -75,52 +108,67 @@ var PageSpecs = (function () {
             showCancelButton: true,
             confirmButtonText: 'Delete',
             confirmButtonColor: '#AA0808',
-            cancelButtonColor: '#758CA4',
+            cancelButtonColor: '#758CA4'
         }).then(function (result) {
             if (result.isConfirmed) {
-                $.post(site_url + '/blueprints/page-specifications/' + specId + '/delete', {}, function (res) {
+                $.post(self.API_ENDPOINTS.DELETE(specId), {}, function (res) {
                     if (res.status) {
                         toastr.success('Specification deleted');
-                        row.fadeOut(300, function () { $(this).remove(); updateSpecCount(); });
+                        row.fadeOut(300, function () {
+                            $(this).remove();
+                            self.updateSpecCount();
+                        });
                     } else {
                         toastr.error(res.message || 'Failed');
                     }
                 }).fail(function () { toastr.error('Request failed'); });
             }
         });
-    }
+    },
 
-    function enlargeUx(img) {
+    enlargeUx: function (img) {
         var src = $(img).data('full') || $(img).attr('src');
         $('#uxEnlargedImg').attr('src', src);
         $('#uxEnlargedModal').modal('show');
-    }
+    },
+
+    removeUxFile: function () {
+        this.uxFile = null;
+        this.uxRemoveFlag = true;
+        $('#specFormExistingAttId').val('');
+        this.renderUxPreview();
+    },
 
     // ===========================
-    // PRIVATE
+    // PRIVATE HELPERS
     // ===========================
 
-    function findSpec(encryptedId) {
-        var specs = pageData.page_specifications || [];
+    findSpec: function (encryptedId) {
+        var specs = this.pageData.page_specifications || [];
         for (var i = 0; i < specs.length; i++) {
             if ((specs[i].id_encrypted || specs[i].id) === encryptedId) {
                 return specs[i];
             }
         }
         return null;
-    }
+    },
 
-    function updateSpecCount() {
+    updateSpecCount: function () {
         var count = $('#specsContainer tbody tr').length;
         $('#specCountBadge').text(count + ' field' + (count !== 1 ? 's' : ''));
         if (count === 0) {
-            $('#specsContainer').html('<div class="sap-empty" style="padding:40px"><i class="fas fa-list-alt" style="font-size:36px"></i><h4>No specifications</h4><p>Add page specifications for this design page.</p></div>');
+            $('#specsContainer').html(GlobalSanitize.sanitizeHtml(
+                '<div class="sap-empty" style="padding:40px"><i class="fas fa-list-alt" style="font-size:36px"></i><h4>No specifications</h4><p>Add page specifications for this design page.</p></div>'
+            ));
         }
-    }
+    },
 
-    // ── UX Image Upload ────────────────────────────────────────
+    // ===========================
+    // UX IMAGE UPLOAD
+    // ===========================
 
-    function bindSpecUxDropzone() {
+    bindSpecUxDropzone: function () {
+        var self = this;
         var $zone = $('#specUxDropzone');
         var $file = $('#specUxFile');
 
@@ -136,16 +184,16 @@ var PageSpecs = (function () {
             e.preventDefault();
             $zone.removeClass('dragover');
             var files = e.originalEvent.dataTransfer.files;
-            if (files.length > 0) { setUxFile(files[0]); }
+            if (files.length > 0) { self.setUxFile(files[0]); }
         });
 
         $file.on('change', function () {
-            if (this.files.length > 0) { setUxFile(this.files[0]); }
+            if (this.files.length > 0) { self.setUxFile(this.files[0]); }
             $(this).val('');
         });
-    }
+    },
 
-    function setUxFile(file) {
+    setUxFile: function (file) {
         if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
             toastr.error('Only JPG, PNG, WebP images are allowed');
             return;
@@ -154,17 +202,18 @@ var PageSpecs = (function () {
             toastr.error('Image size must be under 500KB');
             return;
         }
-        uxFile = file;
-        uxRemoveFlag = false;
-        renderUxPreview();
-    }
+        this.uxFile = file;
+        this.uxRemoveFlag = false;
+        this.renderUxPreview();
+    },
 
-    function renderUxPreview() {
+    renderUxPreview: function () {
         var $preview = $('#specUxPreview');
         $preview.empty();
 
-        if (uxFile) {
+        if (this.uxFile) {
             var reader = new FileReader();
+            var self = this;
             reader.onload = function (e) {
                 $preview.html(
                     '<div class="spec-ux-preview">' +
@@ -173,12 +222,12 @@ var PageSpecs = (function () {
                     '</div>'
                 );
             };
-            reader.readAsDataURL(uxFile);
-        } else if (isEditMode && !uxRemoveFlag) {
+            reader.readAsDataURL(this.uxFile);
+        } else if (this.isEditMode && !this.uxRemoveFlag) {
             var specId = $('#specFormId').val();
-            var spec = findSpec(specId);
+            var spec = this.findSpec(specId);
             if (spec && spec.ux_attachment) {
-                var url = baseUrl + spec.ux_attachment.stored_name;
+                var url = this.baseUrl + spec.ux_attachment.stored_name;
                 $preview.html(
                     '<div class="spec-ux-preview">' +
                     '<img src="' + url + '" alt="Current UX">' +
@@ -187,18 +236,13 @@ var PageSpecs = (function () {
                 );
             }
         }
-    }
+    },
 
-    function removeUxFile() {
-        uxFile = null;
-        uxRemoveFlag = true;
-        $('#specFormExistingAttId').val('');
-        renderUxPreview();
-    }
+    // ===========================
+    // FORM SUBMIT
+    // ===========================
 
-    // ── Form Submit ────────────────────────────────────────────
-
-    function serializeFormToFD(form) {
+    serializeFormToFD: function (form) {
         var fd = new FormData();
         fd.append('blueprint_token', $(form).find('[name="blueprint_token"]').val());
 
@@ -211,28 +255,29 @@ var PageSpecs = (function () {
         var specId = $(form).find('#specFormId').val();
         if (specId) fd.append('spec_id', specId);
 
-        if (uxFile) {
-            fd.append('ux_image[]', uxFile);
+        if (this.uxFile) {
+            fd.append('ux_image[]', this.uxFile);
         }
 
-        if (isEditMode && uxRemoveFlag) {
+        if (this.isEditMode && this.uxRemoveFlag) {
             fd.append('remove_ux', '1');
             var existingAttId = $(form).find('#specFormExistingAttId').val();
             if (existingAttId) fd.append('existing_ux_att_id', existingAttId);
         }
 
         return fd;
-    }
+    },
 
-    function initFormHandlers() {
+    initFormHandlers: function () {
+        var self = this;
         $('#specForm').on('submit', function (e) {
             e.preventDefault();
             var specId = $('#specFormId').val();
-            var url = isEditMode
-                ? site_url + '/blueprints/page-specifications/' + specId + '/update'
-                : site_url + '/blueprints/design-pages/' + data.token + '/page-specifications';
+            var url = self.isEditMode
+                ? self.API_ENDPOINTS.UPDATE(specId)
+                : self.API_ENDPOINTS.CREATE(self.token);
 
-            var fd = serializeFormToFD(this);
+            var fd = self.serializeFormToFD(this);
 
             var $btn = $(this).find('[type="submit"]');
             $btn.prop('disabled', true);
@@ -245,7 +290,7 @@ var PageSpecs = (function () {
                 contentType: false,
                 success: function (res) {
                     if (res.status) {
-                        toastr.success(isEditMode ? 'Specification updated' : 'Specification added');
+                        toastr.success(self.isEditMode ? 'Specification updated' : 'Specification added');
                         $('#specModal').modal('hide');
                         location.reload();
                     } else {
@@ -256,38 +301,26 @@ var PageSpecs = (function () {
                 complete: function () { $btn.prop('disabled', false); }
             });
         });
-    }
+    },
 
-    // ── Bootstrap modal cleanup ────────────────────────────────
+    // ===========================
+    // MODAL CLEANUP
+    // ===========================
 
-    function initModalDismiss() {
+    initModalDismiss: function () {
         $('#specModal, #uxEnlargedModal').on('hidden.bs.modal', function () {
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open').css('padding-right', '');
         });
     }
+};
 
-    // ── INIT ──────────────────────────────────────────────────
-
-    $(function () {
-        bindSpecUxDropzone();
-        initFormHandlers();
-        initModalDismiss();
-    });
-
-    // ===========================
-    // EXPORTS
-    // ===========================
-    return {
-        showAddSpec:  showAddSpec,
-        editSpec:     editSpec,
-        deleteSpec:   deleteSpec,
-        enlargeUx:    enlargeUx,
-        removeUxFile: removeUxFile
-    };
-})();
-
+window.PageSpecs = PageSpecs;
 window.showAddSpec = PageSpecs.showAddSpec;
-window.editSpec    = PageSpecs.editSpec;
-window.deleteSpec  = PageSpecs.deleteSpec;
-window.enlargeUx   = PageSpecs.enlargeUx;
+window.editSpec = PageSpecs.editSpec;
+window.deleteSpec = PageSpecs.deleteSpec;
+window.enlargeUx = PageSpecs.enlargeUx;
+
+$(function () {
+    PageSpecs.init();
+});

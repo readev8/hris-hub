@@ -3,6 +3,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use Config\Tables;
 
 class CreateBlueprintApprovalRequests extends Migration
 {
@@ -21,14 +22,14 @@ class CreateBlueprintApprovalRequests extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addKey('blueprint_id');
-        $this->forge->addForeignKey('blueprint_id', 'blueprints', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('requester_id', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('approver_id', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->createTable('blueprint_approval_requests');
+        $this->forge->addForeignKey('blueprint_id', Tables::BLUEPRINTS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('requester_id', Tables::USERS, 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('approver_id', Tables::USERS, 'id', 'SET NULL', 'CASCADE');
+        $this->forge->createTable(Tables::BLUEPRINT_APPROVAL_REQUESTS);
     }
 
     public function down()
     {
-        $this->forge->dropTable('blueprint_approval_requests');
+        $this->forge->dropTable(Tables::BLUEPRINT_APPROVAL_REQUESTS);
     }
 }
