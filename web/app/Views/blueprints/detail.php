@@ -38,7 +38,10 @@
             <p class="blueprint-description"><?= nl2br(esc($blueprint['description'])) ?></p>
             <?php endif; ?>
         </div>
-        <a href="<?= site_url('blueprints') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+        <div class="d-flex gap-2">
+            <a href="<?= site_url('blueprints') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+            <button id="btnExportPdf" class="sap-btn sap-btn-primary sap-btn-sm" onclick="BlueprintDetail.exportPdf()"><i class="fas fa-download"></i> Download PDF</button>
+        </div>
     </div>
 
     <div class="row g-3">
@@ -289,5 +292,7 @@
 <script src="<?= base_url('public/assets/js/page/blueprints/detail-dropzones.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/assets/js/page/blueprints/detail-crud.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/assets/js/page/blueprints/detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/vendor/html-to-pdfmake/2.5.20/html-to-pdfmake.browser.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script src="<?= base_url('public/assets/js/page/blueprints/export.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <script src="<?= base_url('public/vendor/summernote/0.9.1/summernote-bs5.min.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
 <?= $this->endSection() ?>
