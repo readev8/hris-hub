@@ -73,7 +73,7 @@ class ApiClient
             'Authorization: Basic ' . base64_encode($apiU . ':' . $apiP),
         ];
 
-        log_message('debug', 'MyhrAuth POST URL: ' . $url);
+        log_message('debug', 'MyhrAuth POST URL: ' . $this->redactUrl($url));
 
         $ch = curl_init();
         curl_setopt_array($ch, [
@@ -91,10 +91,10 @@ class ApiClient
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
 
-        log_message('debug', 'MyhrAuth Response [' . $httpCode . ']: ' . mb_substr($response ?? '', 0, 500));
+        log_message('debug', 'MyhrAuth Response [' . $httpCode . ']: ' . mb_substr($this->redactResponse($response), 0, 500));
 
         if ($error) {
-            log_message('error', 'MyhrAuth cURL error: ' . $error . ' | URL: ' . $url);
+            log_message('error', 'MyhrAuth cURL error: ' . $error . ' | URL: ' . $this->redactUrl($url));
             return null;
         }
 
@@ -135,7 +135,7 @@ class ApiClient
             'Authorization: Basic ' . base64_encode($apiU . ':' . $apiP),
         ];
 
-        log_message('debug', 'MyhrAuth GET URL: ' . $url);
+        log_message('debug', 'MyhrAuth GET URL: ' . $this->redactUrl($url));
 
         $ch = curl_init();
         curl_setopt_array($ch, [
@@ -151,10 +151,10 @@ class ApiClient
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
 
-        log_message('debug', 'MyhrAuth GET Response [' . $httpCode . ']: ' . mb_substr($response ?? '', 0, 500));
+        log_message('debug', 'MyhrAuth GET Response [' . $httpCode . ']: ' . mb_substr($this->redactResponse($response), 0, 500));
 
         if ($error) {
-            log_message('error', 'MyhrAuth GET cURL error: ' . $error . ' | URL: ' . $url);
+            log_message('error', 'MyhrAuth GET cURL error: ' . $error . ' | URL: ' . $this->redactUrl($url));
             return null;
         }
 
@@ -198,7 +198,7 @@ class ApiClient
             'Authorization: Basic ' . base64_encode($apiU . ':' . $apiP),
         ];
 
-        log_message('debug', 'MyhrApi GET URL: ' . $url);
+        log_message('debug', 'MyhrApi GET URL: ' . $this->redactUrl($url));
 
         $ch = curl_init();
         curl_setopt_array($ch, [
@@ -214,10 +214,10 @@ class ApiClient
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
 
-        log_message('debug', 'MyhrApi Response [' . $httpCode . ']: ' . mb_substr($response ?? '', 0, 500));
+        log_message('debug', 'MyhrApi Response [' . $httpCode . ']: ' . mb_substr($this->redactResponse($response), 0, 500));
 
         if ($error) {
-            log_message('error', 'MyhrApi cURL error: ' . $error . ' | URL: ' . $url);
+            log_message('error', 'MyhrApi cURL error: ' . $error . ' | URL: ' . $this->redactUrl($url));
             return null;
         }
 
@@ -284,5 +284,16 @@ class ApiClient
 
         $decoded['_http_code'] = $httpCode;
         return $decoded;
+    }
+
+    private function redactUrl(string $url): string
+    {
+        return preg_replace('/(token|key)=[^&]+/i', '$1=***', $url);
+    }
+
+    private function redactResponse(?string $response): string
+    {
+        if (!$response) return '';
+        return preg_replace('/"(token|key|password)"\s*:\s*"[^"]{10,}[^"]*"/i', '"$1":"***"', $response);
     }
 }
