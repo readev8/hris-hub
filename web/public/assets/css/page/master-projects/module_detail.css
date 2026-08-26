@@ -962,7 +962,7 @@
 .dark-mode .ticket-drawer-id { background: var(--sap-dark-surface); border-color: var(--sap-dark-border); color: #94A3B8; }
 .dark-mode .ticket-drawer-close:hover { background: rgba(13, 148, 136, 0.1); color: #5EEAD4; }
 .dark-mode .skeleton-line { background: linear-gradient(90deg, var(--sap-dark-border) 25%, var(--sap-dark-surface) 50%, var(--sap-dark-border) 75%); background-size: 200% 100%; }
-.dark-mode .drawer-meta-label { color: #64748B; }
+.dark-mode .drawer-meta-label { color: #94A3B8; }
 .dark-mode .drawer-meta-value { color: #E2E8F0; }
 .dark-mode .drawer-comment { background: var(--sap-dark-surface); border-color: var(--sap-dark-border); }
 .dark-mode .drawer-comment-author { color: #E2E8F0; }
@@ -981,13 +981,13 @@
 .dark-mode .specs-page-card-header { background: var(--sap-dark-elevated); border-bottom-color: var(--sap-dark-border); }
 .dark-mode .specs-page-name { color: #E2E8F0; }
 .dark-mode .specs-page-badge.linked { background: rgba(13, 148, 136, 0.1); color: #5EEAD4; border-color: rgba(13, 148, 136, 0.25); }
-.dark-mode .specs-page-badge.unlinked { background: var(--sap-dark-surface); color: #64748B; border-color: var(--sap-dark-border); }
-.dark-mode .specs-page-card-empty { background: var(--sap-dark-surface); color: #64748B; border-top-color: var(--sap-dark-border); }
+.dark-mode .specs-page-badge.unlinked { background: var(--sap-dark-surface); color: #94A3B8; border-color: var(--sap-dark-border); }
+.dark-mode .specs-page-card-empty { background: var(--sap-dark-surface); color: #94A3B8; border-top-color: var(--sap-dark-border); }
 .dark-mode .spec-card { background: var(--sap-dark-surface); border-color: var(--sap-dark-border); }
 .dark-mode .spec-card:hover { border-color: rgba(13, 148, 136, 0.5); }
 .dark-mode .spec-card-header { background: var(--sap-dark-elevated); border-bottom-color: var(--sap-dark-border); }
 .dark-mode .spec-card-field-name { color: #5EEAD4; }
-.dark-mode .spec-card-label { color: #64748B; }
+.dark-mode .spec-card-label { color: #94A3B8; }
 .dark-mode .spec-card-value { color: #E2E8F0; }
 
 /* ── Import Design Pages Modal ──────────────────── */
@@ -1179,10 +1179,10 @@
     color: #E2E8F0;
 }
 .dark-mode .import-design-meta {
-    color: #64748B;
+    color: #94A3B8;
 }
 .dark-mode .import-design-status.available {
     background: var(--sap-dark-surface);
     border-color: var(--sap-dark-border);
-    color: #64748B;
+    color: #94A3B8;
 }

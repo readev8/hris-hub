@@ -72,6 +72,16 @@
     padding: 10px 8px;
 }
 
+.dark-mode #referralModal .modal-content { background: var(--sap-dark-surface); }
+.dark-mode #referralModal .modal-header { border-bottom-color: var(--sap-dark-border); }
+.dark-mode #referralModal .modal-title { color: var(--sap-dark-text); }
+.dark-mode #referralModal .modal-body { color: var(--sap-dark-text-secondary); }
+.dark-mode #referralModal .table { --bs-table-bg: transparent; color: #CBD5E1; }
+.dark-mode #referralModal .table th { color: #94A3B8; border-bottom-color: var(--sap-dark-border); background: transparent; }
+.dark-mode #referralModal .table td { color: #CBD5E1; }
+.dark-mode #referralModal .table tbody tr:hover { background: rgba(13,148,136,0.1); }
+.dark-mode #referralModal .btn-close { filter: invert(1); }
+
 /* Page Modal */
 #pageModal .modal-content {
     border-radius: 12px;
@@ -85,6 +95,16 @@
 #pageModal .modal-body {
     padding: 20px 24px;
 }
+
+.dark-mode #pageModal .modal-content { background: var(--sap-dark-surface); }
+.dark-mode #pageModal .modal-header { border-bottom-color: var(--sap-dark-border); }
+.dark-mode #pageModal .modal-title { color: var(--sap-dark-text); }
+.dark-mode #pageModal .modal-body { color: var(--sap-dark-text-secondary); }
+.dark-mode #pageModal .table { --bs-table-bg: transparent; color: #CBD5E1; }
+.dark-mode #pageModal .table th { color: #94A3B8; border-bottom-color: var(--sap-dark-border); background: transparent; }
+.dark-mode #pageModal .table td { color: #CBD5E1; }
+.dark-mode #pageModal .table tbody tr:hover { background: rgba(13,148,136,0.1); }
+.dark-mode #pageModal .btn-close { filter: invert(1); }
 #pageModal .table th {
     font-size: 12px;
     font-weight: 600;
