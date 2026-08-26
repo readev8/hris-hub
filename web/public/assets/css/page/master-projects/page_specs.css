@@ -231,14 +231,14 @@
 .dark-mode .page-specs-linked-info strong { color: #5EEAD4; }
 .dark-mode .page-specs-spec-count { color: #5EEAD4; background: rgba(13, 148, 136, 0.15); }
 .dark-mode .page-specs-empty { background: var(--sap-dark-elevated); border-color: var(--sap-dark-border); }
-.dark-mode .page-specs-empty-icon { background: var(--sap-dark-surface); color: #64748B; }
+.dark-mode .page-specs-empty-icon { background: var(--sap-dark-surface); color: #94A3B8; }
 .dark-mode .page-specs-empty h4 { color: #E2E8F0; }
 .dark-mode .page-specs-empty p { color: #94A3B8; }
 .dark-mode .spec-card { background: var(--sap-dark-elevated); border-color: var(--sap-dark-border); }
 .dark-mode .spec-card:hover { border-color: rgba(13, 148, 136, 0.5); }
 .dark-mode .spec-card-header { background: var(--sap-dark-surface); border-bottom-color: var(--sap-dark-border); }
 .dark-mode .spec-card-field-name { color: #5EEAD4; }
-.dark-mode .spec-card-label { color: #64748B; }
+.dark-mode .spec-card-label { color: #94A3B8; }
 .dark-mode .spec-card-value { color: #E2E8F0; }
 .dark-mode .page-specs-linked-badge {
     background: rgba(13, 148, 136, 0.1);

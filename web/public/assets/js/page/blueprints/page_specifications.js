@@ -316,10 +316,10 @@ const PageSpecs = {
 };
 
 window.PageSpecs = PageSpecs;
-window.showAddSpec = PageSpecs.showAddSpec;
-window.editSpec = PageSpecs.editSpec;
-window.deleteSpec = PageSpecs.deleteSpec;
-window.enlargeUx = PageSpecs.enlargeUx;
+window.showAddSpec = PageSpecs.showAddSpec.bind(PageSpecs);
+window.editSpec = PageSpecs.editSpec.bind(PageSpecs);
+window.deleteSpec = PageSpecs.deleteSpec.bind(PageSpecs);
+window.enlargeUx = PageSpecs.enlargeUx.bind(PageSpecs);
 
 $(function () {
     PageSpecs.init();

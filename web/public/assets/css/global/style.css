@@ -125,9 +125,12 @@
   /* ── Dark Mode ───────────────────────────────────────────── */
   --sap-dark-bg:        #0F172A;
   --sap-dark-surface:   #1E293B;
+  --sap-dark-elevated:  #263341;
   --sap-dark-text:      #F1F5F9;
+  --sap-dark-text-secondary: #CBD5E1;
   --sap-dark-muted:     #94A3B8;
   --sap-dark-border:    #334155;
+  --sap-text-tertiary:  #94A3B8;
 }
 
 /* Dark mode class */
@@ -184,7 +187,7 @@ code, .mono { font-family: var(--sap-mono); font-size: 0.8125rem; }
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
-.dark-mode ::-webkit-scrollbar-thumb { background: #475569; }
+.dark-mode ::-webkit-scrollbar-thumb { background: #64748B; }
 .dark-mode ::-webkit-scrollbar-thumb:hover { background: #64748B; }
 
 /* ============================================================
@@ -454,7 +457,7 @@ code, .mono { font-family: var(--sap-mono); font-size: 0.8125rem; }
 }
 
 .dark-mode .sidebar-group-label {
-  color: #64748B;
+  color: #94A3B8;
 }
 
 .sidebar-nav {
@@ -808,6 +811,11 @@ code, .mono { font-family: var(--sap-mono); font-size: 0.8125rem; }
 .dark-mode .sap-table tbody tr:active { background: rgba(13,148,136,0.2); }
 .dark-mode .sap-table tbody tr.selected { background: rgba(13,148,136,0.2); }
 
+/* Dark mode Bootstrap .table reset */
+.dark-mode .table { --bs-table-bg: transparent; --bs-table-color: #CBD5E1; --bs-table-striped-bg: rgba(30,41,59,0.4); --bs-table-hover-bg: rgba(13,148,136,0.1); }
+.dark-mode .table th { color: #94A3B8; border-bottom-color: var(--sap-dark-border); }
+.dark-mode .table td { color: #CBD5E1; border-bottom-color: #334155; }
+
 /* DataTables overrides */
 .dataTables_wrapper { min-width: 0; }
 .dataTables_wrapper .dt-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -1071,8 +1079,8 @@ textarea.sap-input { height: auto; min-height: 100px; }
   background-size: 200% 100%;
 }
 
-.dark-mode .sap-empty i { color: #475569; }
-.dark-mode .empty-state i { color: #475569; }
+.dark-mode .sap-empty i { color: #64748B; }
+.dark-mode .empty-state i { color: #64748B; }
 
 /* ============================================================
    Empty States — Modern
@@ -1189,7 +1197,7 @@ textarea.sap-input { height: auto; min-height: 100px; }
 
 .dark-mode .filter-bar input[type="date"] {
   background: var(--sap-dark-surface);
-  border-color: #475569;
+  border-color: #64748B;
   color: #F1F5F9;
 }
 
@@ -1240,7 +1248,7 @@ textarea.sap-input { height: auto; min-height: 100px; }
 .dark-mode .stepper-node {
   background: var(--sap-dark-surface);
   border-color: #475569;
-  color: #64748B;
+  color: #94A3B8;
 }
 .stepper-step.completed .stepper-node {
   background: linear-gradient(135deg, var(--sap-success) 0%, #10B981 100%);
@@ -1448,6 +1456,13 @@ textarea.sap-input { height: auto; min-height: 100px; }
 }
 .sap-modal .btn-close:focus { box-shadow: 0 0 0 4px rgba(13,148,136,0.15); }
 
+.dark-mode .sap-modal .modal-content { background: var(--sap-dark-surface); border-color: var(--sap-dark-border); }
+.dark-mode .sap-modal .modal-header { border-bottom-color: var(--sap-dark-border); }
+.dark-mode .sap-modal .modal-footer { border-top-color: var(--sap-dark-border); }
+.dark-mode .sap-modal .modal-title { color: var(--sap-dark-text); }
+.dark-mode .sap-modal .modal-body { color: var(--sap-dark-text-secondary); }
+.dark-mode .sap-modal .btn-close { filter: invert(1); }
+
 /* ============================================================
    Responsive
    ============================================================ */
@@ -1511,7 +1526,7 @@ textarea.sap-input { height: auto; min-height: 100px; }
 .dark-mode .app-footer {
   background: var(--sap-dark-surface);
   border-top-color: #334155;
-  color: #64748B;
+  color: #94A3B8;
 }
 
 .footer-left {
@@ -1611,7 +1626,7 @@ textarea.sap-input { height: auto; min-height: 100px; }
 
 .dark-mode .text-meta { color: #94A3B8 !important; }
 .dark-mode .text-secondary { color: #94A3B8 !important; }
-.dark-mode .text-muted { color: #64748B !important; }
+.dark-mode .text-muted { color: #94A3B8 !important; }
 
 /* Toastr Modern overrides */
 .toast { border-radius: var(--sap-radius) !important; font-family: var(--sap-font) !important; box-shadow: var(--sap-shadow-lg) !important; }
@@ -1644,7 +1659,7 @@ textarea.sap-input { height: auto; min-height: 100px; }
 .dark-mode .swal2-popup { background: var(--sap-dark-surface) !important; }
 .dark-mode .swal2-title { color: #F1F5F9 !important; }
 .dark-mode .swal2-html-container { color: #CBD5E1 !important; }
-.dark-mode .swal2-input, .dark-mode .swal2-textarea { background: #0F172A !important; border-color: #475569 !important; color: #F1F5F9 !important; }
+.dark-mode .swal2-input, .dark-mode .swal2-textarea { background: #0F172A !important; border-color: #64748B !important; color: #F1F5F9 !important; }
 
 .btn { font-family: var(--sap-font) !important; }
 .card { background: var(--sap-surface); border: 1px solid var(--sap-border); border-radius: var(--sap-radius-lg); box-shadow: var(--sap-shadow-sm); }
@@ -1667,10 +1682,10 @@ textarea.sap-input { height: auto; min-height: 100px; }
 .dark-mode .card { background: var(--sap-dark-surface); border-color: #334155; }
 .dark-mode .card-header { border-bottom-color: #334155; color: #F1F5F9; }
 .dark-mode .card-footer { background: #0F172A; border-top-color: #334155; }
-.dark-mode .form-control, .dark-mode .form-select { background: #0F172A; border-color: #475569; color: #F1F5F9; }
+.dark-mode .form-control, .dark-mode .form-select { background: #0F172A; border-color: #64748B; color: #F1F5F9; }
 .dark-mode .form-control:focus, .dark-mode .form-select:focus { border-color: #5EEAD4; box-shadow: 0 0 0 4px rgba(94,234,212,0.15); }
-.dark-mode .breadcrumb-item a { color: #64748B; }
+.dark-mode .breadcrumb-item a { color: #94A3B8; }
 .dark-mode .breadcrumb-item a:hover { color: #5EEAD4; }
 .dark-mode .breadcrumb-item.active { color: #F1F5F9; }
-.dark-mode .empty-state { color: #64748B; }
-.dark-mode .empty-state h4 { color: #94A3B8; }
+.dark-mode .empty-state { color: #94A3B8; }
+.dark-mode .empty-state h4 { color: #CBD5E1; }
