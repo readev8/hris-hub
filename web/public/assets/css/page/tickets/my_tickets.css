@@ -11,7 +11,7 @@
     gap: 12px;
     padding: 16px 20px;
     border-radius: 10px;
-    background: #fff;
+    background: var(--sap-surface, #fff);
     border: 1px solid var(--sap-border, #e5e7eb);
     transition: all 200ms ease;
 }
@@ -59,6 +59,31 @@
 .summary-card--closed .summary-card-icon {
     background: #f3f4f6;
     color: #6b7280;
+}
+
+/* ── Summary Cards Dark Mode ───────────────────────────── */
+.dark-mode .summary-card {
+    background: var(--sap-dark-surface);
+    border-color: var(--sap-dark-border);
+}
+.dark-mode .summary-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.dark-mode .summary-card--open .summary-card-icon {
+    background: rgba(37, 99, 235, 0.15);
+    color: #60a5fa;
+}
+.dark-mode .summary-card--inprogress .summary-card-icon {
+    background: rgba(217, 119, 6, 0.15);
+    color: #fbbf24;
+}
+.dark-mode .summary-card--resolved .summary-card-icon {
+    background: rgba(5, 150, 105, 0.15);
+    color: #34d399;
+}
+.dark-mode .summary-card--closed .summary-card-icon {
+    background: rgba(107, 114, 128, 0.15);
+    color: #9ca3af;
 }
 
 /* ── Filter Bar ────────────────────────────────────────── */
