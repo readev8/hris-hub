@@ -65,6 +65,12 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     // Dashboard
     $routes->get('dashboard/stats', 'Dashboard\Report\Stats::get_stats');
 
+    // Monitoring Hub
+    $routes->get('monitoring/stats',  'Monitoring\Report\Stats::get_stats');
+    $routes->get('monitoring/list',   'Monitoring\Report\ListReport::get_list');
+    $routes->get('monitoring/detail', 'Monitoring\Data\Detail::get_detail');
+    $routes->get('monitoring/export', 'Monitoring\Report\Export::get_export');
+
     // Audit log
     $routes->get('audit-log/recent',      'AuditLog\Report\LogList::get_recent_logs');
     $routes->get('audit-log/entity',       'AuditLog\Report\LogList::get_entity_logs');
