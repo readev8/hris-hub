@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #1E40AF;
+  --color-secondary: #3B82F6;
+  --color-accent: #D97706;
+  --color-background: #F8FAFC;
+  --color-foreground: #1E3A8A;
+  --color-muted: #E9EEF6;
+  --color-border: #DBEAFE;
+  --color-destructive: #DC2626;
+  --mon-space-1: 8px;
+  --mon-space-2: 16px;
+  --mon-space-3: 24px;
+  --mon-space-4: 32px;
+}
+
+.mon-wrap, .mon-section { font-family: 'Fira Sans', sans-serif; }
+.mon-wrap h1, .mon-section h2, .mon-section h3 { font-family: 'Fira Code', monospace; color: var(--color-foreground); }
+
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--mon-space-2); margin: var(--mon-space-2) 0;
+}
+.kpi-grid.kpi-sub { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.metric-card {
+  background: #fff; border: 1px solid var(--color-border); border-radius: 10px;
+  padding: var(--mon-space-2); text-align: center;
+  transition: box-shadow 150ms ease-in-out, transform 150ms ease-in-out;
+}
+.metric-card:hover { box-shadow: 0 4px 14px rgba(30, 64, 175, 0.12); transform: translateY(-2px); }
+.metric-value { font-family: 'Fira Code', monospace; font-size: 26px; font-weight: 600; color: var(--color-primary); }
+.metric-label { font-size: 12px; color: #475569; margin-top: 4px; }
+
+.chart-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--mon-space-2); margin-bottom: var(--mon-space-3);
+}
+.chart-card, .table-card {
+  background: #fff; border: 1px solid var(--color-border); border-radius: 10px;
+  padding: var(--mon-space-2);
+}
+.chart-card h3, .table-card h3 { font-size: 14px; margin: 0 0 var(--mon-space-1); }
+.chart-card canvas { max-height: 260px; }
+
+.mon-section { margin-top: var(--mon-space-3); }
+.mon-section-head { display: flex; align-items: baseline; gap: var(--mon-space-1); margin-bottom: var(--mon-space-1); }
+.mon-section-head h2 { font-size: 17px; margin: 0; }
+
+.domain-tabs, .domain-subtabs { display: flex; flex-wrap: wrap; gap: var(--mon-space-1); margin-bottom: var(--mon-space-1); }
+.domain-tab, .domain-subtab {
+  cursor: pointer; border: 1px solid var(--color-border); background: #fff;
+  border-radius: 8px; padding: 6px 14px; font-size: 13px; color: var(--color-foreground);
+  transition: background 150ms ease-in-out, color 150ms ease-in-out;
+}
+.domain-tab:hover, .domain-subtab:hover { background: var(--color-muted); }
+.domain-tab.active, .domain-subtab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.domain-tab:focus-visible, .domain-subtab:focus-visible, #btn-filter:focus-visible, #btn-export:focus-visible {
+  outline: 2px solid var(--color-ring, #1E40AF); outline-offset: 2px;
+}
+
+.sap-table tbody tr { transition: background 150ms ease-in-out; }
+.sap-table tbody tr:hover { background: var(--color-muted); }
+
+@media (max-width: 768px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid { grid-template-columns: 1fr; }
+  .metric-value { font-size: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metric-card, .domain-tab, .domain-subtab, .sap-table tbody tr { transition: none; }
+  .metric-card:hover { transform: none; }
+}
