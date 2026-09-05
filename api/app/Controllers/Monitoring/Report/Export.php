@@ -18,12 +18,14 @@ class Export extends BaseApi
                 return $this->JSONResponse('Tabel tidak dikenal', null, 400);
             }
             $m = new MonitoringRpt_model();
-            $rows = $m->getList($table, $this->request->getGet('start_date'), $this->request->getGet('end_date'), 100, 0);
+            $page = $m->getList($table, $this->request->getGet('start_date'), $this->request->getGet('end_date'), 100, 0);
+            $rows = $page['items'];
             // Batch berikutnya hingga maks 5000 baris
             $all = $rows;
             $skip = 100;
             while (count($rows) === 100 && count($all) < 5000) {
-                $rows = $m->getList($table, $this->request->getGet('start_date'), $this->request->getGet('end_date'), 100, $skip);
+                $page = $m->getList($table, $this->request->getGet('start_date'), $this->request->getGet('end_date'), 100, $skip);
+                $rows = $page['items'];
                 $all = array_merge($all, $rows);
                 $skip += 100;
             }

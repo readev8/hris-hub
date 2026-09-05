@@ -64,4 +64,35 @@ class MonitoringCheck_model
     {
         return self::MAP[$key]['date'];
     }
+
+    /** Kolom yang boleh di-sort (selain PK & kolom tanggal sederhana). */
+    public function sortable(string $key): array
+    {
+        return match ($key) {
+            'session' => ['start', 'userid'],
+            'w_pegawai' => ['Nama', 'TglMasuk'],
+            'w_pelamar' => ['Nama'],
+            'w_fpk' => ['Tgl', 'No'],
+            'w_sk' => ['Tanggal', 'No'],
+            'w_kontrak' => ['AwalKontrak', 'No'],
+            'w_memo_keluar' => ['Tanggal', 'No'],
+            'w_sk_pengajuan' => ['Tanggal', 'No'],
+            default => [],
+        };
+    }
+
+    /** Kolom teks untuk pencarian (LIKE), null = tanpa search. Terverifikasi via SHOW COLUMNS. */
+    public function searchable(string $key): ?string
+    {
+        return match ($key) {
+            'session' => 'userid',
+            'w_pegawai' => 'Nama',
+            'w_pelamar' => 'Nama',
+            'w_fpk', 'w_sk', 'w_sk_pengajuan', 'w_memo_keluar', 'w_kontrak',
+            'w_surat_peringatan', 'w_surat_jamsostek', 'w_surat_referensi' => 'No',
+            'pengajuan_ijin' => 'keterangan',
+            'ss' => 'judul',
+            default => null,
+        };
+    }
 }

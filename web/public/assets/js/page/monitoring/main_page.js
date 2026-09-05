@@ -13,14 +13,14 @@ const Monitoring = {
     COLORS: ['#1E40AF', '#3B82F6', '#D97706', '#DC2626', '#059669', '#7C3AED', '#0891B2', '#BE123C', '#4D7C0F', '#0F766E']
   },
 
-  state: { stats: {}, start: null, end: null, charts: {}, activeTable: 'assignment', poll: { on: true, ms: 60000, timer: null } },
+  state: { stats: {}, start: null, end: null, charts: {}, activeTable: 'assignment', grid: { take: 20, skip: 0, total: 0, sort: '', dir: 'DESC', q: '' }, poll: { on: true, ms: 60000, timer: null } },
 
   api: {
     refreshStats(start, end) {
       return $.ajax({ url: Monitoring.constants.ENDPOINTS.STATS, method: 'GET', data: { start_date: start, end_date: end }, timeout: Monitoring.constants.TIMEOUT });
     },
-    loadTable(table, start, end, take) {
-      return $.ajax({ url: Monitoring.constants.ENDPOINTS.LIST, method: 'GET', data: { table: table, start_date: start, end_date: end, take: take || 20 }, timeout: Monitoring.constants.TIMEOUT });
+    loadTable(table, start, end, take, skip, sort, dir, q) {
+      return $.ajax({ url: Monitoring.constants.ENDPOINTS.LIST, method: 'GET', data: { table: table, start_date: start, end_date: end, take: take || 20, skip: skip || 0, sort: sort || '', dir: dir || 'DESC', q: q || '' }, timeout: Monitoring.constants.TIMEOUT });
     },
     loadTrend(table, days, end) {
       return $.ajax({ url: Monitoring.constants.ENDPOINTS.TREND, method: 'GET', data: { table: table, days: days || 14, end_date: end }, timeout: Monitoring.constants.TIMEOUT });
@@ -131,7 +131,14 @@ const Monitoring = {
         tr.appendChild(td); body.appendChild(tr); return;
       }
       const cols = Object.keys(items[0]).slice(0, 6);
-      cols.forEach((c) => { const th = document.createElement('th'); th.textContent = c; head.appendChild(th); });
+      cols.forEach((c) => {
+        const th = document.createElement('th');
+        th.textContent = c + (Monitoring.state.grid.sort === c ? (Monitoring.state.grid.dir === 'ASC' ? ' ▲' : ' ▼') : '');
+        th.style.cursor = 'pointer';
+        th.dataset.col = c;
+        th.title = 'Klik untuk sort';
+        head.appendChild(th);
+      });
       items.forEach((r) => {
         const tr = document.createElement('tr');
         tr.className = 'row-clickable';
@@ -145,6 +152,19 @@ const Monitoring = {
         });
         body.appendChild(tr);
       });
+    },
+    renderGridRange() {
+      const g = Monitoring.state.grid;
+      const el = document.getElementById('grid-range');
+      if (!el) return;
+      if (!g.total) { el.textContent = ''; return; }
+      const from = g.skip + 1;
+      const to = Math.min(g.skip + g.take, g.total);
+      el.textContent = 'Baris ' + from + '–' + to + ' dari ' + g.total;
+      const prev = document.getElementById('grid-prev');
+      const next = document.getElementById('grid-next');
+      if (prev) prev.disabled = g.skip <= 0;
+      if (next) next.disabled = to >= g.total;
     },
     renderSubtabs(domain) {
       const box = document.getElementById('domain-subtabs');
@@ -173,6 +193,8 @@ const Monitoring = {
         $('.domain-tab').removeClass('active');
         $(this).addClass('active');
         Monitoring.state.activeTable = $(this).data('table');
+        Monitoring.state.grid.skip = 0; Monitoring.state.grid.sort = ''; Monitoring.state.grid.q = '';
+        const s = document.getElementById('domain-search'); if (s) s.value = '';
         Monitoring.ui.renderSubtabs($(this).data('domain'));
         Monitoring.loadActiveTable();
       });
@@ -180,10 +202,36 @@ const Monitoring = {
         $('.domain-subtab').removeClass('active');
         $(this).addClass('active');
         Monitoring.state.activeTable = $(this).data('table');
+        Monitoring.state.grid.skip = 0; Monitoring.state.grid.sort = '';
         Monitoring.loadActiveTable();
       });
-      $(document).on('click', '#grid-domain tbody tr.row-clickable', function () {
-        Monitoring.showDetail($(this).data('pk'));
+      $(document).on('click', '#grid-domain thead th[data-col]', function () {
+        const g = Monitoring.state.grid;
+        const col = $(this).data('col');
+        if (g.sort === col) g.dir = g.dir === 'ASC' ? 'DESC' : 'ASC';
+        else { g.sort = col; g.dir = 'DESC'; }
+        g.skip = 0;
+        Monitoring.loadActiveTable();
+      });
+      $(document).on('click', '#grid-prev', () => {
+        const g = Monitoring.state.grid;
+        g.skip = Math.max(0, g.skip - g.take);
+        Monitoring.loadActiveTable();
+      });
+      $(document).on('click', '#grid-next', () => {
+        const g = Monitoring.state.grid;
+        g.skip = g.skip + g.take;
+        Monitoring.loadActiveTable();
+      });
+      let searchTimer = null;
+      $(document).on('input', '#domain-search', function () {
+        clearTimeout(searchTimer);
+        const v = $(this).val();
+        searchTimer = setTimeout(() => {
+          Monitoring.state.grid.q = v;
+          Monitoring.state.grid.skip = 0;
+          Monitoring.loadActiveTable();
+        }, 400);
       });
     }
   },
@@ -249,10 +297,15 @@ const Monitoring = {
   },
 
   loadActiveTable() {
+    const g = Monitoring.state.grid;
     const body = document.getElementById('grid-domain-body');
     if (body) body.innerHTML = '<tr><td class="text-center text-muted">Memuat…</td></tr>';
-    this.api.loadTable(this.state.activeTable, this.state.start, this.state.end, 20)
-      .done((res) => { Monitoring.ui.renderDomainTable(res.items || []); })
+    this.api.loadTable(this.state.activeTable, this.state.start, this.state.end, g.take, g.skip, g.sort, g.dir, g.q)
+      .done((res) => {
+        Monitoring.ui.renderDomainTable(res.items || []);
+        g.total = (res.pagination && res.pagination.total) || 0;
+        Monitoring.ui.renderGridRange();
+      })
       .fail((xhr) => {
         if (window.toastr_error) window.toastr_error('Gagal memuat data domain');
         if (body) body.innerHTML = '<tr><td class="text-center text-muted">Gagal memuat data.</td></tr>';

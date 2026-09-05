@@ -30,6 +30,12 @@ $tabs = [
         <?php endforeach; ?>
     </div>
     <div class="domain-subtabs" id="domain-subtabs"></div>
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+        <input type="search" id="domain-search" placeholder="Cari…" aria-label="Cari data" style="max-width:220px">
+        <button class="sap-btn sap-btn-secondary sap-btn-sm" id="grid-prev">‹ Prev</button>
+        <span class="text-muted" id="grid-range" style="font-size:12px" aria-live="polite"></span>
+        <button class="sap-btn sap-btn-secondary sap-btn-sm" id="grid-next">Next ›</button>
+    </div>
     <div class="mon-card">
         <div class="table-responsive">
             <table class="sap-table" id="grid-domain">

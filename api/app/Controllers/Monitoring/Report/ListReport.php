@@ -18,9 +18,13 @@ class ListReport extends BaseApi
             }
             $take = max(1, min((int) ($this->request->getGet('take') ?? 20), 100));
             $skip = max(0, (int) ($this->request->getGet('skip') ?? 0));
+            $sort = $this->request->getGet('sort');
+            $dir = strtoupper((string) ($this->request->getGet('dir') ?? 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+            $qRaw = $this->request->getGet('q');
+            $q = is_string($qRaw) && $qRaw !== '' ? $this->cleanInput($qRaw) : null;
             $m = new MonitoringRpt_model();
-            $items = $m->getList($table, $this->request->getGet('start_date'), $this->request->getGet('end_date'), $take, $skip);
-            return $this->JSONResponse('OK', ['items' => $items, 'pagination' => ['take' => $take, 'skip' => $skip]], 200);
+            $data = $m->getList($table, $this->request->getGet('start_date'), $this->request->getGet('end_date'), $take, $skip, is_string($sort) ? $sort : null, $dir, is_string($q) ? $q : null);
+            return $this->JSONResponse('OK', ['items' => $data['items'], 'pagination' => ['take' => $take, 'skip' => $skip, 'total' => $data['total']]], 200);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->JSONResponse('Gagal memuat daftar monitoring', null, 500);

@@ -60,14 +60,31 @@ class MonitoringRpt_model
         return $out;
     }
 
-    public function getList(string $key, ?string $start, ?string $end, int $take = 20, int $skip = 0): array
+    public function getList(string $key, ?string $start, ?string $end, int $take = 20, int $skip = 0, ?string $sort = null, string $dir = 'DESC', ?string $q = null): array
     {
         $take = max(1, min($take, 100));
         $skip = max(0, $skip);
-        return $this->filtered($key, $start, $end)
-            ->orderBy($this->orderCol($key), 'DESC')
+        $b = $this->filtered($key, $start, $end);
+        $searchCol = $this->check->searchable($key);
+        if ($q !== null && $q !== '' && $searchCol !== null) {
+            $b->groupStart()->like($searchCol, $q)->groupEnd();
+        }
+        $total = (int) $b->countAllResults(false);
+        $rows = $b->orderBy($this->sortCol($key, $sort), $dir === 'ASC' ? 'ASC' : 'DESC')
             ->get($take, $skip)
             ->getResultArray();
+        return ['items' => $rows, 'total' => $total];
+    }
+
+    private function sortCol(string $key, ?string $sort): string
+    {
+        $d = $this->check->dateExpr($key);
+        $simpleDate = ($d !== null && $d !== 'bulantahun' && !str_contains($d, '(')) ? $d : null;
+        $allowed = array_merge([$this->pk($key)], $simpleDate ? [$simpleDate] : [], $this->check->sortable($key));
+        if ($sort !== null && in_array($sort, $allowed, true)) {
+            return $sort;
+        }
+        return $this->orderCol($key);
     }
 
     private function orderCol(string $key): string
