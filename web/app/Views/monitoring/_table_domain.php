@@ -30,7 +30,7 @@ $tabs = [
         <?php endforeach; ?>
     </div>
     <div class="domain-subtabs" id="domain-subtabs"></div>
-    <div class="table-card">
+    <div class="mon-card">
         <div class="table-responsive">
             <table class="sap-table" id="grid-domain">
                 <thead><tr id="grid-domain-head"><th>Data</th></tr></thead>

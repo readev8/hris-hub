@@ -52,7 +52,7 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 </div>
 
 <!-- ══════════ SECTION 2: KPI Grid ══════════ -->
-<div class="kpi-grid">
+<div class="mon-kpi-grid">
     <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($sess['total'] ?? 0) ?></div><div class="metric-label">Sesi</div></div>
     <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($asg['assignment'] ?? 0) ?></div><div class="metric-label">Assignment</div></div>
     <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($fpkt['fpkt'] ?? 0) ?></div><div class="metric-label">FPKT</div></div>
@@ -66,9 +66,9 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 </div>
 
 <!-- ══════════ SECTION 3: Charts ══════════ -->
-<div class="chart-grid">
-    <div class="chart-card"><h3>Distribusi per Domain</h3><canvas id="monStatusChart"></canvas></div>
-    <div class="chart-card"><h3>Tren Sesi (14 hari)</h3><canvas id="monTrendChart"></canvas></div>
+<div class="mon-chart-grid">
+    <div class="mon-card"><h3>Distribusi per Domain</h3><canvas id="monStatusChart"></canvas></div>
+    <div class="mon-card"><h3>Tren Sesi (14 hari)</h3><canvas id="monTrendChart"></canvas></div>
 </div>
 
 <!-- ══════════ SECTION 4: Sessions (tersendiri) ══════════ -->
@@ -80,6 +80,9 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap">
 <link rel="stylesheet" href="<?= base_url('public/assets/css/page/monitoring/main_page.css?v=' . config('App')->assetVersion) ?>">
 <?= $this->endSection() ?>
 

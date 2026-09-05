@@ -146,8 +146,8 @@ final class MonitoringMainTest extends BaseFunctionalTest
     public static function cssClassProvider(): array
     {
         return [
-            'kpi-grid'    => ['kpi-grid'],
-            'metric-card' => ['metric-card'],
+            'mon-kpi-grid' => ['mon-kpi-grid'],
+            'metric-card'  => ['metric-card'],
             'chart-grid'  => ['chart-grid'],
             'domain-tab'  => ['domain-tab'],
             'sap-table'   => ['sap-table'],

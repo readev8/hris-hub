@@ -1,74 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+/* MONITORING — page-specific layout. Colors/surfaces from global --sap-* tokens
+ * (dark-mode ready via body.dark-mode remap in global/style.css).
+ * @file public/assets/css/page/monitoring/main_page.css
+ */
 
-:root {
-  --color-primary: #1E40AF;
-  --color-secondary: #3B82F6;
-  --color-accent: #D97706;
-  --color-background: #F8FAFC;
-  --color-foreground: #1E3A8A;
-  --color-muted: #E9EEF6;
-  --color-border: #DBEAFE;
-  --color-destructive: #DC2626;
-  --mon-space-1: 8px;
-  --mon-space-2: 16px;
-  --mon-space-3: 24px;
-  --mon-space-4: 32px;
-}
-
-.mon-wrap, .mon-section { font-family: 'Fira Sans', sans-serif; }
-.mon-wrap h1, .mon-section h2, .mon-section h3 { font-family: 'Fira Code', monospace; color: var(--color-foreground); }
-
-.kpi-grid {
+.mon-kpi-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: var(--mon-space-2); margin: var(--mon-space-2) 0;
+  gap: 16px; margin: 16px 0;
 }
-.kpi-grid.kpi-sub { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-.metric-card {
-  background: #fff; border: 1px solid var(--color-border); border-radius: 10px;
-  padding: var(--mon-space-2); text-align: center;
-  transition: box-shadow 150ms ease-in-out, transform 150ms ease-in-out;
-}
-.metric-card:hover { box-shadow: 0 4px 14px rgba(30, 64, 175, 0.12); transform: translateY(-2px); }
-.metric-value { font-family: 'Fira Code', monospace; font-size: 26px; font-weight: 600; color: var(--color-primary); }
-.metric-label { font-size: 12px; color: #475569; margin-top: 4px; }
+.mon-kpi-grid .metric-card { flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.metric-value { font-size: 26px; font-weight: 700; color: var(--sap-brand); }
+.metric-label { font-size: 12px; color: var(--sap-text-secondary); }
 
-.chart-grid {
+.mon-chart-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--mon-space-2); margin-bottom: var(--mon-space-3);
+  gap: 16px; margin-bottom: 24px;
 }
-.chart-card, .table-card {
-  background: #fff; border: 1px solid var(--color-border); border-radius: 10px;
-  padding: var(--mon-space-2);
+.mon-card {
+  background: var(--sap-surface); border: 1px solid var(--sap-border);
+  border-radius: var(--sap-radius-lg); padding: 16px;
 }
-.chart-card h3, .table-card h3 { font-size: 14px; margin: 0 0 var(--mon-space-1); }
-.chart-card canvas { max-height: 260px; }
+.mon-card h3 { font-size: 14px; margin: 0 0 8px; color: var(--sap-text); }
+.mon-card canvas { max-height: 260px; }
 
-.mon-section { margin-top: var(--mon-space-3); }
-.mon-section-head { display: flex; align-items: baseline; gap: var(--mon-space-1); margin-bottom: var(--mon-space-1); }
-.mon-section-head h2 { font-size: 17px; margin: 0; }
+.mon-section { margin-top: 24px; }
+.mon-section-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.mon-section-head h2 { font-size: 17px; margin: 0; color: var(--sap-text); }
 
-.domain-tabs, .domain-subtabs { display: flex; flex-wrap: wrap; gap: var(--mon-space-1); margin-bottom: var(--mon-space-1); }
+.domain-tabs, .domain-subtabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .domain-tab, .domain-subtab {
-  cursor: pointer; border: 1px solid var(--color-border); background: #fff;
-  border-radius: 8px; padding: 6px 14px; font-size: 13px; color: var(--color-foreground);
+  cursor: pointer; border: 1px solid var(--sap-border); background: var(--sap-surface);
+  border-radius: 8px; padding: 6px 14px; font-size: 13px; color: var(--sap-text);
   transition: background 150ms ease-in-out, color 150ms ease-in-out;
 }
-.domain-tab:hover, .domain-subtab:hover { background: var(--color-muted); }
-.domain-tab.active, .domain-subtab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
-.domain-tab:focus-visible, .domain-subtab:focus-visible, #btn-filter:focus-visible, #btn-export:focus-visible {
-  outline: 2px solid var(--color-ring, #1E40AF); outline-offset: 2px;
+.domain-tab:hover, .domain-subtab:hover { background: var(--sap-border-light); }
+.domain-tab.active, .domain-subtab.active { background: var(--sap-brand); border-color: var(--sap-brand); color: #fff; }
+.domain-tab:focus-visible, .domain-subtab:focus-visible, #btn-filter:focus-visible, #btn-export:focus-visible, #refreshToggle:focus-visible {
+  outline: 2px solid var(--sap-brand); outline-offset: 2px;
 }
 
 .sap-table tbody tr { transition: background 150ms ease-in-out; }
-.sap-table tbody tr:hover { background: var(--color-muted); }
+.sap-table tbody tr.row-clickable { cursor: pointer; }
+.sap-table tbody tr.row-clickable:hover { background: var(--sap-border-light); }
+
+/* Skeleton shimmer for loading states */
+.skel {
+  background: linear-gradient(90deg, var(--sap-border-light) 25%, var(--sap-surface) 50%, var(--sap-border-light) 75%);
+  background-size: 200% 100%;
+  animation: mon-skel 1.2s ease-in-out infinite;
+  border-radius: 6px; min-height: 14px;
+}
+@keyframes mon-skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.filter-bar label { font-size: 12px; color: var(--sap-text-secondary); margin: 0 2px; }
+
+/* Glassmorphism accent: modal + alert badge only (selective per design decision) */
+.mon-modal-glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.mon-alert-badge {
+  background: rgba(220, 38, 38, 0.12); border: 1px solid rgba(220, 38, 38, 0.35);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; color: var(--sap-error);
+}
 
 @media (max-width: 768px) {
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .chart-grid { grid-template-columns: 1fr; }
+  .mon-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .mon-chart-grid { grid-template-columns: 1fr; }
   .metric-value { font-size: 21px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .metric-card, .domain-tab, .domain-subtab, .sap-table tbody tr { transition: none; }
   .metric-card:hover { transform: none; }
+  .skel, .metric-pulse { animation: none; }
 }

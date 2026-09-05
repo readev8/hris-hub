@@ -17,16 +17,16 @@ $sess = $stats['sessions'] ?? [];
         <h2><i class="fas fa-sign-in-alt"></i> Sesi Pengguna</h2>
         <span class="text-muted" style="font-size:12px">Sumber: hr_selfservice.session (active=0)</span>
     </div>
-    <div class="kpi-grid kpi-sub">
+    <div class="mon-kpi-grid">
         <div class="metric-card"><div class="metric-value sap-count-up" id="sess-total"><?= (int) ($sess['total'] ?? 0) ?></div><div class="metric-label">Total Sesi</div></div>
         <div class="metric-card"><div class="metric-value sap-count-up" id="sess-today">0</div><div class="metric-label">Sesi Hari Ini</div></div>
         <div class="metric-card"><div class="metric-value sap-count-up" id="sess-users">0</div><div class="metric-label">User Unik</div></div>
     </div>
-    <div class="chart-grid">
-        <div class="chart-card"><h3>Tren Sesi per Hari</h3><canvas id="sessTrendChart"></canvas></div>
-        <div class="chart-card"><h3>Distribusi Apps</h3><canvas id="sessAppsChart"></canvas></div>
+    <div class="mon-chart-grid">
+        <div class="mon-card"><h3>Tren Sesi per Hari</h3><canvas id="sessTrendChart"></canvas></div>
+        <div class="mon-card"><h3>Distribusi Apps</h3><canvas id="sessAppsChart"></canvas></div>
     </div>
-    <div class="table-card">
+    <div class="mon-card">
         <h3>Sesi Terbaru</h3>
         <div class="table-responsive">
             <table class="sap-table" id="grid-session">
