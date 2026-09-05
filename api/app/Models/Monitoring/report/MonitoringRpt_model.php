@@ -45,6 +45,20 @@ class MonitoringRpt_model
         return (int) $this->filtered($key, $start, $end)->countAllResults();
     }
 
+    public function statusBreakdown(string $key, ?string $start = null, ?string $end = null): array
+    {
+        $col = $this->check->statusColumn($key);
+        if ($col === null) {
+            return [];
+        }
+        $rows = $this->filtered($key, $start, $end)->select($col . ' AS v, COUNT(*) AS c')->groupBy($col)->get()->getResultArray();
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(string) ($r['v'] ?? 'NULL')] = (int) $r['c'];
+        }
+        return $out;
+    }
+
     public function countByDay(string $key, string $start, string $end): array
     {
         $out = [];

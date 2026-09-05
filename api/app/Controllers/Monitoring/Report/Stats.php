@@ -14,6 +14,26 @@ class Stats extends BaseApi
             $end = $this->request->getGet('end_date');
             $m = new MonitoringRpt_model();
             $c = fn(string $k) => $m->countTable($k, $start, $end);
+            $domainKeys = [
+                'sessions' => ['session'], 'assignment' => ['assignment', 'assignment_approve'],
+                'fpkt' => ['fpkt', 'fpkt_jobdesc', 'fpkt_pelatihan', 'fpkt_value'],
+                'ninebox' => ['ninebox_assessment', 'ninebox_rtc', 'ppanelmt_nilai'],
+                'ijin' => ['pengajuan_ijin', 'pengajuan_ijin_approve'],
+                'resign' => ['pengajuan_resign', 'pengajuan_resign_approve'],
+                'panel_ss' => ['ppanel', 'ss', 'ss_approval', 'jobcode'],
+                'rekrutmen' => ['w_fpk', 'w_fpk_approve', 'w_pelamar', 'w_fpmj_approve', 'w_ppmj_approve', 'w_penilaianpanel'],
+                'sk' => ['w_sk_pengajuan', 'w_sk', 'w_memo_keluar'],
+                'surat' => ['w_surat_peringatan', 'w_surat_jamsostek', 'w_surat_referensi', 'w_kontrak', 'w_pegawai'],
+            ];
+            [$prevStart, $prevEnd] = $this->previousRange($start, $end);
+            $previous = [];
+            foreach ($domainKeys as $domain => $keys) {
+                $total = 0;
+                foreach ($keys as $k) {
+                    $total += $m->countTable($k, $prevStart, $prevEnd);
+                }
+                $previous[$domain] = $total;
+            }
             $result = [
                 'sessions'   => ['total' => $c('session')],
                 'assignment' => ['assignment' => $c('assignment'), 'approve' => $c('assignment_approve')],
@@ -26,10 +46,36 @@ class Stats extends BaseApi
                 'sk'         => ['pengajuan' => $c('w_sk_pengajuan'), 'sk' => $c('w_sk'), 'memo' => $c('w_memo_keluar')],
                 'surat'      => ['peringatan' => $c('w_surat_peringatan'), 'jamsostek' => $c('w_surat_jamsostek'), 'referensi' => $c('w_surat_referensi'), 'kontrak' => $c('w_kontrak'), 'pegawai' => $c('w_pegawai')],
             ];
+            $result['by_status'] = [
+                'assignment_approve' => $m->statusBreakdown('assignment_approve', $start, $end),
+                'pengajuan_ijin_approve' => $m->statusBreakdown('pengajuan_ijin_approve', $start, $end),
+                'pengajuan_resign_approve' => $m->statusBreakdown('pengajuan_resign_approve', $start, $end),
+                'w_fpk_approve' => $m->statusBreakdown('w_fpk_approve', $start, $end),
+                'w_ppmj_approve' => $m->statusBreakdown('w_ppmj_approve', $start, $end),
+            ];
+            $result['previous'] = $previous;
             return $this->JSONResponse('OK', $result, 200);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->JSONResponse('Gagal memuat statistik monitoring', null, 500);
+        }
+    }
+
+    /** Geser rentang mundur sepanjang durasinya untuk perbandingan periode lalu. */
+    private function previousRange(?string $start, ?string $end): array
+    {
+        if (!$start || !$end) {
+            return [null, null];
+        }
+        try {
+            $s = new \DateTime($start);
+            $e = new \DateTime($end);
+            $len = (int) $s->diff($e)->days + 1;
+            $ps = (clone $s)->modify("-{$len} days")->format('Y-m-d');
+            $pe = (clone $s)->modify('-1 day')->format('Y-m-d');
+            return [$ps, $pe];
+        } catch (\Throwable $e) {
+            return [null, null];
         }
     }
 }

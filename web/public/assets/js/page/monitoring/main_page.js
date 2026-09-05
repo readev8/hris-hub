@@ -47,6 +47,57 @@ const Monitoring = {
         options: { responsive: true, plugins: { legend: { position: 'right' } } }
       });
     },
+    renderDeltas(stats) {
+      const prev = stats.previous || {};
+      const keys = ['sessions', 'assignment', 'fpkt', 'ninebox', 'ijin', 'resign', 'panel_ss', 'rekrutmen', 'sk', 'surat'];
+      keys.forEach((k) => {
+        const el = document.getElementById('delta-' + k);
+        if (!el) return;
+        const cur = Object.values(stats[k] || {}).reduce((a, b) => a + (parseInt(b, 10) || 0), 0);
+        const p = parseInt(prev[k], 10) || 0;
+        if (!p) { el.textContent = ''; return; }
+        const pct = Math.round(((cur - p) / p) * 100);
+        el.textContent = (pct >= 0 ? '▲ +' : '▼ ') + pct + '% vs periode lalu';
+        el.style.color = pct >= 0 ? '#059669' : '#DC2626';
+        el.setAttribute('aria-label', 'Perubahan ' + pct + ' persen dibanding periode lalu');
+      });
+    },
+    renderApprovalBreakdown(byStatus) {
+      const box = document.getElementById('approval-breakdown');
+      if (!box) return;
+      box.textContent = '';
+      const labels = { assignment_approve: 'Assignment', pengajuan_ijin_approve: 'Ijin', pengajuan_resign_approve: 'Resign', w_fpk_approve: 'FPK', w_ppmj_approve: 'PPMJ' };
+      const keys = Object.keys(labels).filter((k) => byStatus && byStatus[k]);
+      if (!keys.length) { box.innerHTML = '<p class="text-muted" style="font-size:12px">Belum ada data.</p>'; return; }
+      keys.forEach((k) => {
+        const h = document.createElement('h4');
+        h.textContent = labels[k]; h.style.cssText = 'font-size:12px;margin:8px 0 2px;';
+        box.appendChild(h);
+        const ul = document.createElement('ul');
+        ul.style.cssText = 'font-size:12px;margin:0;padding-left:18px;';
+        Object.entries(byStatus[k]).forEach(([st, n]) => {
+          const li = document.createElement('li');
+          li.textContent = 'Status ' + st + ': ' + n;
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+      });
+    },
+    renderDomainTrend(series) {
+      const el = document.getElementById('monDomainTrend');
+      const alt = document.getElementById('monDomainTrendAlt');
+      if (!el || typeof Chart === 'undefined') return;
+      const colors = Monitoring.constants.COLORS;
+      const datasets = (series || []).map((s, i) => ({ label: s.label, data: s.items.map((r) => r.count || 0), borderColor: colors[i % colors.length], fill: false, tension: 0.3 }));
+      const labels = series && series.length ? series[0].items.map((r) => String(r.date || '').slice(5)) : [];
+      Monitoring.ui.destroyChart('domainTrend');
+      Monitoring.state.charts.domainTrend = new Chart(el, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+      if (alt) alt.textContent = datasets.length ? ('Perbandingan harian: ' + datasets.map((d) => d.label).join(', ') + '.') : '';
+    },
     renderMainTrend(items) {
       const el = document.getElementById('monTrendChart');
       const alt = document.getElementById('monTrendAlt');
@@ -319,6 +370,8 @@ const Monitoring = {
     this.state.start = pd.startDate || null;
     this.state.end = pd.endDate || null;
     this.ui.renderDomainChart(this.state.stats);
+    this.ui.renderDeltas(this.state.stats);
+    this.ui.renderApprovalBreakdown(this.state.stats.by_status || {});
     this.events.bind();
     const firstTab = document.querySelector('.domain-tab.active');
     if (firstTab) {
@@ -332,6 +385,12 @@ const Monitoring = {
     this.api.loadTrend('session', 14, this.state.end)
       .done((res) => { Monitoring.ui.renderMainTrend(res.items || []); })
       .fail((xhr) => { if (window.console && console.error) console.error(xhr); });
+    const trendTables = [['session', 'Sesi'], ['pengajuan_ijin', 'Ijin'], ['pengajuan_resign', 'Resign'], ['w_fpk', 'FPK']];
+    const trendCalls = trendTables.map(([t]) => Monitoring.api.loadTrend(t, 14, Monitoring.state.end));
+    $.when.apply($, trendCalls).done(function () {
+      const args = Array.prototype.slice.call(arguments);
+      Monitoring.ui.renderDomainTrend(trendTables.map(([t, label], i) => ({ label: label, items: (args[i] && args[i][0] && args[i][0].items) || [] })));
+    }).fail((xhr) => { if (window.console && console.error) console.error(xhr); });
     this.poll.start();
   }
 };

@@ -65,6 +65,18 @@ class MonitoringCheck_model
         return self::MAP[$key]['date'];
     }
 
+    /** Kolom status untuk breakdown (GROUP BY), null = tidak didukung. Terverifikasi via SHOW COLUMNS. */
+    public function statusColumn(string $key): ?string
+    {
+        return match ($key) {
+            'assignment_approve' => 'status',
+            'pengajuan_ijin_approve' => 'status',
+            'pengajuan_resign_approve' => 'Status',
+            'w_fpk_approve' => 'Status',
+            'w_ppmj_approve' => 'Status',
+            default => null,
+        };
+    }
     /** Kolom yang boleh di-sort (selain PK & kolom tanggal sederhana). */
     public function sortable(string $key): array
     {

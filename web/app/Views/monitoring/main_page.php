@@ -56,22 +56,26 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 
 <!-- ══════════ SECTION 2: KPI Grid ══════════ -->
 <div class="mon-kpi-grid">
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($sess['total'] ?? 0) ?></div><div class="metric-label">Sesi</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($asg['assignment'] ?? 0) ?></div><div class="metric-label">Assignment</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($fpkt['fpkt'] ?? 0) ?></div><div class="metric-label">FPKT</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($nb['assessment'] ?? 0) ?></div><div class="metric-label">Ninebox</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($ijin['pengajuan'] ?? 0) ?></div><div class="metric-label">Ijin</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($res['pengajuan'] ?? 0) ?></div><div class="metric-label">Resign</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($rek['fpk'] ?? 0) ?></div><div class="metric-label">FPK</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($sk['pengajuan'] ?? 0) ?></div><div class="metric-label">SK Pengajuan</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($surat['pegawai'] ?? 0) ?></div><div class="metric-label">Pegawai</div></div>
-    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($surat['kontrak'] ?? 0) ?></div><div class="metric-label">Kontrak</div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($sess['total'] ?? 0) ?></div><div class="metric-label">Sesi</div><div class="metric-delta" id="delta-sessions"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($asg['assignment'] ?? 0) ?></div><div class="metric-label">Assignment</div><div class="metric-delta" id="delta-assignment"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($fpkt['fpkt'] ?? 0) ?></div><div class="metric-label">FPKT</div><div class="metric-delta" id="delta-fpkt"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($nb['assessment'] ?? 0) ?></div><div class="metric-label">Ninebox</div><div class="metric-delta" id="delta-ninebox"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($ijin['pengajuan'] ?? 0) ?></div><div class="metric-label">Ijin</div><div class="metric-delta" id="delta-ijin"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($res['pengajuan'] ?? 0) ?></div><div class="metric-label">Resign</div><div class="metric-delta" id="delta-resign"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($rek['fpk'] ?? 0) ?></div><div class="metric-label">FPK</div><div class="metric-delta" id="delta-rekrutmen"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($sk['pengajuan'] ?? 0) ?></div><div class="metric-label">SK Pengajuan</div><div class="metric-delta" id="delta-sk"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($surat['pegawai'] ?? 0) ?></div><div class="metric-label">Pegawai</div><div class="metric-delta" id="delta-surat"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($surat['kontrak'] ?? 0) ?></div><div class="metric-label">Kontrak</div><div class="metric-delta" id="delta-surat"></div></div>
 </div>
 
 <!-- ══════════ SECTION 3: Charts ══════════ -->
 <div class="mon-chart-grid">
     <div class="mon-card"><h3>Distribusi per Domain</h3><canvas id="monStatusChart"></canvas></div>
     <div class="mon-card"><h3>Tren Sesi (14 hari)</h3><canvas id="monTrendChart"></canvas><p class="chart-alt text-muted" id="monTrendAlt" style="font-size:12px"></p></div>
+</div>
+<div class="mon-chart-grid">
+    <div class="mon-card"><h3>Status Approval</h3><div id="approval-breakdown"><p class="text-muted" style="font-size:12px">Memuat…</p></div></div>
+    <div class="mon-card"><h3>Tren per Domain</h3><canvas id="monDomainTrend"></canvas><p class="chart-alt text-muted" id="monDomainTrendAlt" style="font-size:12px"></p></div>
 </div>
 
 <!-- ══════════ SECTION 4: Sessions (tersendiri) ══════════ -->
