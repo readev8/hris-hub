@@ -17,6 +17,7 @@ class AccessModuleSeeder extends Seeder
             ['name' => 'Master Projects', 'slug' => 'master_projects', 'icon' => 'fas fa-folder-tree',  'sort_order' => 5],
             ['name' => 'Users',           'slug' => 'users',           'icon' => 'fas fa-users',        'sort_order' => 6],
             ['name' => 'Roles',           'slug' => 'roles',           'icon' => 'fas fa-user-shield',  'sort_order' => 7],
+            ['name' => 'Monitoring',      'slug' => 'monitoring',      'icon' => 'fas fa-chart-line',   'sort_order' => 8],
         ];
 
         foreach ($modules as $mod) {
