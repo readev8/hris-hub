@@ -84,6 +84,26 @@ class Monitoring extends BaseController
         ]);
     }
 
+    public function ajaxAlerts()
+    {
+        if (!$this->guard()) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+
+        $result = $this->api->get_data('monitoring/alerts', []);
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Monitoring alerts API failed: ' . json_encode($result));
+            return $this->response->setJSON(['status' => false, 'message' => 'Gagal memuat alert']);
+        }
+
+        return $this->response->setJSON([
+            'status' => true,
+            'items'  => $result['data']['result']['items'] ?? [],
+            'total'  => $result['data']['result']['total'] ?? 0,
+        ]);
+    }
+
     public function ajaxDetail()
     {
         if (!$this->guard()) {

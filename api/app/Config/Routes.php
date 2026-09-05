@@ -70,6 +70,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('monitoring/list',   'Monitoring\Report\ListReport::get_list');
     $routes->get('monitoring/detail', 'Monitoring\Data\Detail::get_detail');
     $routes->get('monitoring/trend',  'Monitoring\Report\Trend::get_trend');
+    $routes->get('monitoring/alerts', 'Monitoring\Report\Alerts::get_alerts');
     $routes->get('monitoring/export', 'Monitoring\Report\Export::get_export');
 
     // Audit log

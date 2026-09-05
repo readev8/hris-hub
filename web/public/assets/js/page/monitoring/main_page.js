@@ -27,6 +27,9 @@ const Monitoring = {
     },
     loadDetail(table, id) {
       return $.ajax({ url: site_url + '/monitoring/ajax-detail', method: 'GET', data: { table: table, id: id }, timeout: Monitoring.constants.TIMEOUT });
+    },
+    loadAlerts() {
+      return $.ajax({ url: site_url + '/monitoring/ajax-alerts', method: 'GET', timeout: Monitoring.constants.TIMEOUT });
     }
   },
 
@@ -256,6 +259,9 @@ const Monitoring = {
         Monitoring.state.grid.skip = 0; Monitoring.state.grid.sort = '';
         Monitoring.loadActiveTable();
       });
+      $(document).on('click', '#monAlertBell', () => {
+        document.getElementById('section-domains')?.scrollIntoView({ behavior: 'smooth' });
+      });
       $(document).on('click', '#grid-domain thead th[data-col]', function () {
         const g = Monitoring.state.grid;
         const col = $(this).data('col');
@@ -287,34 +293,6 @@ const Monitoring = {
     }
   },
 
-  poll: {
-    start() {
-      Monitoring.poll.stop();
-      Monitoring.state.poll.timer = setInterval(() => {
-        if (document.hidden || !Monitoring.state.poll.on) return;
-        Monitoring.api.refreshStats(Monitoring.state.start, Monitoring.state.end)
-          .done((res) => {
-            Monitoring.state.stats = res.stats || {};
-            Monitoring.ui.renderDomainChart(Monitoring.state.stats);
-          })
-          .fail((xhr) => {
-            if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; }
-            else if (window.console && console.error) console.error(xhr);
-          });
-      }, Monitoring.state.poll.ms);
-    },
-    stop() {
-      if (Monitoring.state.poll.timer) { clearInterval(Monitoring.state.poll.timer); Monitoring.state.poll.timer = null; }
-    },
-    toggle() {
-      Monitoring.state.poll.on = !Monitoring.state.poll.on;
-      const btn = document.getElementById('refreshToggle');
-      const label = document.getElementById('refreshLabel');
-      if (btn) btn.setAttribute('aria-pressed', String(Monitoring.state.poll.on));
-      if (label) label.textContent = Monitoring.state.poll.on ? 'Auto' : 'Off';
-      if (Monitoring.state.poll.on) Monitoring.poll.start(); else Monitoring.poll.stop();
-    }
-  },
 
   showDetail(pk) {
     if (!pk) return;
@@ -392,6 +370,7 @@ const Monitoring = {
       Monitoring.ui.renderDomainTrend(trendTables.map(([t, label], i) => ({ label: label, items: (args[i] && args[i][0] && args[i][0].items) || [] })));
     }).fail((xhr) => { if (window.console && console.error) console.error(xhr); });
     this.poll.start();
+    this.alerts.start();
   }
 };
 
