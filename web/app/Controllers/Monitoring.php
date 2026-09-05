@@ -36,6 +36,12 @@ class Monitoring extends BaseController
         if (!$this->guard()) {
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
         }
+        // Lepas session lock lebih awal: method ini hanya membaca session
+        // (userId sudah dibaca di BaseController::initController), sehingga
+        // request ajax konkurensi tidak antre pada file session.
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
 
         $startDate = $this->request->getGet('start_date') ?? date('Y-m-01');
         $endDate   = $this->request->getGet('end_date') ?? date('Y-m-d');
@@ -50,6 +56,12 @@ class Monitoring extends BaseController
     {
         if (!$this->guard()) {
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+        // Lepas session lock lebih awal: method ini hanya membaca session
+        // (userId sudah dibaca di BaseController::initController), sehingga
+        // request ajax konkurensi tidak antre pada file session.
+        if (function_exists('session_write_close')) {
+            @session_write_close();
         }
 
         $t0 = microtime(true);
@@ -73,6 +85,12 @@ class Monitoring extends BaseController
         if (!$this->guard()) {
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
         }
+        // Lepas session lock lebih awal: method ini hanya membaca session
+        // (userId sudah dibaca di BaseController::initController), sehingga
+        // request ajax konkurensi tidak antre pada file session.
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
 
         $t0 = microtime(true);
         $result = $this->api->get_data('monitoring/trend', $this->request->getGet() ?? []);
@@ -93,6 +111,12 @@ class Monitoring extends BaseController
     {
         if (!$this->guard()) {
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+        // Lepas session lock lebih awal: method ini hanya membaca session
+        // (userId sudah dibaca di BaseController::initController), sehingga
+        // request ajax konkurensi tidak antre pada file session.
+        if (function_exists('session_write_close')) {
+            @session_write_close();
         }
 
         $t0 = microtime(true);
@@ -115,6 +139,12 @@ class Monitoring extends BaseController
     {
         if (!$this->guard()) {
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+        // Lepas session lock lebih awal: method ini hanya membaca session
+        // (userId sudah dibaca di BaseController::initController), sehingga
+        // request ajax konkurensi tidak antre pada file session.
+        if (function_exists('session_write_close')) {
+            @session_write_close();
         }
 
         $table = preg_replace('/[^a-z_]/', '', (string) ($this->request->getGet('table') ?? ''));
@@ -142,6 +172,12 @@ class Monitoring extends BaseController
     {
         if (!$this->guard()) {
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+        // Lepas session lock lebih awal: method ini hanya membaca session
+        // (userId sudah dibaca di BaseController::initController), sehingga
+        // request ajax konkurensi tidak antre pada file session.
+        if (function_exists('session_write_close')) {
+            @session_write_close();
         }
 
         $table = preg_replace('/[^a-z_]/', '', (string) ($this->request->getGet('table') ?? ''));
