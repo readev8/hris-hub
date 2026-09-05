@@ -371,6 +371,7 @@ const Monitoring = {
     }).fail((xhr) => { if (window.console && console.error) console.error(xhr); });
     this.poll.start();
     this.alerts.start();
+    if (this.presets) this.presets.init();
   }
 };
 

@@ -53,6 +53,12 @@ $userName = esc(session('user')['full_name'] ?? 'User');
             <button class="sap-btn sap-btn-secondary sap-btn-sm" id="refreshToggle" aria-pressed="true" title="Auto-refresh every 60s">
                 <i class="fas fa-sync-alt"></i> <span id="refreshLabel">Auto</span>
             </button>
+            <select id="preset-select" aria-label="Preset filter" style="max-width:160px">
+                <option value="">Preset…</option>
+            </select>
+            <button class="sap-btn sap-btn-secondary sap-btn-sm" id="btn-preset-save" title="Simpan filter saat ini sebagai preset">
+                <i class="fas fa-bookmark"></i>
+            </button>
         </div>
     </div>
 </div>

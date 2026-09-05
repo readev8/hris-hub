@@ -36,8 +36,7 @@
     }
   };
 
-  Monitoring.alerts = {
-    seen: {},
+  Monitoring.alerts = {    seen: {},
     check() {
       if (document.hidden) return;
       Monitoring.api.loadAlerts()
@@ -61,6 +60,82 @@
     start() {
       Monitoring.alerts.check();
       setInterval(() => Monitoring.alerts.check(), 300000);
+    }
+  };
+
+  Monitoring.presets = {
+    key: 'monitoring_presets',
+    all() {
+      try { return JSON.parse(localStorage.getItem(Monitoring.presets.key) || '[]'); }
+      catch (e) { return []; }
+    },
+    saveAll(list) {
+      try { localStorage.setItem(Monitoring.presets.key, JSON.stringify(list.slice(0, 5))); } catch (e) { /* abaikan */ }
+    },
+    current() {
+      return {
+        start_date: document.getElementById('filter-start')?.value || '',
+        end_date: document.getElementById('filter-end')?.value || '',
+        domain: document.querySelector('.domain-tab.active')?.dataset.domain || '',
+        table: Monitoring.state.activeTable
+      };
+    },
+    apply(p) {
+      const url = site_url + '/monitoring?start_date=' + encodeURIComponent(p.start_date)
+        + '&end_date=' + encodeURIComponent(p.end_date)
+        + '&domain=' + encodeURIComponent(p.domain) + '&table=' + encodeURIComponent(p.table);
+      location.href = url;
+    },
+    render() {
+      const sel = document.getElementById('preset-select');
+      if (!sel) return;
+      sel.querySelectorAll('option[data-preset]').forEach((o) => o.remove());
+      Monitoring.presets.all().forEach((p, i) => {
+        const o = document.createElement('option');
+        o.value = String(i); o.dataset.preset = '1'; o.textContent = p.name;
+        sel.appendChild(o);
+      });
+    },
+    init() {
+      Monitoring.presets.render();
+      $(document).on('change', '#preset-select', function () {
+        const i = parseInt($(this).val(), 10);
+        if (isNaN(i)) return;
+        const p = Monitoring.presets.all()[i];
+        if (p) Monitoring.presets.apply(p);
+        $(this).val('');
+      });
+      $(document).on('click', '#btn-preset-save', () => {
+        const name = window.prompt('Nama preset:');
+        if (!name) return;
+        const list = Monitoring.presets.all();
+        list.push(Object.assign({ name: name.slice(0, 40) }, Monitoring.presets.current()));
+        Monitoring.presets.saveAll(list);
+        Monitoring.presets.render();
+      });
+      // deep-link: ?domain=&table= → aktifkan tab terkait saat init
+      const qs = new URLSearchParams(location.search);
+      const domain = qs.get('domain');
+      const table = qs.get('table');
+      if (domain) {
+        const tab = document.querySelector('.domain-tab[data-domain="' + domain.replace(/[^a-z_]/g, '') + '"]');
+        if (tab) {
+          document.querySelectorAll('.domain-tab').forEach((t) => t.classList.remove('active'));
+          tab.classList.add('active');
+          Monitoring.state.activeTable = tab.dataset.table;
+          Monitoring.ui.renderSubtabs(domain);
+        }
+      }
+      if (table && /^[a-z_]+$/.test(table)) {
+        Monitoring.state.activeTable = table;
+        const sub = document.querySelector('.domain-subtab[data-table="' + table + '"]');
+        if (sub) {
+          document.querySelectorAll('.domain-subtab').forEach((t) => t.classList.remove('active'));
+          sub.classList.add('active');
+        }
+        Monitoring.state.grid.skip = 0;
+        Monitoring.loadActiveTable();
+      }
     }
   };
 })();
