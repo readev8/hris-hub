@@ -1,6 +1,13 @@
 /** Monitoring Hub — constants → state → api → ui → events → init.
  * @file public/assets/js/page/monitoring/main_page.js
  */
+const MonLog = {
+  on: !!(window.PageData && window.PageData.debug === true),
+  debug(...a) { if (MonLog.on && window.console && console.debug) console.debug('[Monitoring]', ...a); },
+  error(...a) { if (window.console && console.error) console.error('[Monitoring]', ...a); }
+};
+window.MonLog = MonLog;
+
 const Monitoring = {
   constants: {
     ENDPOINTS: {
@@ -338,7 +345,7 @@ const Monitoring = {
       .fail((xhr) => {
         if (window.toastr_error) window.toastr_error('Gagal memuat data domain');
         if (body) body.innerHTML = '<tr><td class="text-center text-muted">Gagal memuat data.</td></tr>';
-        if (window.console && console.error) console.error(xhr);
+        MonLog.error('loadActiveTable fail', Monitoring.state.activeTable, xhr.status);
       });
   },
 
@@ -347,6 +354,7 @@ const Monitoring = {
     this.state.stats = pd.stats || {};
     this.state.start = pd.startDate || null;
     this.state.end = pd.endDate || null;
+    MonLog.debug('init', { start: this.state.start, end: this.state.end, debug: MonLog.on });
     this.ui.renderDomainChart(this.state.stats);
     this.ui.renderDeltas(this.state.stats);
     this.ui.renderApprovalBreakdown(this.state.stats.by_status || {});
@@ -358,17 +366,18 @@ const Monitoring = {
       this.loadActiveTable();
     }
     this.api.loadTable('session', this.state.start, this.state.end, 100)
-      .done((res) => { Monitoring.ui.renderSession(res.items || []); })
-      .fail((xhr) => { if (window.console && console.error) console.error(xhr); });
+      .done((res) => { MonLog.debug('session loaded', (res.items || []).length); Monitoring.ui.renderSession(res.items || []); })
+      .fail((xhr) => { MonLog.error('session load fail', xhr.status); });
     this.api.loadTrend('session', 14, this.state.end)
-      .done((res) => { Monitoring.ui.renderMainTrend(res.items || []); })
-      .fail((xhr) => { if (window.console && console.error) console.error(xhr); });
+      .done((res) => { MonLog.debug('main trend loaded', (res.items || []).length); Monitoring.ui.renderMainTrend(res.items || []); })
+      .fail((xhr) => { MonLog.error('main trend fail', xhr.status); });
     const trendTables = [['session', 'Sesi'], ['pengajuan_ijin', 'Ijin'], ['pengajuan_resign', 'Resign'], ['w_fpk', 'FPK']];
     const trendCalls = trendTables.map(([t]) => Monitoring.api.loadTrend(t, 14, Monitoring.state.end));
     $.when.apply($, trendCalls).done(function () {
       const args = Array.prototype.slice.call(arguments);
+      MonLog.debug('domain trends loaded');
       Monitoring.ui.renderDomainTrend(trendTables.map(([t, label], i) => ({ label: label, items: (args[i] && args[i][0] && args[i][0].items) || [] })));
-    }).fail((xhr) => { if (window.console && console.error) console.error(xhr); });
+    }).fail((xhr) => { MonLog.error('domain trends fail', xhr.status); });
     this.poll.start();
     this.alerts.start();
     if (this.presets) this.presets.init();

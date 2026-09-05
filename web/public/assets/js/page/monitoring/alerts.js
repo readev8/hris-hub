@@ -19,7 +19,7 @@
           })
           .fail((xhr) => {
             if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; }
-            else if (window.console && console.error) console.error(xhr);
+            else window.MonLog?.error('poll refresh fail', xhr.status);
           });
       }, Monitoring.state.poll.ms);
     },
@@ -42,6 +42,7 @@
       Monitoring.api.loadAlerts()
         .done((res) => {
           const items = res.items || [];
+          window.MonLog?.debug('alerts check', items.length);
           const badge = document.getElementById('monAlertCount');
           if (badge) {
             badge.hidden = !items.length;
@@ -55,7 +56,7 @@
             else if (window.toastr_error) window.toastr_error(a.message);
           });
         })
-        .fail((xhr) => { if (window.console && console.error) console.error(xhr); });
+        .fail((xhr) => { window.MonLog?.error('alerts check fail', xhr.status); });
     },
     start() {
       Monitoring.alerts.check();

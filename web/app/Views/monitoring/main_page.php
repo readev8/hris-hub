@@ -106,7 +106,7 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 
 <?= $this->section('scripts') ?>
 <script>
-window.PageData = <?= json_encode(['stats' => $stats, 'startDate' => $start_date, 'endDate' => $end_date]) ?>;
+window.PageData = <?= json_encode(['stats' => $stats, 'startDate' => $start_date, 'endDate' => $end_date, 'debug' => $debug ?? false]) ?>;
 </script>
 <script src="<?= base_url('public/assets/js/page/monitoring/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
 <script src="<?= base_url('public/assets/js/page/monitoring/alerts.js?v=' . config('App')->assetVersion) ?>"></script>

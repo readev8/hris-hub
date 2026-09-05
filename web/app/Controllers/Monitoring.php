@@ -27,6 +27,7 @@ class Monitoring extends BaseController
             'stats'      => $stats,
             'start_date' => $startDate,
             'end_date'   => $endDate,
+            'debug'      => ENVIRONMENT === 'development',
         ]);
     }
 
