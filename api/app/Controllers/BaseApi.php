@@ -88,7 +88,8 @@ abstract class BaseApi extends ResourceController
 
     protected function getCurrentUserId(): ?int
     {
-        return $this->request->user_id ?? null;
+        $header = $this->request->getHeaderLine('X-User-Id');
+        return ($header !== '' && is_numeric($header)) ? (int) $header : null;
     }
 
     protected function resolveId(string $encryptedId): ?int

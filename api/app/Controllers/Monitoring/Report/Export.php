@@ -40,9 +40,9 @@ class Export extends BaseApi
             $filename = 'monitoring-' . $table . '-' . date('Ymd') . '.csv';
             $out = fopen('php://temp', 'r+');
             if (!empty($all)) {
-                fputcsv($out, array_keys($all[0]));
+                fputcsv($out, array_keys($all[0]), ',', '"', '\\');
                 foreach ($all as $r) {
-                    fputcsv($out, array_values(array_map(fn($v) => is_scalar($v) ? (string) $v : '', $r)));
+                    fputcsv($out, array_values(array_map(fn($v) => is_scalar($v) ? (string) $v : '', $r)), ',', '"', '\\');
                 }
             }
             rewind($out);

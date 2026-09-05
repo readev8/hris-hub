@@ -84,7 +84,9 @@ class MonitoringRpt_model
             $b->groupStart()->like($searchCol, $q)->groupEnd();
         }
         $total = (int) $b->countAllResults(false);
-        $rows = $b->orderBy($this->sortCol($key, $sort), $dir === 'ASC' ? 'ASC' : 'DESC')
+        // $escape=false: kolom berasal dari whitelist Check_model (bukan input user),
+        // agar ekspresi COALESCE tidak diurai ulang oleh Query Builder.
+        $rows = $b->orderBy($this->sortCol($key, $sort), $dir === 'ASC' ? 'ASC' : 'DESC', false)
             ->get($take, $skip)
             ->getResultArray();
         return ['items' => $rows, 'total' => $total];

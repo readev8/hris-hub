@@ -26,9 +26,8 @@ class ApiKeyAuthFilter implements FilterInterface
                 ]);
         }
 
-        $userId = $request->getHeaderLine('X-User-Id');
-        $request->user_id = ($userId && is_numeric($userId)) ? (int) $userId : null;
-
+        // X-User-Id dibaca langsung oleh BaseApi::getCurrentUserId() dari header
+        // (tanpa dynamic property — deprecated di PHP 8.2+).
         return;
     }
 
