@@ -12,7 +12,7 @@ const Monitoring = {
     COLORS: ['#1E40AF', '#3B82F6', '#D97706', '#DC2626', '#059669', '#7C3AED', '#0891B2', '#BE123C', '#4D7C0F', '#0F766E']
   },
 
-  state: { stats: {}, start: null, end: null, charts: {}, activeTable: 'assignment' },
+  state: { stats: {}, start: null, end: null, charts: {}, activeTable: 'assignment', poll: { on: true, ms: 60000, timer: null } },
 
   api: {
     refreshStats(start, end) {
@@ -137,6 +137,7 @@ const Monitoring = {
       $(document).on('click', '#btn-filter', () => {
         location.href = site_url + '/monitoring?start_date=' + $('#filter-start').val() + '&end_date=' + $('#filter-end').val();
       });
+      $(document).on('click', '#refreshToggle', () => { Monitoring.poll.toggle(); });
       $(document).on('click', '#btn-export', () => {
         location.href = Monitoring.constants.ENDPOINTS.EXPORT + '?table=' + Monitoring.state.activeTable
           + '&start_date=' + $('#filter-start').val() + '&end_date=' + $('#filter-end').val();
@@ -154,6 +155,35 @@ const Monitoring = {
         Monitoring.state.activeTable = $(this).data('table');
         Monitoring.loadActiveTable();
       });
+    }
+  },
+
+  poll: {
+    start() {
+      Monitoring.poll.stop();
+      Monitoring.state.poll.timer = setInterval(() => {
+        if (document.hidden || !Monitoring.state.poll.on) return;
+        Monitoring.api.refreshStats(Monitoring.state.start, Monitoring.state.end)
+          .done((res) => {
+            Monitoring.state.stats = res.stats || {};
+            Monitoring.ui.renderDomainChart(Monitoring.state.stats);
+          })
+          .fail((xhr) => {
+            if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; }
+            else if (window.console && console.error) console.error(xhr);
+          });
+      }, Monitoring.state.poll.ms);
+    },
+    stop() {
+      if (Monitoring.state.poll.timer) { clearInterval(Monitoring.state.poll.timer); Monitoring.state.poll.timer = null; }
+    },
+    toggle() {
+      Monitoring.state.poll.on = !Monitoring.state.poll.on;
+      const btn = document.getElementById('refreshToggle');
+      const label = document.getElementById('refreshLabel');
+      if (btn) btn.setAttribute('aria-pressed', String(Monitoring.state.poll.on));
+      if (label) label.textContent = Monitoring.state.poll.on ? 'Auto' : 'Off';
+      if (Monitoring.state.poll.on) Monitoring.poll.start(); else Monitoring.poll.stop();
     }
   },
 
@@ -185,6 +215,7 @@ const Monitoring = {
     this.api.loadTable('session', this.state.start, this.state.end, 100)
       .done((res) => { Monitoring.ui.renderSession(res.items || []); })
       .fail((xhr) => { if (window.console && console.error) console.error(xhr); });
+    this.poll.start();
   }
 };
 
