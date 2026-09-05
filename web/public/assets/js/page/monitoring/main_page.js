@@ -20,7 +20,7 @@ const Monitoring = {
     COLORS: ['#1E40AF', '#3B82F6', '#D97706', '#DC2626', '#059669', '#7C3AED', '#0891B2', '#BE123C', '#4D7C0F', '#0F766E']
   },
 
-  state: { stats: {}, start: null, end: null, charts: {}, activeTable: 'assignment', grid: { take: 20, skip: 0, total: 0, sort: '', dir: 'DESC', q: '' }, poll: { on: true, ms: 60000, timer: null } },
+  state: { stats: {}, start: null, end: null, charts: {}, activeTable: 'assignment', trendSeries: [], grid: { take: 20, skip: 0, total: 0, sort: '', dir: 'DESC', q: '' }, poll: { on: true, ms: 60000, timer: null } },
 
   api: {
     refreshStats(start, end) {
@@ -92,6 +92,13 @@ const Monitoring = {
         });
         box.appendChild(ul);
       });
+    },
+    renderDomainTrendAppend(label, items) {
+      const series = Monitoring.state.trendSeries;
+      const ix = series.findIndex((s) => s.label === label);
+      if (ix >= 0) series[ix] = { label: label, items: items || [] };
+      else series.push({ label: label, items: items || [] });
+      Monitoring.ui.renderDomainTrend(series);
     },
     renderDomainTrend(series) {
       const el = document.getElementById('monDomainTrend');
@@ -363,21 +370,21 @@ const Monitoring = {
     if (firstTab) {
       this.state.activeTable = firstTab.dataset.table;
       this.ui.renderSubtabs(firstTab.dataset.domain);
-      this.loadActiveTable();
+      Monitoring.queue.add(() => Monitoring.loadActiveTable());
     }
-    this.api.loadTable('session', this.state.start, this.state.end, 100)
+    Monitoring.queue.add(() => Monitoring.api.loadTable('session', Monitoring.state.start, Monitoring.state.end, 100)
       .done((res) => { MonLog.debug('session loaded', (res.items || []).length); Monitoring.ui.renderSession(res.items || []); })
-      .fail((xhr) => { MonLog.error('session load fail', xhr.status); });
-    this.api.loadTrend('session', 14, this.state.end)
+      .fail((xhr) => { MonLog.error('session load fail', xhr.status); }));
+    Monitoring.queue.add(() => Monitoring.api.loadTrend('session', 14, Monitoring.state.end)
       .done((res) => { MonLog.debug('main trend loaded', (res.items || []).length); Monitoring.ui.renderMainTrend(res.items || []); })
-      .fail((xhr) => { MonLog.error('main trend fail', xhr.status); });
+      .fail((xhr) => { MonLog.error('main trend fail', xhr.status); }));
     const trendTables = [['session', 'Sesi'], ['pengajuan_ijin', 'Ijin'], ['pengajuan_resign', 'Resign'], ['w_fpk', 'FPK']];
-    const trendCalls = trendTables.map(([t]) => Monitoring.api.loadTrend(t, 14, Monitoring.state.end));
-    $.when.apply($, trendCalls).done(function () {
-      const args = Array.prototype.slice.call(arguments);
-      MonLog.debug('domain trends loaded');
-      Monitoring.ui.renderDomainTrend(trendTables.map(([t, label], i) => ({ label: label, items: (args[i] && args[i][0] && args[i][0].items) || [] })));
-    }).fail((xhr) => { MonLog.error('domain trends fail', xhr.status); });
+    trendTables.reduce(
+      (chain, [t, label]) => chain.then(() => Monitoring.api.loadTrend(t, 14, Monitoring.state.end)
+        .done((res) => { MonLog.debug('domain trend loaded', label); Monitoring.ui.renderDomainTrendAppend(label, res.items || []); })
+        .fail((xhr) => { MonLog.error('domain trend fail', label, xhr.status); })),
+      Monitoring.queue.add(() => Promise.resolve())
+    );
     this.poll.start();
     this.alerts.start();
     if (this.presets) this.presets.init();

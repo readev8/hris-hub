@@ -5,12 +5,22 @@
 (function () {
   if (typeof window.Monitoring === 'undefined') return;
 
+  /** FIFO promise queue: 1 request aktif. Cegah tabrakan konkurensi + session-lock serialize. */
+  Monitoring.queue = {
+    tail: Promise.resolve(),
+    add(fn) {
+      const run = () => Promise.resolve().then(fn).catch((e) => MonLog.error('queue item fail', e && e.status));
+      Monitoring.queue.tail = Monitoring.queue.tail.then(run, run);
+      return Monitoring.queue.tail;
+    }
+  };
+
   Monitoring.poll = {
     start() {
       Monitoring.poll.stop();
       Monitoring.state.poll.timer = setInterval(() => {
         if (document.hidden || !Monitoring.state.poll.on) return;
-        Monitoring.api.refreshStats(Monitoring.state.start, Monitoring.state.end)
+        Monitoring.queue.add(() => Monitoring.api.refreshStats(Monitoring.state.start, Monitoring.state.end)
           .done((res) => {
             Monitoring.state.stats = res.stats || {};
             Monitoring.ui.renderDomainChart(Monitoring.state.stats);
@@ -20,7 +30,7 @@
           .fail((xhr) => {
             if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; }
             else window.MonLog?.error('poll refresh fail', xhr.status);
-          });
+          }));
       }, Monitoring.state.poll.ms);
     },
     stop() {
@@ -39,7 +49,7 @@
   Monitoring.alerts = {    seen: {},
     check() {
       if (document.hidden) return;
-      Monitoring.api.loadAlerts()
+      Monitoring.queue.add(() => Monitoring.api.loadAlerts()
         .done((res) => {
           const items = res.items || [];
           window.MonLog?.debug('alerts check', items.length);
@@ -56,7 +66,7 @@
             else if (window.toastr_error) window.toastr_error(a.message);
           });
         })
-        .fail((xhr) => { window.MonLog?.error('alerts check fail', xhr.status); });
+        .fail((xhr) => { window.MonLog?.error('alerts check fail', xhr.status); }));
     },
     start() {
       Monitoring.alerts.check();
