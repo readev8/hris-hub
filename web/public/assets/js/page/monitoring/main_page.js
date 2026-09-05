@@ -6,6 +6,7 @@ const Monitoring = {
     ENDPOINTS: {
       STATS: site_url + '/monitoring/ajax-stats',
       LIST: site_url + '/monitoring/ajax-list',
+      TREND: site_url + '/monitoring/ajax-trend',
       EXPORT: site_url + '/monitoring/export'
     },
     TIMEOUT: 15000,
@@ -20,6 +21,9 @@ const Monitoring = {
     },
     loadTable(table, start, end, take) {
       return $.ajax({ url: Monitoring.constants.ENDPOINTS.LIST, method: 'GET', data: { table: table, start_date: start, end_date: end, take: take || 20 }, timeout: Monitoring.constants.TIMEOUT });
+    },
+    loadTrend(table, days, end) {
+      return $.ajax({ url: Monitoring.constants.ENDPOINTS.TREND, method: 'GET', data: { table: table, days: days || 14, end_date: end }, timeout: Monitoring.constants.TIMEOUT });
     }
   },
 
@@ -39,6 +43,23 @@ const Monitoring = {
         data: { labels: labels, datasets: [{ data: data, backgroundColor: Monitoring.constants.COLORS }] },
         options: { responsive: true, plugins: { legend: { position: 'right' } } }
       });
+    },
+    renderMainTrend(items) {
+      const el = document.getElementById('monTrendChart');
+      const alt = document.getElementById('monTrendAlt');
+      if (!el || typeof Chart === 'undefined') return;
+      const rows = items || [];
+      const labels = rows.map((r) => String(r.date || '').slice(5));
+      Monitoring.ui.destroyChart('mainTrend');
+      Monitoring.state.charts.mainTrend = new Chart(el, {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Sesi per hari', data: rows.map((r) => r.count || 0), borderColor: '#1E40AF', fill: false, tension: 0.3 }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+      if (alt) {
+        const total = rows.reduce((a, r) => a + (parseInt(r.count, 10) || 0), 0);
+        alt.textContent = rows.length ? ('Total ' + total + ' sesi dalam ' + rows.length + ' hari.') : 'Belum ada data tren pada periode ini.';
+      }
     },
     renderSessionTrend(items) {
       const el = document.getElementById('sessTrendChart');
@@ -214,6 +235,9 @@ const Monitoring = {
     }
     this.api.loadTable('session', this.state.start, this.state.end, 100)
       .done((res) => { Monitoring.ui.renderSession(res.items || []); })
+      .fail((xhr) => { if (window.console && console.error) console.error(xhr); });
+    this.api.loadTrend('session', 14, this.state.end)
+      .done((res) => { Monitoring.ui.renderMainTrend(res.items || []); })
       .fail((xhr) => { if (window.console && console.error) console.error(xhr); });
     this.poll.start();
   }

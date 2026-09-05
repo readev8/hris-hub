@@ -71,7 +71,7 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 <!-- ══════════ SECTION 3: Charts ══════════ -->
 <div class="mon-chart-grid">
     <div class="mon-card"><h3>Distribusi per Domain</h3><canvas id="monStatusChart"></canvas></div>
-    <div class="mon-card"><h3>Tren Sesi (14 hari)</h3><canvas id="monTrendChart"></canvas></div>
+    <div class="mon-card"><h3>Tren Sesi (14 hari)</h3><canvas id="monTrendChart"></canvas><p class="chart-alt text-muted" id="monTrendAlt" style="font-size:12px"></p></div>
 </div>
 
 <!-- ══════════ SECTION 4: Sessions (tersendiri) ══════════ -->

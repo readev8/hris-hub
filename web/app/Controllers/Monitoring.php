@@ -65,6 +65,25 @@ class Monitoring extends BaseController
         ]);
     }
 
+    public function ajaxTrend()
+    {
+        if (!$this->guard()) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+
+        $result = $this->api->get_data('monitoring/trend', $this->request->getGet() ?? []);
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Monitoring trend API failed: ' . json_encode($result));
+            return $this->response->setJSON(['status' => false, 'message' => 'Gagal memuat tren']);
+        }
+
+        return $this->response->setJSON([
+            'status' => true,
+            'items'  => $result['data']['result']['items'] ?? [],
+        ]);
+    }
+
     public function export()
     {
         if (!$this->guard()) {

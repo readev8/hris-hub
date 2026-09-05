@@ -45,6 +45,21 @@ class MonitoringRpt_model
         return (int) $this->filtered($key, $start, $end)->countAllResults();
     }
 
+    public function countByDay(string $key, string $start, string $end): array
+    {
+        $out = [];
+        $period = new \DatePeriod(
+            new \DateTime($start),
+            new \DateInterval('P1D'),
+            (new \DateTime($end))->modify('+1 day')
+        );
+        foreach ($period as $d) {
+            $day = $d->format('Y-m-d');
+            $out[] = ['date' => $day, 'count' => $this->countTable($key, $day, $day)];
+        }
+        return $out;
+    }
+
     public function getList(string $key, ?string $start, ?string $end, int $take = 20, int $skip = 0): array
     {
         $take = max(1, min($take, 100));

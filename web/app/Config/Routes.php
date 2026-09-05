@@ -35,6 +35,7 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/monitoring', 'Monitoring::index');
     $routes->get('/monitoring/ajax-stats', 'Monitoring::ajaxStats');
     $routes->get('/monitoring/ajax-list', 'Monitoring::ajaxList');
+    $routes->get('/monitoring/ajax-trend', 'Monitoring::ajaxTrend');
     $routes->get('/monitoring/export', 'Monitoring::export');
 
     $routes->post('/auth/refresh-permissions', 'Auth::refreshPermissions');
