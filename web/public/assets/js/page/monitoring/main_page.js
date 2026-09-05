@@ -236,10 +236,10 @@ const Monitoring = {
         location.href = site_url + '/monitoring?start_date=' + $('#filter-start').val() + '&end_date=' + $('#filter-end').val();
       });
       $(document).on('click', '#refreshToggle', () => { Monitoring.poll.toggle(); });
-      $(document).on('click', '#btn-export', () => {
-        location.href = Monitoring.constants.ENDPOINTS.EXPORT + '?table=' + Monitoring.state.activeTable
-          + '&start_date=' + $('#filter-start').val() + '&end_date=' + $('#filter-end').val();
-      });
+      const exportUrl = (fmt) => Monitoring.constants.ENDPOINTS.EXPORT + '?table=' + Monitoring.state.activeTable
+        + '&start_date=' + $('#filter-start').val() + '&end_date=' + $('#filter-end').val() + (fmt ? '&format=' + fmt : '');
+      $(document).on('click', '#btn-export', () => { location.href = exportUrl(''); });
+      $(document).on('click', '#btn-export-xlsx', () => { location.href = exportUrl('xlsx'); });
       $(document).on('click', '.domain-tab', function () {
         $('.domain-tab').removeClass('active');
         $(this).addClass('active');

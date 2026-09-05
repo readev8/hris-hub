@@ -33,6 +33,10 @@ class Export extends BaseApi
                 unset($r['Foto']);
             }
             unset($r);
+            $format = strtolower((string) $this->request->getGet('format'));
+            if ($format === 'xlsx') {
+                return $this->exportXlsx($table, $all);
+            }
             $filename = 'monitoring-' . $table . '-' . date('Ymd') . '.csv';
             $out = fopen('php://temp', 'r+');
             if (!empty($all)) {
@@ -53,5 +57,33 @@ class Export extends BaseApi
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->JSONResponse('Gagal mengekspor data monitoring', null, 500);
         }
+    }
+
+    private function exportXlsx(string $table, array $rows): ResponseInterface
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle(substr($table, 0, 31));
+        if (!empty($rows)) {
+            $sheet->fromArray(array_keys($rows[0]), null, 'A1');
+            $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1')->getFont()->setBold(true);
+            $sheet->freezePane('A2');
+            $r = 2;
+            foreach ($rows as $row) {
+                $sheet->fromArray(array_values(array_map(fn($v) => is_scalar($v) ? (string) $v : '', $row)), null, 'A' . $r);
+                $r++;
+            }
+        }
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $tmp = tempnam(sys_get_temp_dir(), 'mon') . '.xlsx';
+        $writer->save($tmp);
+        $bin = file_get_contents($tmp);
+        @unlink($tmp);
+        $spreadsheet->disconnectWorksheets();
+        return $this->response
+            ->setStatusCode(200)
+            ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->setHeader('Content-Disposition', 'attachment; filename="monitoring-' . $table . '-' . date('Ymd') . '.xlsx"')
+            ->setBody($bin);
     }
 }

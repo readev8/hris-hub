@@ -47,6 +47,9 @@ $userName = esc(session('user')['full_name'] ?? 'User');
             <button class="sap-btn sap-btn-secondary sap-btn-sm" id="btn-export">
                 <i class="fas fa-download"></i> Export CSV
             </button>
+            <button class="sap-btn sap-btn-secondary sap-btn-sm" id="btn-export-xlsx">
+                <i class="fas fa-file-excel"></i> Export XLSX
+            </button>
             <button class="sap-btn sap-btn-secondary sap-btn-sm" id="refreshToggle" aria-pressed="true" title="Auto-refresh every 60s">
                 <i class="fas fa-sync-alt"></i> <span id="refreshLabel">Auto</span>
             </button>

@@ -116,7 +116,8 @@ class Monitoring extends BaseController
         }
 
         $table = preg_replace('/[^a-z_]/', '', (string) ($this->request->getGet('table') ?? ''));
-        $query = http_build_query(array_merge($this->request->getGet() ?? [], ['table' => $table]));
+        $format = strtolower((string) ($this->request->getGet('format') ?? 'csv')) === 'xlsx' ? 'xlsx' : 'csv';
+        $query = http_build_query(array_merge($this->request->getGet() ?? [], ['table' => $table, 'format' => $format]));
         $url = rtrim(env('api.base_url', 'http://localhost:8888/'), '/') . '/monitoring/export?' . $query;
 
         $headers = ['X-API-Key: ' . env('api.service_key', '')];
@@ -140,6 +141,13 @@ class Monitoring extends BaseController
         if ($csv === false || $httpCode !== 200) {
             log_message('error', 'Monitoring export API failed, HTTP ' . $httpCode);
             return $this->response->setStatusCode(502)->setJSON(['status' => false, 'message' => 'Gagal mengekspor data']);
+        }
+
+        if ($format === 'xlsx') {
+            return $this->response
+                ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                ->setHeader('Content-Disposition', 'attachment; filename="monitoring-' . $table . '-' . date('Ymd') . '.xlsx"')
+                ->setBody($csv);
         }
 
         return $this->response
