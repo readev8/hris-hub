@@ -12,6 +12,7 @@ class Export extends BaseApi
     public function get_export(): ResponseInterface
     {
         try {
+            $t0 = microtime(true);
             $table = (string) $this->request->getGet('table');
             $check = new MonitoringCheck_model();
             if (!$check->isAllowedTable($table)) {
@@ -34,6 +35,7 @@ class Export extends BaseApi
             }
             unset($r);
             $format = strtolower((string) $this->request->getGet('format'));
+            log_message('debug', '[Monitoring][Export] table=' . $table . ' format=' . ($format !== '' ? $format : 'csv') . ' rows=' . count($all));
             if ($format === 'xlsx') {
                 return $this->exportXlsx($table, $all);
             }

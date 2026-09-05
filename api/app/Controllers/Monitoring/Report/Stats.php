@@ -10,8 +10,10 @@ class Stats extends BaseApi
     public function get_stats()
     {
         try {
+            $t0 = microtime(true);
             $start = $this->request->getGet('start_date');
             $end = $this->request->getGet('end_date');
+            log_message('debug', '[Monitoring][Stats] start=' . ($start ?? '-') . ' end=' . ($end ?? '-'));
             $m = new MonitoringRpt_model();
             $c = fn(string $k) => $m->countTable($k, $start, $end);
             $domainKeys = [
@@ -54,6 +56,7 @@ class Stats extends BaseApi
                 'w_ppmj_approve' => $m->statusBreakdown('w_ppmj_approve', $start, $end),
             ];
             $result['previous'] = $previous;
+            log_message('debug', '[Monitoring][Stats] done tables=32 ms=' . (int) ((microtime(true) - $t0) * 1000));
             return $this->JSONResponse('OK', $result, 200);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());

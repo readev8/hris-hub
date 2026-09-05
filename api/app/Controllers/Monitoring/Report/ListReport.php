@@ -11,6 +11,7 @@ class ListReport extends BaseApi
     public function get_list()
     {
         try {
+            $t0 = microtime(true);
             $table = (string) $this->request->getGet('table');
             $check = new MonitoringCheck_model();
             if (!$check->isAllowedTable($table)) {
@@ -25,6 +26,7 @@ class ListReport extends BaseApi
             $q = is_string($qRaw) && $qRaw !== '' ? $this->cleanInput($qRaw) : null;
             $m = new MonitoringRpt_model();
             $data = $m->getList($table, $this->request->getGet('start_date'), $this->request->getGet('end_date'), $take, $skip, $sort, $dir, is_string($q) ? $q : null);
+            log_message('debug', '[Monitoring][List] table=' . $table . ' take=' . $take . ' skip=' . $skip . ' sort=' . ($sort ?? '-') . ' dir=' . $dir . ' q=' . ($q !== null ? 'y' : 'n') . ' total=' . $data['total'] . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
             return $this->JSONResponse('OK', ['items' => $data['items'], 'pagination' => ['take' => $take, 'skip' => $skip, 'total' => $data['total']]], 200);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());

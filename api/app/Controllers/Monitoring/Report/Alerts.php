@@ -11,6 +11,7 @@ class Alerts extends BaseApi
     public function get_alerts()
     {
         try {
+            $t0 = microtime(true);
             $cfg = new MonitoringAlerts();
             $m = new MonitoringRpt_model();
             $today = date('Y-m-d');
@@ -33,6 +34,7 @@ class Alerts extends BaseApi
                     }
                 }
             }
+            log_message('debug', '[Monitoring][Alerts] rules=' . count($cfg->rules) . ' active=' . count($alerts) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
             return $this->JSONResponse('OK', ['items' => $alerts, 'total' => count($alerts)], 200);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());

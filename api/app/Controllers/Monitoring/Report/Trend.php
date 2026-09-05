@@ -11,6 +11,7 @@ class Trend extends BaseApi
     public function get_trend()
     {
         try {
+            $t0 = microtime(true);
             $table = (string) $this->request->getGet('table');
             $check = new MonitoringCheck_model();
             if (!$check->isAllowedTable($table)) {
@@ -28,6 +29,7 @@ class Trend extends BaseApi
             if (count($items) > $days + 1) {
                 $items = array_slice($items, -($days + 1));
             }
+            log_message('debug', '[Monitoring][Trend] table=' . $table . ' days=' . $days . ' points=' . count($items) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
             return $this->JSONResponse('OK', ['items' => $items], 200);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());
