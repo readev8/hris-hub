@@ -51,7 +51,9 @@ class Monitoring extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
         }
 
+        $t0 = microtime(true);
         $result = $this->api->get_data('monitoring/list', $this->request->getGet() ?? []);
+        log_message('debug', '[Monitoring][WebProxy] endpoint=monitoring/list http=' . ($result['_http_code'] ?? 0) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Monitoring list API failed: ' . json_encode($result));
@@ -71,7 +73,9 @@ class Monitoring extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
         }
 
+        $t0 = microtime(true);
         $result = $this->api->get_data('monitoring/trend', $this->request->getGet() ?? []);
+        log_message('debug', '[Monitoring][WebProxy] endpoint=monitoring/trend http=' . ($result['_http_code'] ?? 0) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Monitoring trend API failed: ' . json_encode($result));
@@ -90,7 +94,9 @@ class Monitoring extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
         }
 
+        $t0 = microtime(true);
         $result = $this->api->get_data('monitoring/alerts', []);
+        log_message('debug', '[Monitoring][WebProxy] endpoint=monitoring/alerts http=' . ($result['_http_code'] ?? 0) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Monitoring alerts API failed: ' . json_encode($result));
@@ -116,7 +122,9 @@ class Monitoring extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Parameter tidak valid']);
         }
 
+        $t0 = microtime(true);
         $result = $this->api->get_data('monitoring/detail', ['table' => $table, 'id' => $id]);
+        log_message('debug', '[Monitoring][WebProxy] endpoint=monitoring/detail table=' . $table . ' http=' . ($result['_http_code'] ?? 0) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Monitoring detail API failed: ' . json_encode($result));
@@ -157,6 +165,7 @@ class Monitoring extends BaseController
         $csv = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+        log_message('debug', '[Monitoring][WebProxy] endpoint=monitoring/export table=' . $table . ' format=' . $format . ' http=' . $httpCode . ' bytes=' . (is_string($csv) ? strlen($csv) : 0));
 
         if ($csv === false || $httpCode !== 200) {
             log_message('error', 'Monitoring export API failed, HTTP ' . $httpCode);
@@ -178,10 +187,12 @@ class Monitoring extends BaseController
 
     private function fetchStats(string $startDate, string $endDate): array
     {
+        $t0 = microtime(true);
         $result = $this->api->get_data('monitoring/stats', [
             'start_date' => $startDate,
             'end_date'   => $endDate,
         ]);
+        log_message('debug', '[Monitoring][WebProxy] endpoint=monitoring/stats http=' . ($result['_http_code'] ?? 0) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
 
         if (!$result || !($result['status'] ?? false)) {
             log_message('error', 'Monitoring stats API failed: ' . json_encode($result));
