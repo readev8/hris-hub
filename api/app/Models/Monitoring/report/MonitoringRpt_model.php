@@ -42,7 +42,13 @@ class MonitoringRpt_model
 
     public function countTable(string $key, ?string $start = null, ?string $end = null): int
     {
-        return (int) $this->filtered($key, $start, $end)->countAllResults();
+        $t0 = microtime(true);
+        $n = (int) $this->filtered($key, $start, $end)->countAllResults();
+        $ms = (int) ((microtime(true) - $t0) * 1000);
+        if ($ms > 500) {
+            log_message('debug', '[Monitoring][Model] slow count key=' . $key . ' n=' . $n . ' ms=' . $ms);
+        }
+        return $n;
     }
 
     public function statusBreakdown(string $key, ?string $start = null, ?string $end = null): array
@@ -56,11 +62,13 @@ class MonitoringRpt_model
         foreach ($rows as $r) {
             $out[(string) ($r['v'] ?? 'NULL')] = (int) $r['c'];
         }
+        log_message('debug', '[Monitoring][Model] breakdown key=' . $key . ' groups=' . count($out));
         return $out;
     }
 
     public function countByDay(string $key, string $start, string $end): array
     {
+        $t0 = microtime(true);
         $out = [];
         $period = new \DatePeriod(
             new \DateTime($start),
@@ -71,6 +79,7 @@ class MonitoringRpt_model
             $day = $d->format('Y-m-d');
             $out[] = ['date' => $day, 'count' => $this->countTable($key, $day, $day)];
         }
+        log_message('debug', '[Monitoring][Model] trend key=' . $key . ' points=' . count($out) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
         return $out;
     }
 
@@ -89,6 +98,7 @@ class MonitoringRpt_model
         $rows = $b->orderBy($this->sortCol($key, $sort), $dir === 'ASC' ? 'ASC' : 'DESC', false)
             ->get($take, $skip)
             ->getResultArray();
+        log_message('debug', '[Monitoring][Model] list key=' . $key . ' take=' . $take . ' skip=' . $skip . ' total=' . $total . ' rows=' . count($rows));
         return ['items' => $rows, 'total' => $total];
     }
 
