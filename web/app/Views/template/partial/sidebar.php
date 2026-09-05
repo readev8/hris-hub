@@ -15,7 +15,7 @@ $canModuleFlows   = !empty($perms['module_flows']['can_view']);
 $canMonitoring     = !empty($perms['monitoring']['can_view']);
 ?>
 <aside class="sidebar">
-    <?php if ($canDashboard || $canTickets || $canImprovements || $canBlueprints): ?>
+    <?php if ($canDashboard || $canTickets || $canImprovements || $canBlueprints || $canMonitoring): ?>
         <div class="sidebar-group-label">Main Menu</div>
         <ul class="sidebar-nav">
             <?php if ($canDashboard): ?>
