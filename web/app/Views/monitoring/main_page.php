@@ -80,6 +80,8 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 <!-- ══════════ SECTION 5: Tabel per Domain ══════════ -->
 <?= view('monitoring/_table_domain') ?>
 
+<?= view('monitoring/_modal_detail') ?>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>

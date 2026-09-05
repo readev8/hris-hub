@@ -24,6 +24,9 @@ const Monitoring = {
     },
     loadTrend(table, days, end) {
       return $.ajax({ url: Monitoring.constants.ENDPOINTS.TREND, method: 'GET', data: { table: table, days: days || 14, end_date: end }, timeout: Monitoring.constants.TIMEOUT });
+    },
+    loadDetail(table, id) {
+      return $.ajax({ url: site_url + '/monitoring/ajax-detail', method: 'GET', data: { table: table, id: id }, timeout: Monitoring.constants.TIMEOUT });
     }
   },
 
@@ -131,6 +134,9 @@ const Monitoring = {
       cols.forEach((c) => { const th = document.createElement('th'); th.textContent = c; head.appendChild(th); });
       items.forEach((r) => {
         const tr = document.createElement('tr');
+        tr.className = 'row-clickable';
+        const pk = r.id ?? r.Id ?? r.ID ?? '';
+        tr.dataset.pk = String(pk);
         cols.forEach((c) => {
           const td = document.createElement('td');
           let v = r[c];
@@ -176,6 +182,9 @@ const Monitoring = {
         Monitoring.state.activeTable = $(this).data('table');
         Monitoring.loadActiveTable();
       });
+      $(document).on('click', '#grid-domain tbody tr.row-clickable', function () {
+        Monitoring.showDetail($(this).data('pk'));
+      });
     }
   },
 
@@ -206,6 +215,37 @@ const Monitoring = {
       if (label) label.textContent = Monitoring.state.poll.on ? 'Auto' : 'Off';
       if (Monitoring.state.poll.on) Monitoring.poll.start(); else Monitoring.poll.stop();
     }
+  },
+
+  showDetail(pk) {
+    if (!pk) return;
+    const tb = document.querySelector('#mon-detail-table tbody');
+    if (tb) tb.innerHTML = '<tr><td class="text-center text-muted">Memuat…</td></tr>';
+    const modalEl = document.getElementById('monDetailModal');
+    if (modalEl && window.bootstrap) window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    this.api.loadDetail(this.state.activeTable, pk)
+      .done((res) => {
+        if (!tb) return;
+        tb.textContent = '';
+        const row = res.row || {};
+        const keys = Object.keys(row);
+        if (!keys.length) {
+          tb.innerHTML = '<tr><td class="text-center text-muted">Data tidak ditemukan.</td></tr>';
+          return;
+        }
+        keys.forEach((k) => {
+          const tr = document.createElement('tr');
+          const th = document.createElement('th'); th.textContent = k; th.style.width = '35%';
+          const td = document.createElement('td');
+          const v = row[k];
+          td.textContent = v == null ? '' : String(v);
+          tr.appendChild(th); tr.appendChild(td); tb.appendChild(tr);
+        });
+      })
+      .fail(() => {
+        if (tb) tb.innerHTML = '<tr><td class="text-center text-muted">Gagal memuat detail.</td></tr>';
+        if (window.toastr_error) window.toastr_error('Gagal memuat detail');
+      });
   },
 
   loadActiveTable() {
