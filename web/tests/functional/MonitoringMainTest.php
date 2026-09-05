@@ -148,7 +148,7 @@ final class MonitoringMainTest extends BaseFunctionalTest
         return [
             'mon-kpi-grid' => ['mon-kpi-grid'],
             'metric-card'  => ['metric-card'],
-            'chart-grid'  => ['chart-grid'],
+            'mon-chart-grid' => ['mon-chart-grid'],
             'domain-tab'  => ['domain-tab'],
             'sap-table'   => ['sap-table'],
         ];
