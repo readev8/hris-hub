@@ -1,6 +1,6 @@
 web/app/Config/*
 api-hrhub/*
-api/*
+# api/*
 api/.env
 
 .env
