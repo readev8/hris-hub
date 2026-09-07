@@ -2,3 +2,5 @@ web/app/Config/*
 api-hrhub/*
 api/*
 api/.env
+
+.env
