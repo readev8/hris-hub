@@ -27,11 +27,11 @@ $sess = $stats['sessions'] ?? [];
         <div class="mon-card"><h3>Distribusi Apps</h3><canvas id="sessAppsChart"></canvas></div>
     </div>
     <div class="mon-card">
-        <h3>Sesi Terbaru</h3>
+        <h3>Sesi Terbaru (100 terakhir)</h3>
         <div class="table-responsive">
-            <table class="sap-table" id="grid-session">
+            <table class="sap-table display responsive nowrap" id="grid-session" style="width:100%">
                 <thead><tr><th>UserID</th><th>IP</th><th>Apps</th><th>Start</th></tr></thead>
-                <tbody><tr><td colspan="4" class="text-center text-muted">Memuat…</td></tr></tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>

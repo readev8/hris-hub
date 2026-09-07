@@ -135,6 +135,34 @@ class Monitoring extends BaseController
         ]);
     }
 
+    public function ajaxActivity()
+    {
+        if (!$this->guard()) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+        // Lepas session lock lebih awal: method ini hanya membaca session
+        // (userId sudah dibaca di BaseController::initController), sehingga
+        // request ajax konkurensi tidak antre pada file session.
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
+
+        $t0 = microtime(true);
+        $result = $this->api->get_data('monitoring/activity', $this->request->getGet() ?? []);
+        log_message('debug', '[Monitoring][WebProxy] endpoint=monitoring/activity http=' . ($result['_http_code'] ?? 0) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Monitoring activity API failed: ' . json_encode($result));
+            return $this->response->setJSON(['status' => false, 'message' => 'Gagal memuat aktivitas']);
+        }
+
+        return $this->response->setJSON([
+            'status'  => true,
+            'items'   => $result['data']['result']['items'] ?? [],
+            'skipped' => $result['data']['result']['skipped'] ?? [],
+        ]);
+    }
+
     public function ajaxDetail()
     {
         if (!$this->guard()) {

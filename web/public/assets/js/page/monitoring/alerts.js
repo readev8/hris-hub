@@ -25,7 +25,7 @@
             Monitoring.state.stats = res.stats || {};
             Monitoring.ui.renderDomainChart(Monitoring.state.stats);
             Monitoring.ui.renderDeltas(Monitoring.state.stats);
-            Monitoring.ui.renderApprovalBreakdown((Monitoring.state.stats.by_status) || {});
+            Monitoring.ui.renderApprovalTracking((Monitoring.state.stats.by_status) || {}, (Monitoring.state.stats.last_doc) || {});
           })
           .fail((xhr) => {
             if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; }
@@ -86,16 +86,12 @@
     current() {
       return {
         start_date: document.getElementById('filter-start')?.value || '',
-        end_date: document.getElementById('filter-end')?.value || '',
-        domain: document.querySelector('.domain-tab.active')?.dataset.domain || '',
-        table: Monitoring.state.activeTable
+        end_date: document.getElementById('filter-end')?.value || ''
       };
     },
     apply(p) {
-      const url = site_url + '/monitoring?start_date=' + encodeURIComponent(p.start_date)
-        + '&end_date=' + encodeURIComponent(p.end_date)
-        + '&domain=' + encodeURIComponent(p.domain) + '&table=' + encodeURIComponent(p.table);
-      location.href = url;
+      location.href = site_url + '/monitoring?start_date=' + encodeURIComponent(p.start_date || '')
+        + '&end_date=' + encodeURIComponent(p.end_date || '');
     },
     render() {
       const sel = document.getElementById('preset-select');
@@ -124,29 +120,6 @@
         Monitoring.presets.saveAll(list);
         Monitoring.presets.render();
       });
-      // deep-link: ?domain=&table= → aktifkan tab terkait saat init
-      const qs = new URLSearchParams(location.search);
-      const domain = qs.get('domain');
-      const table = qs.get('table');
-      if (domain) {
-        const tab = document.querySelector('.domain-tab[data-domain="' + domain.replace(/[^a-z_]/g, '') + '"]');
-        if (tab) {
-          document.querySelectorAll('.domain-tab').forEach((t) => t.classList.remove('active'));
-          tab.classList.add('active');
-          Monitoring.state.activeTable = tab.dataset.table;
-          Monitoring.ui.renderSubtabs(domain);
-        }
-      }
-      if (table && /^[a-z_]+$/.test(table)) {
-        Monitoring.state.activeTable = table;
-        const sub = document.querySelector('.domain-subtab[data-table="' + table + '"]');
-        if (sub) {
-          document.querySelectorAll('.domain-subtab').forEach((t) => t.classList.remove('active'));
-          sub.classList.add('active');
-        }
-        Monitoring.state.grid.skip = 0;
-        Monitoring.loadActiveTable();
-      }
     }
   };
 })();

@@ -118,11 +118,14 @@ final class MonitoringMainTest extends BaseFunctionalTest
     public static function publicMethodProvider(): array
     {
         return [
-            'init'              => ['init'],
-            'loadActiveTable'   => ['loadActiveTable'],
-            'renderDomainChart' => ['renderDomainChart'],
-            'renderSession'     => ['renderSession'],
-            'renderDomainTable' => ['renderDomainTable'],
+            'init'                   => ['init'],
+            'loadSession'            => ['loadSession'],
+            'loadActivity'           => ['loadActivity'],
+            'showDetail'             => ['showDetail'],
+            'renderDomainChart'      => ['renderDomainChart'],
+            'renderSession'          => ['renderSession'],
+            'renderActivity'         => ['renderActivity'],
+            'renderApprovalTracking' => ['renderApprovalTracking'],
         ];
     }
 
@@ -149,7 +152,7 @@ final class MonitoringMainTest extends BaseFunctionalTest
             'mon-kpi-grid' => ['mon-kpi-grid'],
             'metric-card'  => ['metric-card'],
             'mon-chart-grid' => ['mon-chart-grid'],
-            'domain-tab'  => ['domain-tab'],
+            'activity-feed'  => ['activity-feed'],
             'sap-table'   => ['sap-table'],
         ];
     }

@@ -54,6 +54,23 @@
 
 .filter-bar label { font-size: 12px; color: var(--sap-text-secondary); margin: 0 2px; }
 
+.activity-feed { list-style: none; margin: 0; padding: 0; max-height: 480px; overflow-y: auto; }
+.activity-feed li:hover { background: var(--sap-border-light); }
+#grid-activity tbody tr.row-clickable { cursor: pointer; }
+#grid-activity tbody tr.row-clickable:hover { background: var(--sap-border-light); }
+
+#approval-tracking { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.appr-card { background: var(--sap-surface); border: 1px solid var(--sap-border); border-radius: 10px; padding: 12px; }
+.appr-card h4 { font-size: 13px; margin: 0 0 6px; color: var(--sap-text); }
+.appr-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--sap-border-light); margin-bottom: 6px; }
+.appr-seg { height: 100%; }
+.appr-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 11px; margin-bottom: 8px; }
+.appr-last { display: block; width: 100%; text-align: left; font-size: 12px; padding: 8px 10px; border: 1px solid var(--sap-border); border-radius: 8px; background: var(--sap-surface); cursor: pointer; transition: background 150ms ease-in-out, border-color 150ms ease-in-out; }
+.appr-last:hover { background: var(--sap-border-light); border-color: var(--sap-brand); }
+.appr-last:focus-visible { outline: 2px solid var(--sap-brand); outline-offset: 2px; }
+.stagger-in { animation: appr-stagger 0.3s ease-out both; }
+@keyframes appr-stagger { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
 /* Glassmorphism accent: modal + alert badge only (selective per design decision) */
 .mon-modal-glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .mon-alert-badge {
@@ -71,5 +88,5 @@
 @media (prefers-reduced-motion: reduce) {
   .metric-card, .domain-tab, .domain-subtab, .sap-table tbody tr { transition: none; }
   .metric-card:hover { transform: none; }
-  .skel, .metric-pulse { animation: none; }
+  .skel, .metric-pulse, .stagger-in { animation: none; }
 }

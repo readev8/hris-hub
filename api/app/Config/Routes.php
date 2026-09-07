@@ -71,6 +71,7 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->get('monitoring/detail', 'Monitoring\Data\Detail::get_detail');
     $routes->get('monitoring/trend',  'Monitoring\Report\Trend::get_trend');
     $routes->get('monitoring/alerts', 'Monitoring\Report\Alerts::get_alerts');
+    $routes->get('monitoring/activity', 'Monitoring\Report\Activity::get_activity');
     $routes->get('monitoring/export', 'Monitoring\Report\Export::get_export');
 
     // Audit log

@@ -50,6 +50,12 @@ $userName = esc(session('user')['full_name'] ?? 'User');
             <button class="sap-btn sap-btn-secondary sap-btn-sm" id="btn-export-xlsx">
                 <i class="fas fa-file-excel"></i> Export XLSX
             </button>
+            <select id="export-table" aria-label="Tabel untuk export" style="max-width:190px">
+                <?php $exportTables = ['session' => 'Sesi', 'assignment' => 'Assignment', 'assignment_approve' => 'Assignment Approve', 'ppanelmt_nilai' => 'Nilai Panel', 'fpkt' => 'FPKT', 'fpkt_jobdesc' => 'FPKT Jobdesc', 'fpkt_pelatihan' => 'FPKT Pelatihan', 'fpkt_value' => 'FPKT Value', 'ninebox_assessment' => 'Ninebox Assessment', 'ninebox_rtc' => 'Ninebox RTC', 'jobcode' => 'Jobcode', 'pengajuan_ijin' => 'Pengajuan Ijin', 'pengajuan_ijin_approve' => 'Ijin Approve', 'pengajuan_resign' => 'Pengajuan Resign', 'pengajuan_resign_approve' => 'Resign Approve', 'ppanel' => 'Panel', 'ss' => 'SS', 'ss_approval' => 'SS Approval', 'w_fpk' => 'FPK', 'w_fpk_approve' => 'FPK Approve', 'w_sk_pengajuan' => 'SK Pengajuan', 'w_fpmj_approve' => 'FPMJ Approve', 'w_penilaianpanel' => 'Penilaian Panel', 'w_memo_keluar' => 'Memo Keluar', 'w_sk' => 'SK', 'w_pegawai' => 'Pegawai', 'w_pelamar' => 'Pelamar', 'w_ppmj_approve' => 'PPMJ Approve', 'w_surat_peringatan' => 'Surat Peringatan', 'w_surat_jamsostek' => 'Surat Jamsostek', 'w_surat_referensi' => 'Surat Referensi', 'w_kontrak' => 'Kontrak']; ?>
+                <?php foreach ($exportTables as $key => $label): ?>
+                    <option value="<?= esc($key, 'attr') ?>"><?= esc($label) ?></option>
+                <?php endforeach; ?>
+            </select>
             <button class="sap-btn sap-btn-secondary sap-btn-sm" id="refreshToggle" aria-pressed="true" title="Auto-refresh every 60s">
                 <i class="fas fa-sync-alt"></i> <span id="refreshLabel">Auto</span>
             </button>
@@ -82,16 +88,13 @@ $userName = esc(session('user')['full_name'] ?? 'User');
     <div class="mon-card"><h3>Distribusi per Domain</h3><canvas id="monStatusChart"></canvas></div>
     <div class="mon-card"><h3>Tren Sesi (14 hari)</h3><canvas id="monTrendChart"></canvas><p class="chart-alt text-muted" id="monTrendAlt" style="font-size:12px"></p></div>
 </div>
-<div class="mon-chart-grid">
-    <div class="mon-card"><h3>Status Approval</h3><div id="approval-breakdown"><p class="text-muted" style="font-size:12px">Memuat…</p></div></div>
-    <div class="mon-card"><h3>Tren per Domain</h3><canvas id="monDomainTrend"></canvas><p class="chart-alt text-muted" id="monDomainTrendAlt" style="font-size:12px"></p></div>
-</div>
+<?= view('monitoring/_section_approval') ?>
 
 <!-- ══════════ SECTION 4: Sessions (tersendiri) ══════════ -->
 <?= view('monitoring/_section_session', ['stats' => $stats]) ?>
 
-<!-- ══════════ SECTION 5: Tabel per Domain ══════════ -->
-<?= view('monitoring/_table_domain') ?>
+<!-- ══════════ SECTION 5: 100 Last Activity ══════════ -->
+<?= view('monitoring/_section_activity') ?>
 
 <?= view('monitoring/_modal_detail') ?>
 

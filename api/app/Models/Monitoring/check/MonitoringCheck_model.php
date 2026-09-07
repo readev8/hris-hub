@@ -65,6 +65,19 @@ class MonitoringCheck_model
         return self::MAP[$key]['date'];
     }
 
+    /** Kolom tanggal/status/ref untuk last-doc tracking per approval table. */
+    public function docColumns(string $key): ?array
+    {
+        return match ($key) {
+            'assignment_approve' => ['date' => 'createdon', 'status' => 'status', 'ref' => 'assignmentid'],
+            'pengajuan_ijin_approve' => ['date' => 'createdon', 'status' => 'status', 'ref' => 'pengajuanijinid'],
+            'pengajuan_resign_approve' => ['date' => 'RecDate', 'status' => 'Status', 'ref' => 'PengajuanId'],
+            'w_fpk_approve' => ['date' => 'RecDate', 'status' => 'Status', 'ref' => 'FpkID'],
+            'w_ppmj_approve' => ['date' => 'RecDate', 'status' => 'Status', 'ref' => 'PpmjID'],
+            default => null,
+        };
+    }
+
     /** Kolom status untuk breakdown (GROUP BY), null = tidak didukung. Terverifikasi via SHOW COLUMNS. */
     public function statusColumn(string $key): ?string
     {

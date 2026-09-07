@@ -56,12 +56,38 @@ class Stats extends BaseApi
                 'w_ppmj_approve' => $m->statusBreakdown('w_ppmj_approve', $start, $end),
             ];
             $result['previous'] = $previous;
+            $result['last_doc'] = $this->lastDocs($m, $start, $end);
             log_message('debug', '[Monitoring][Stats] done tables=32 ms=' . (int) ((microtime(true) - $t0) * 1000));
             return $this->JSONResponse('OK', $result, 200);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->JSONResponse('Gagal memuat statistik monitoring', null, 500);
         }
+    }
+
+    private function lastDocs(\App\Models\Monitoring\report\MonitoringRpt_model $m, ?string $start, ?string $end): array
+    {
+        $keys = ['assignment_approve', 'pengajuan_ijin_approve', 'pengajuan_resign_approve', 'w_fpk_approve', 'w_ppmj_approve'];
+        $out = [];
+        foreach ($keys as $k) {
+            $check = new \App\Models\Monitoring\check\MonitoringCheck_model();
+            $cols = $check->docColumns($k);
+            if (!$cols) continue;
+            $rows = $m->getList($k, $start, $end, 1, 0)['items'];
+            if (!$rows) {
+                $out[$k] = null;
+                continue;
+            }
+            $r = $rows[0];
+            $out[$k] = [
+                'table' => $k,
+                'id' => (string) ($r['id'] ?? $r['Id'] ?? $r['ID'] ?? ''),
+                'date' => (string) ($r[$cols['date']] ?? ''),
+                'status' => (string) ($r[$cols['status']] ?? ''),
+                'ref' => (string) ($r[$cols['ref']] ?? ''),
+            ];
+        }
+        return $out;
     }
 
     /** Geser rentang mundur sepanjang durasinya untuk perbandingan periode lalu. */
