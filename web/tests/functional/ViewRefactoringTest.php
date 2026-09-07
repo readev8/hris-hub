@@ -38,6 +38,7 @@ final class ViewRefactoringTest extends BaseFunctionalTest
         'roles/permissions.php',
         'users/main_page.php',
         'users/add_user.php',
+        'monitoring/main_page.php',
     ];
 
     /**
@@ -59,6 +60,7 @@ final class ViewRefactoringTest extends BaseFunctionalTest
         'master-projects/module_detail.php',
         'roles/permissions.php',
         'users/main_page.php',
+        'monitoring/main_page.php',
     ];
 
     /**

@@ -27,9 +27,10 @@
             <i class="fas fa-moon"></i>
         </button>
         
-        <button class="shell-btn" title="Notifications" aria-label="Notifications">
+        <button class="shell-btn" id="monAlertBell" title="Monitoring alerts" aria-label="Monitoring alerts">
             <i class="fas fa-bell"></i>
             <span class="badge-dot"></span>
+            <span class="mon-alert-badge" id="monAlertCount" hidden>0</span>
         </button>
 
         <div class="dropdown">

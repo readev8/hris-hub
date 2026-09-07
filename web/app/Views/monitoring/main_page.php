@@ -1,0 +1,116 @@
+<?php
+/**
+ * ============================================================================
+ * MONITORING — MAIN PAGE
+ * ============================================================================
+ *
+ * Description: Halaman monitoring seluruh kegiatan HR (hr_selfservice + wine_hris)
+ *              dengan KPI per domain, charts, section Sessions tersendiri,
+ *              dan tabel drill-down per domain.
+ *
+ * Required: $stats, $start_date, $end_date
+ * Optional: (none)
+ * Template: template/index
+ */
+?>
+<?= $this->extend('template/index') ?>
+<?= $this->section('content') ?>
+
+<?php
+$sess  = $stats['sessions'] ?? [];
+$asg   = $stats['assignment'] ?? [];
+$fpkt  = $stats['fpkt'] ?? [];
+$nb    = $stats['ninebox'] ?? [];
+$ijin  = $stats['ijin'] ?? [];
+$res   = $stats['resign'] ?? [];
+$pss   = $stats['panel_ss'] ?? [];
+$rek   = $stats['rekrutmen'] ?? [];
+$sk    = $stats['sk'] ?? [];
+$surat = $stats['surat'] ?? [];
+$userName = esc(session('user')['full_name'] ?? 'User');
+?>
+
+<!-- ══════════ SECTION 1: Header + Filter ══════════ -->
+<div class="dashboard-header">
+    <div>
+        <h1 class="mb-1">Monitoring HRIS</h1>
+        <p class="text-secondary mb-0" style="font-size:13px">Halo <?= $userName ?>, pantau seluruh kegiatan HR di sini.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div class="filter-bar">
+            <input type="date" id="filter-start" value="<?= esc($start_date ?? date('Y-m-01'), 'attr') ?>">
+            <span class="text-muted" style="font-size:13px">to</span>
+            <input type="date" id="filter-end" value="<?= esc($end_date ?? date('Y-m-d'), 'attr') ?>">
+            <button class="sap-btn sap-btn-primary sap-btn-sm" id="btn-filter">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+            <button class="sap-btn sap-btn-secondary sap-btn-sm" id="btn-export">
+                <i class="fas fa-download"></i> Export CSV
+            </button>
+            <button class="sap-btn sap-btn-secondary sap-btn-sm" id="btn-export-xlsx">
+                <i class="fas fa-file-excel"></i> Export XLSX
+            </button>
+            <select id="export-table" aria-label="Tabel untuk export" style="max-width:190px">
+                <?php $exportTables = ['session' => 'Sesi', 'assignment' => 'Assignment', 'assignment_approve' => 'Assignment Approve', 'ppanelmt_nilai' => 'Nilai Panel', 'fpkt' => 'FPKT', 'fpkt_jobdesc' => 'FPKT Jobdesc', 'fpkt_pelatihan' => 'FPKT Pelatihan', 'fpkt_value' => 'FPKT Value', 'ninebox_assessment' => 'Ninebox Assessment', 'ninebox_rtc' => 'Ninebox RTC', 'jobcode' => 'Jobcode', 'pengajuan_ijin' => 'Pengajuan Ijin', 'pengajuan_ijin_approve' => 'Ijin Approve', 'pengajuan_resign' => 'Pengajuan Resign', 'pengajuan_resign_approve' => 'Resign Approve', 'ppanel' => 'Panel', 'ss' => 'SS', 'ss_approval' => 'SS Approval', 'w_fpk' => 'FPK', 'w_fpk_approve' => 'FPK Approve', 'w_sk_pengajuan' => 'SK Pengajuan', 'w_fpmj_approve' => 'FPMJ Approve', 'w_penilaianpanel' => 'Penilaian Panel', 'w_memo_keluar' => 'Memo Keluar', 'w_sk' => 'SK', 'w_pegawai' => 'Pegawai', 'w_pelamar' => 'Pelamar', 'w_ppmj_approve' => 'PPMJ Approve', 'w_surat_peringatan' => 'Surat Peringatan', 'w_surat_jamsostek' => 'Surat Jamsostek', 'w_surat_referensi' => 'Surat Referensi', 'w_kontrak' => 'Kontrak']; ?>
+                <?php foreach ($exportTables as $key => $label): ?>
+                    <option value="<?= esc($key, 'attr') ?>"><?= esc($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button class="sap-btn sap-btn-secondary sap-btn-sm" id="refreshToggle" aria-pressed="true" title="Auto-refresh every 60s">
+                <i class="fas fa-sync-alt"></i> <span id="refreshLabel">Auto</span>
+            </button>
+            <select id="preset-select" aria-label="Preset filter" style="max-width:160px">
+                <option value="">Preset…</option>
+            </select>
+            <button class="sap-btn sap-btn-secondary sap-btn-sm" id="btn-preset-save" title="Simpan filter saat ini sebagai preset">
+                <i class="fas fa-bookmark"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ SECTION 2: KPI Grid ══════════ -->
+<div class="mon-kpi-grid">
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($sess['total'] ?? 0) ?></div><div class="metric-label">Sesi</div><div class="metric-delta" id="delta-sessions"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($asg['assignment'] ?? 0) ?></div><div class="metric-label">Assignment</div><div class="metric-delta" id="delta-assignment"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($fpkt['fpkt'] ?? 0) ?></div><div class="metric-label">FPKT</div><div class="metric-delta" id="delta-fpkt"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($nb['assessment'] ?? 0) ?></div><div class="metric-label">Ninebox</div><div class="metric-delta" id="delta-ninebox"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($ijin['pengajuan'] ?? 0) ?></div><div class="metric-label">Ijin</div><div class="metric-delta" id="delta-ijin"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($res['pengajuan'] ?? 0) ?></div><div class="metric-label">Resign</div><div class="metric-delta" id="delta-resign"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($rek['fpk'] ?? 0) ?></div><div class="metric-label">FPK</div><div class="metric-delta" id="delta-rekrutmen"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($sk['pengajuan'] ?? 0) ?></div><div class="metric-label">SK Pengajuan</div><div class="metric-delta" id="delta-sk"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($surat['pegawai'] ?? 0) ?></div><div class="metric-label">Pegawai</div><div class="metric-delta" id="delta-surat"></div></div>
+    <div class="metric-card"><div class="metric-value sap-count-up"><?= (int) ($surat['kontrak'] ?? 0) ?></div><div class="metric-label">Kontrak</div><div class="metric-delta" id="delta-surat"></div></div>
+</div>
+
+<!-- ══════════ SECTION 3: Charts ══════════ -->
+<div class="mon-chart-grid">
+    <div class="mon-card"><h3>Distribusi per Domain</h3><canvas id="monStatusChart"></canvas></div>
+    <div class="mon-card"><h3>Tren Sesi (14 hari)</h3><canvas id="monTrendChart"></canvas><p class="chart-alt text-muted" id="monTrendAlt" style="font-size:12px"></p></div>
+</div>
+<?= view('monitoring/_section_approval') ?>
+
+<!-- ══════════ SECTION 4: Sessions (tersendiri) ══════════ -->
+<?= view('monitoring/_section_session', ['stats' => $stats]) ?>
+
+<!-- ══════════ SECTION 5: 100 Last Activity ══════════ -->
+<?= view('monitoring/_section_activity') ?>
+
+<?= view('monitoring/_modal_detail') ?>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="<?= base_url('public/assets/css/page/monitoring/main_page.css?v=' . config('App')->assetVersion) ?>">
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+window.PageData = <?= json_encode(['stats' => $stats, 'startDate' => $start_date, 'endDate' => $end_date, 'debug' => $debug ?? false]) ?>;
+</script>
+<script src="<?= base_url('public/assets/js/page/monitoring/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
+<script src="<?= base_url('public/assets/js/page/monitoring/alerts.js?v=' . config('App')->assetVersion) ?>"></script>
+<?= $this->endSection() ?>

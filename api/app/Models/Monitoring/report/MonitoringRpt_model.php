@@ -1,0 +1,135 @@
+<?php
+
+namespace App\Models\Monitoring\report;
+
+use App\Models\Monitoring\check\MonitoringCheck_model;
+
+class MonitoringRpt_model
+{
+    protected \CodeIgniter\Database\BaseConnection $db;
+    protected MonitoringCheck_model $check;
+
+    public function __construct()
+    {
+        $this->db = \Config\Database::connect();
+        $this->check = new MonitoringCheck_model();
+    }
+
+    private function filtered(string $key, ?string $start, ?string $end): \CodeIgniter\Database\BaseBuilder
+    {
+        $b = $this->db->table($this->check->tableName($key));
+        if ($this->check->hasActive($key)) {
+            $b->where('active', 0);
+        }
+        $d = $this->check->dateExpr($key);
+        if ($d === 'bulantahun') {
+            if ($start) {
+                $b->where('Tahun >=', (int) substr($start, 0, 4));
+            }
+            if ($end) {
+                $b->where('Tahun <=', (int) substr($end, 0, 4));
+            }
+        } else {
+            if ($d && $start) {
+                $b->where($d . ' >=', $start . ' 00:00:00');
+            }
+            if ($d && $end) {
+                $b->where($d . ' <=', $end . ' 23:59:59');
+            }
+        }
+        return $b;
+    }
+
+    public function countTable(string $key, ?string $start = null, ?string $end = null): int
+    {
+        $t0 = microtime(true);
+        $n = (int) $this->filtered($key, $start, $end)->countAllResults();
+        $ms = (int) ((microtime(true) - $t0) * 1000);
+        if ($ms > 500) {
+            log_message('debug', '[Monitoring][Model] slow count key=' . $key . ' n=' . $n . ' ms=' . $ms);
+        }
+        return $n;
+    }
+
+    public function statusBreakdown(string $key, ?string $start = null, ?string $end = null): array
+    {
+        $col = $this->check->statusColumn($key);
+        if ($col === null) {
+            return [];
+        }
+        $rows = $this->filtered($key, $start, $end)->select($col . ' AS v, COUNT(*) AS c')->groupBy($col)->get()->getResultArray();
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(string) ($r['v'] ?? 'NULL')] = (int) $r['c'];
+        }
+        log_message('debug', '[Monitoring][Model] breakdown key=' . $key . ' groups=' . count($out));
+        return $out;
+    }
+
+    public function countByDay(string $key, string $start, string $end): array
+    {
+        $t0 = microtime(true);
+        $out = [];
+        $period = new \DatePeriod(
+            new \DateTime($start),
+            new \DateInterval('P1D'),
+            (new \DateTime($end))->modify('+1 day')
+        );
+        foreach ($period as $d) {
+            $day = $d->format('Y-m-d');
+            $out[] = ['date' => $day, 'count' => $this->countTable($key, $day, $day)];
+        }
+        log_message('debug', '[Monitoring][Model] trend key=' . $key . ' points=' . count($out) . ' ms=' . (int) ((microtime(true) - $t0) * 1000));
+        return $out;
+    }
+
+    public function getList(string $key, ?string $start, ?string $end, int $take = 20, int $skip = 0, ?string $sort = null, string $dir = 'DESC', ?string $q = null): array
+    {
+        $take = max(1, min($take, 100));
+        $skip = max(0, $skip);
+        $b = $this->filtered($key, $start, $end);
+        $searchCol = $this->check->searchable($key);
+        if ($q !== null && $q !== '' && $searchCol !== null) {
+            $b->groupStart()->like($searchCol, $q)->groupEnd();
+        }
+        $total = (int) $b->countAllResults(false);
+        // $escape=false: kolom berasal dari whitelist Check_model (bukan input user),
+        // agar ekspresi COALESCE tidak diurai ulang oleh Query Builder.
+        $rows = $b->orderBy($this->sortCol($key, $sort), $dir === 'ASC' ? 'ASC' : 'DESC', false)
+            ->get($take, $skip)
+            ->getResultArray();
+        log_message('debug', '[Monitoring][Model] list key=' . $key . ' take=' . $take . ' skip=' . $skip . ' total=' . $total . ' rows=' . count($rows));
+        return ['items' => $rows, 'total' => $total];
+    }
+
+    private function sortCol(string $key, ?string $sort): string
+    {
+        $d = $this->check->dateExpr($key);
+        $simpleDate = ($d !== null && $d !== 'bulantahun' && !str_contains($d, '(')) ? $d : null;
+        $allowed = array_merge([$this->pk($key)], $simpleDate ? [$simpleDate] : [], $this->check->sortable($key));
+        if ($sort !== null && in_array($sort, $allowed, true)) {
+            return $sort;
+        }
+        return $this->orderCol($key);
+    }
+
+    private function orderCol(string $key): string
+    {
+        $d = $this->check->dateExpr($key);
+        if ($d === null || $d === 'bulantahun') {
+            return $this->pk($key);
+        }
+        return $d;
+    }
+
+    private function pk(string $key): string
+    {
+        if (in_array($key, ['fpkt', 'fpkt_jobdesc', 'fpkt_value'], true)) {
+            return 'Id';
+        }
+        if (str_starts_with($key, 'w_')) {
+            return 'ID';
+        }
+        return 'id';
+    }
+}

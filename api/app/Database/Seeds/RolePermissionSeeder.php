@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
                 ['module_slug' => 'master_projects', 'can_view' => 1, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 0],
                 ['module_slug' => 'users',           'can_view' => 1, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 0],
                 ['module_slug' => 'roles',           'can_view' => 1, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 0],
+                ['module_slug' => 'monitoring',    'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
             ],
             'it_manager' => [
                 ['module_slug' => 'dashboard',       'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
@@ -38,6 +39,7 @@ class RolePermissionSeeder extends Seeder
                 ['module_slug' => 'master_projects', 'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
                 ['module_slug' => 'users',           'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
                 ['module_slug' => 'roles',           'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
+                ['module_slug' => 'monitoring',    'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
             ],
             'dept_head' => [
                 ['module_slug' => 'dashboard',       'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
@@ -47,6 +49,7 @@ class RolePermissionSeeder extends Seeder
                 ['module_slug' => 'master_projects', 'can_view' => 0, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
                 ['module_slug' => 'users',           'can_view' => 0, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
                 ['module_slug' => 'roles',           'can_view' => 0, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
+                ['module_slug' => 'monitoring',    'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],
             ],
             'developer' => [
                 ['module_slug' => 'dashboard',       'can_view' => 1, 'can_create' => 0, 'can_update' => 0, 'can_delete' => 0, 'can_approve' => 0],

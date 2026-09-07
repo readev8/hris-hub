@@ -12,9 +12,10 @@ $canMasterProjects = !empty($perms['master_projects']['can_view']);
 $canRoles          = !empty($perms['roles']['can_view']);
 $canBlueprints     = !empty($perms['blueprints']['can_view']);
 $canModuleFlows   = !empty($perms['module_flows']['can_view']);
+$canMonitoring     = !empty($perms['monitoring']['can_view']);
 ?>
 <aside class="sidebar">
-    <?php if ($canDashboard || $canTickets || $canImprovements || $canBlueprints): ?>
+    <?php if ($canDashboard || $canTickets || $canImprovements || $canBlueprints || $canMonitoring): ?>
         <div class="sidebar-group-label">Main Menu</div>
         <ul class="sidebar-nav">
             <?php if ($canDashboard): ?>
@@ -22,6 +23,14 @@ $canModuleFlows   = !empty($perms['module_flows']['can_view']);
                     <a href="<?= site_url('dashboard') ?>">
                         <i class="fas fa-th-large"></i>
                         <span>Dashboard</span>
+                    </a>
+                </li>
+            <?php endif; ?>
+            <?php if ($canMonitoring): ?>
+                <li>
+                    <a href="<?= site_url('monitoring') ?>">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Monitoring</span>
                     </a>
                 </li>
             <?php endif; ?>

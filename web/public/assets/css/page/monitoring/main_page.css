@@ -1,0 +1,92 @@
+/* MONITORING — page-specific layout. Colors/surfaces from global --sap-* tokens
+ * (dark-mode ready via body.dark-mode remap in global/style.css).
+ * @file public/assets/css/page/monitoring/main_page.css
+ */
+
+.mon-kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px; margin: 16px 0;
+}
+.mon-kpi-grid .metric-card { flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.metric-value { font-size: 26px; font-weight: 700; color: var(--sap-brand); }
+.metric-label { font-size: 12px; color: var(--sap-text-secondary); }
+.metric-delta { font-size: 11px; font-weight: 600; min-height: 14px; }
+
+.mon-chart-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+}
+.mon-card {
+  background: var(--sap-surface); border: 1px solid var(--sap-border);
+  border-radius: var(--sap-radius-lg); padding: 16px;
+}
+.mon-card h3 { font-size: 14px; margin: 0 0 8px; color: var(--sap-text); }
+.mon-card canvas { max-height: 260px; }
+
+.mon-section { margin-top: 24px; }
+.mon-section-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.mon-section-head h2 { font-size: 17px; margin: 0; color: var(--sap-text); }
+
+.domain-tabs, .domain-subtabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.domain-tab, .domain-subtab {
+  cursor: pointer; border: 1px solid var(--sap-border); background: var(--sap-surface);
+  border-radius: 8px; padding: 6px 14px; font-size: 13px; color: var(--sap-text);
+  transition: background 150ms ease-in-out, color 150ms ease-in-out;
+}
+.domain-tab:hover, .domain-subtab:hover { background: var(--sap-border-light); }
+.domain-tab.active, .domain-subtab.active { background: var(--sap-brand); border-color: var(--sap-brand); color: #fff; }
+.domain-tab:focus-visible, .domain-subtab:focus-visible, #btn-filter:focus-visible, #btn-export:focus-visible, #refreshToggle:focus-visible {
+  outline: 2px solid var(--sap-brand); outline-offset: 2px;
+}
+
+.sap-table tbody tr { transition: background 150ms ease-in-out; }
+.sap-table tbody tr.row-clickable { cursor: pointer; }
+.sap-table tbody tr.row-clickable:hover { background: var(--sap-border-light); }
+
+/* Skeleton shimmer for loading states */
+.skel {
+  background: linear-gradient(90deg, var(--sap-border-light) 25%, var(--sap-surface) 50%, var(--sap-border-light) 75%);
+  background-size: 200% 100%;
+  animation: mon-skel 1.2s ease-in-out infinite;
+  border-radius: 6px; min-height: 14px;
+}
+@keyframes mon-skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.filter-bar label { font-size: 12px; color: var(--sap-text-secondary); margin: 0 2px; }
+
+.activity-feed { list-style: none; margin: 0; padding: 0; max-height: 480px; overflow-y: auto; }
+.activity-feed li:hover { background: var(--sap-border-light); }
+#grid-activity tbody tr.row-clickable { cursor: pointer; }
+#grid-activity tbody tr.row-clickable:hover { background: var(--sap-border-light); }
+
+#approval-tracking { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.appr-card { background: var(--sap-surface); border: 1px solid var(--sap-border); border-radius: 10px; padding: 12px; }
+.appr-card h4 { font-size: 13px; margin: 0 0 6px; color: var(--sap-text); }
+.appr-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--sap-border-light); margin-bottom: 6px; }
+.appr-seg { height: 100%; }
+.appr-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 11px; margin-bottom: 8px; }
+.appr-last { display: block; width: 100%; text-align: left; font-size: 12px; padding: 8px 10px; border: 1px solid var(--sap-border); border-radius: 8px; background: var(--sap-surface); cursor: pointer; transition: background 150ms ease-in-out, border-color 150ms ease-in-out; }
+.appr-last:hover { background: var(--sap-border-light); border-color: var(--sap-brand); }
+.appr-last:focus-visible { outline: 2px solid var(--sap-brand); outline-offset: 2px; }
+.stagger-in { animation: appr-stagger 0.3s ease-out both; }
+@keyframes appr-stagger { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Glassmorphism accent: modal + alert badge only (selective per design decision) */
+.mon-modal-glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.mon-alert-badge {
+  background: rgba(220, 38, 38, 0.12); border: 1px solid rgba(220, 38, 38, 0.35);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; color: var(--sap-error);
+}
+
+@media (max-width: 768px) {
+  .mon-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .mon-chart-grid { grid-template-columns: 1fr; }
+  .metric-value { font-size: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metric-card, .domain-tab, .domain-subtab, .sap-table tbody tr { transition: none; }
+  .metric-card:hover { transform: none; }
+  .skel, .metric-pulse, .stagger-in { animation: none; }
+}

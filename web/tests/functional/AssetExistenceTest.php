@@ -105,6 +105,7 @@ final class AssetExistenceTest extends BaseFunctionalTest
             'roles/permissions → js'         => ['roles/permissions.php',         'js/page/roles/permissions.js'],
             'users/main_page → js'           => ['users/main_page.php',           'js/page/users/main_page.js'],
             'users/add_user → js'            => ['users/add_user.php',            'js/page/users/add_user.js'],
+            'monitoring/main_page → js'      => ['monitoring/main_page.php',      'js/page/monitoring/main_page.js'],
         ];
     }
 
@@ -137,6 +138,7 @@ final class AssetExistenceTest extends BaseFunctionalTest
             'roles/permissions → css'         => ['roles/permissions.php',         'css/page/roles/permissions.css'],
             'users/main_page → css'           => ['users/main_page.php',           'css/page/users/main_page.css'],
             'users/add_user → css'            => ['users/add_user.php',            'css/page/users/add_user.css'],
+            'monitoring/main_page → css'      => ['monitoring/main_page.php',      'css/page/monitoring/main_page.css'],
         ];
     }
 }
