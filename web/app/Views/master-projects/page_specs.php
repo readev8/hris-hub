@@ -17,8 +17,8 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/master-projects/page_specs.css') ?>?v=<?= config('App')->assetVersion ?>">
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/master-projects/module_detail.css') ?>?v=<?= config('App')->assetVersion ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/master-projects/page_specs.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/master-projects/module_detail.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -215,5 +215,5 @@
                             'moduleUrl'  => site_url('master-projects/' . ($project['id'] ?? '') . '/modules/' . ($module['id'] ?? '')),
                         ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;
 </script>
-<script src="<?= base_url('public/assets/js/page/master-projects/page_specs.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/master-projects/page_specs.js') ?>"></script>
 <?= $this->endSection() ?>

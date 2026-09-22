@@ -16,6 +16,10 @@ class Attachments extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('blueprints', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menambah lampiran', null, 403);
+        }
+
         $blueprint = $this->db()->table(Tables::BLUEPRINTS)->where('id', $blueprintId)->where('active', 0)->get()->getRowArray();
         if (!$blueprint) return $this->JSONResponse('Blueprint tidak ditemukan', null, 404);
 
@@ -64,6 +68,13 @@ class Attachments extends BaseApi
 
         $id = $this->resolveId($encryptedId);
         if (!$id) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('blueprints', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus lampiran', null, 403);
+        }
 
         $attachment = $this->db()->table(Tables::BLUEPRINT_ATTACHMENTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
         if (!$attachment) return $this->JSONResponse('Lampiran tidak ditemukan', null, 404);

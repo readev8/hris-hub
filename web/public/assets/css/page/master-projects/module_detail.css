@@ -1012,7 +1012,7 @@
     font-size: 14px;
     font-family: inherit;
     color: var(--sap-text, #1F2937);
-    background: #fff;
+    background: var(--sap-card-bg, #fff);
     transition: border-color 150ms, box-shadow 150ms;
 }
 .import-search-input:focus {

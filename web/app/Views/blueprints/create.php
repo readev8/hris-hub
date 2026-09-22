@@ -14,7 +14,7 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/blueprints/create.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/blueprints/create.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -101,6 +101,6 @@
 
 <?= $this->section('scripts') ?>
 <!-- MOVE to page JS file -->
-<script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/blueprints/create.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/badge-helpers.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/create.js') ?>"></script>
 <?= $this->endSection() ?>

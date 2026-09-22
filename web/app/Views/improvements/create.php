@@ -14,7 +14,7 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/_shared/field-errors.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/_shared/field-errors.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -187,5 +187,5 @@
 
 <?= $this->section('scripts') ?>
 <!-- MOVE to page JS file -->
-<script src="<?= base_url('public/assets/js/page/improvements/create.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/improvements/create.js') ?>"></script>
 <?= $this->endSection() ?>

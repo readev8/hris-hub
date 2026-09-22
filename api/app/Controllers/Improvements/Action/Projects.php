@@ -307,6 +307,10 @@ class Projects extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
+        if (!$this->checkPermission('improvements', 'can_create')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk meresubmit', null, 403);
+        }
+
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
         $description = trim($input['description'] ?? '');
         $businessCase = trim($input['business_case'] ?? '');

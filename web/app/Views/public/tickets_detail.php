@@ -13,8 +13,8 @@
 ?>
 <?= $this->extend('template/anonymous') ?>
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/public/_shared/anonymous-layout.css') ?>?v=<?= config('App')->assetVersion ?>">
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/public/tickets_detail.css') ?>?v=<?= config('App')->assetVersion ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/public/_shared/anonymous-layout.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/public/tickets_detail.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -148,5 +148,5 @@
 
 <?= $this->section('scripts') ?>
 <script>window.PageData = <?= json_encode(['ajaxBaseUrl' => site_url('public/tickets'), 'trackingCode' => $tracking_code], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/public/tickets_detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/public/tickets_detail.js') ?>"></script>
 <?= $this->endSection() ?>

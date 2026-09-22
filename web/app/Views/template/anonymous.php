@@ -13,10 +13,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title ?? 'Ticket Portal') ?></title>
-    <link rel="stylesheet" href="<?= base_url('public/vendor/fonts/plus-jakarta-sans.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= asset_url('public/vendor/fonts/plus-jakarta-sans.css') ?>">
     <link rel="stylesheet" href="<?= base_url('public/vendor/bootstrap/5.3.3/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('public/vendor/font-awesome/6.6.0/css/all.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('public/vendor/toastr/2.1.4/css/toastr.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= asset_url('public/vendor/toastr/2.1.4/css/toastr.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css') ?>">
     <?= $this->renderSection('styles') ?>
 </head>
@@ -42,7 +42,7 @@
     </footer>
 
     <script src="<?= base_url('public/vendor/jquery/3.7.1/jquery.min.js') ?>"></script>
-    <script src="<?= base_url('public/vendor/toastr/2.1.4/js/toastr.min.js?v=' . config('App')->assetVersion) ?>"></script>
+    <script src="<?= asset_url('public/vendor/toastr/2.1.4/js/toastr.min.js') ?>"></script>
     <script>
         var site_url = '<?= site_url() ?>';
         toastr.options = { positionClass: 'toast-top-right', timeOut: 3000, progressBar: true };

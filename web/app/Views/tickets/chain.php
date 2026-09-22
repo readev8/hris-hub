@@ -82,9 +82,9 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/tickets/chain.css') ?>?v=<?= config('App')->assetVersion ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/tickets/chain.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script src="<?= base_url('public/assets/js/page/tickets/chain.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/tickets/chain.js') ?>"></script>
 <?= $this->endSection() ?>

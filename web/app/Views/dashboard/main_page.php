@@ -423,7 +423,7 @@ $isDeveloper = $roleId === \App\Config\Enums::DEVELOPER;
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/dashboard/main_page.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/dashboard/main_page.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -441,5 +441,5 @@ window.PageData = <?= json_encode([
     'isApprover'    => $isApprover,
 ]) ?>;
 </script>
-<script src="<?= base_url('public/assets/js/page/dashboard/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/dashboard/main_page.js') ?>"></script>
 <?= $this->endSection() ?>

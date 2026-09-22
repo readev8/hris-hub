@@ -150,13 +150,17 @@ $(function() {
             searchPlaceholder: 'Search tickets...',
             emptyTable: '<div class="sap-empty" style="padding:48px 20px"><i class="fas fa-user-check"></i><h4>No tickets taken yet</h4><p>Take a ticket from the tickets list to get started.</p></div>'
         },
-        dom: '<"row mb-3"<"col-sm-12"B>>rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
+        dom: 'rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
         buttons: [
-            { extend: 'copy', text: '<i class="fas fa-copy"></i> Copy', className: 'btn-sm' },
-            { extend: 'csv', text: '<i class="fas fa-file-csv"></i> CSV', className: 'btn-sm' },
-            { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn-sm' },
-            { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn-sm' },
-            { extend: 'print', text: '<i class="fas fa-print"></i> Print', className: 'btn-sm' },
+            { extend: 'collection', text: '<i class="fas fa-download"></i> Ekspor', className: 'btn-sm sap-btn sap-btn-secondary',
+              buttons: [
+                  { extend: 'copy', text: '<i class="fas fa-copy"></i> Copy' },
+                  { extend: 'csv', text: '<i class="fas fa-file-csv"></i> CSV' },
+                  { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel' },
+                  { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i> PDF' },
+                  { extend: 'print', text: '<i class="fas fa-print"></i> Print' },
+              ]
+            },
         ],
         drawCallback: function() {
             var api = this.api();
@@ -169,6 +173,8 @@ $(function() {
             });
         }
     });
+
+    DtToolbar.relocate(table, '#my-tickets-toolbar');
 
     // Column search headers
     $('#myTicketsTable thead tr').clone(true).appendTo('#myTicketsTable thead');

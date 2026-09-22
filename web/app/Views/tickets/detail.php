@@ -205,6 +205,15 @@
             <?php endif; ?>
 
             <div class="sap-card">
+                <?php
+                $cUserId = session('user_id');
+                $cRoleId = session('role_id');
+                $cIsAdmin = $cRoleId == 5;
+                $cIsCreator = isset($ticket['creator_id']) && (string) $ticket['creator_id'] === (string) $cUserId;
+                $cIsAssignee = isset($ticket['assignee_id']) && (string) $ticket['assignee_id'] === (string) $cUserId;
+                $cIsApprover = !empty($ticket['approver_raw_id']) && (string) $ticket['approver_raw_id'] === (string) $cUserId;
+                $canComment = $cIsCreator || $cIsAssignee || $cIsApprover || $cIsAdmin;
+                ?>
                 <div class="sap-card-header">
                     <i class="fas fa-comment-dots" style="color:var(--sap-text-muted)"></i>
                     Comments
@@ -219,11 +228,24 @@
                         </div>
                     <?php else: ?>
                         <?php foreach ($ticket['comments'] as $comment): ?>
+                        <?php
+                        $isCommentAuthor = isset($comment['user_id']) && (string) $comment['user_id'] === (string) $cUserId;
+                        $canEditComment = $isCommentAuthor || $cIsAdmin;
+                        ?>
                         <div class="sap-comment">
                             <div class="sap-comment-header">
                                 <?= avatar_initials($comment['full_name'] ?? '?', 'sm', '#758CA4') ?>
                                 <span class="sap-comment-author"><?= esc($comment['full_name'] ?? '') ?></span>
                                 <span class="sap-comment-time"><?= esc($comment['created_at']) ?></span>
+                                <?php if (!empty($comment['updated_at'])): ?>
+                                <span class="sap-badge closed" style="font-size:10px">edited</span>
+                                <?php endif; ?>
+                                <?php if ($canEditComment): ?>
+                                <span class="ms-auto d-inline-flex gap-1">
+                                    <button class="sap-btn sap-btn-secondary sap-btn-sm" style="padding:2px 8px;font-size:12px" onclick="editComment('<?= esc($comment['id']) ?>', <?= json_encode($comment['content'] ?? '') ?>)" title="Edit comment"><i class="fas fa-pen"></i></button>
+                                    <button class="sap-btn sap-btn-danger sap-btn-sm" style="padding:2px 8px;font-size:12px" onclick="deleteComment('<?= esc($comment['id']) ?>')" title="Delete comment"><i class="fas fa-trash"></i></button>
+                                </span>
+                                <?php endif; ?>
                             </div>
                             <div class="sap-comment-body"><?= nl2br(esc($comment['content'])) ?></div>
                             <?php if (!empty($comment['attachments'])): ?>
@@ -258,6 +280,7 @@
                         <?php endforeach; ?>
                     <?php endif; ?>
 
+                    <?php if ($canComment): ?>
                     <form id="commentForm" class="mt-3" enctype="multipart/form-data" style="border-top:1px solid var(--sap-border-light);padding-top:16px">
                         <div class="mb-2">
                             <textarea class="sap-input" id="commentText" name="content" rows="2" placeholder="Write a comment..." style="min-height:60px"></textarea>
@@ -271,6 +294,11 @@
                         </div>
                         <div class="d-flex flex-wrap gap-1 mt-2" id="commentImagePreview"></div>
                     </form>
+                    <?php else: ?>
+                    <div class="mt-3 text-muted" style="border-top:1px solid var(--sap-border-light);padding-top:16px;font-size:13px">
+                        <i class="fas fa-lock" style="font-size:11px"></i> Hanya peserta ticket (pembuat, penerima tugas, approver) yang dapat memberikan komentar.
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -376,7 +404,7 @@
                     $roleId = session('role_id');
                     $isAdmin = $roleId == 5;
                     $hasSpecificApprover = !empty($ticket['approver_id']);
-                    $isApprover = $hasSpecificApprover && (string)($ticket['approver_id'] ?? '') === (string)$userId;
+                    $isApprover = $hasSpecificApprover && (string)($ticket['approver_raw_id'] ?? '') === (string)$userId;
                     ?>
                     <?php if ($needsApproval === 1): ?>
                         <?php if ($status === 0 && (($hasSpecificApprover && ($isApprover || $isAdmin)) || (!$hasSpecificApprover && $canApprove))): ?>
@@ -424,7 +452,7 @@
                         <?php endif; ?>
                     <?php endif; ?>
                     <hr class="my-1">
-                    <?php if ($canUpdate): ?>
+                    <?php if ($canUpdate || $isCreator || $isAssignee): ?>
                     <a href="<?= site_url('tickets/' . $token . '/edit') ?>" class="sap-btn sap-btn-secondary sap-btn-sm"><i class="fas fa-edit"></i> Edit</a>
                     <?php endif; ?>
                     <?php if ($canDelete): ?>
@@ -443,10 +471,10 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/tickets/detail.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/tickets/detail.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>window.PageData = <?= json_encode(['token' => $token]) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/tickets/detail.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/tickets/detail.js') ?>"></script>
 <?= $this->endSection() ?>

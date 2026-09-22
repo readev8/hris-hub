@@ -30,6 +30,7 @@
 </div>
 
 <div id="approvalContent">
+    <div class="dt-toolbar" id="approval-toolbar" role="toolbar" aria-label="Alat ekspor"></div>
     <div class="sap-card">
         <div class="sap-card-body p-0">
             <table id="approval-table" class="sap-table mb-0" style="width:100%">
@@ -51,10 +52,12 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/approvals/main_page.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/_shared/dt-toolbar.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/approvals/main_page.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/approvals/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/badge-helpers.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/dt-toolbar.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/approvals/main_page.js') ?>"></script>
 <?= $this->endSection() ?>

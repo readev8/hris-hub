@@ -45,5 +45,5 @@
 
 <?= $this->section('scripts') ?>
 <!-- MOVE to page JS file -->
-<script src="<?= base_url('public/assets/js/page/master-projects/create.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/master-projects/create.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -25,6 +25,8 @@
     <?php endif; ?>
 </div>
 
+<div class="dt-toolbar" id="users-toolbar" role="toolbar" aria-label="Alat ekspor"></div>
+
 <div class="sap-card">
     <div class="sap-card-body p-0">
         <table id="users-table" class="sap-table mb-0" style="width:100%">
@@ -50,12 +52,14 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/users/main_page.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/_shared/dt-toolbar.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/users/main_page.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <!-- MOVE to page JS file -->
 <script>window.PageData = <?= json_encode(['rolesMap' => array_map(fn($r) => ['id' => $r['id'], 'name' => $r['name']], $roles)], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/users/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/badge-helpers.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/dt-toolbar.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/users/main_page.js') ?>"></script>
 <?= $this->endSection() ?>

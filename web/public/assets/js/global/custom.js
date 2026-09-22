@@ -73,15 +73,12 @@ function bulanIndo(bulan) {
 }
 
 function disableSubmit(el, status, html = "") {
-  $(el).empty();
+  var $btn = $(el);
   if (status) {
-    $(el).attr("disabled", true);
-    $(el).html(
-      `<span style='height:15px;width:15px' class="spinner-border spinner-border-reverse align-self-center loader-sm "></span> Memproses...`,
-    );
+    setBtnLoading($btn, true);
   } else {
-    $(el).attr("disabled", false);
-    $(el).html(html);
+    setBtnLoading($btn, false);
+    if (html) $btn.html(html);
   }
 }
 $(document).ready(function () {

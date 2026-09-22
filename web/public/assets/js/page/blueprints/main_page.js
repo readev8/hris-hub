@@ -85,15 +85,19 @@ const BlueprintMainPage = {
                 searchPlaceholder: 'Search blueprints...',
                 emptyTable: '<div class="sap-empty" style="padding:48px 20px"><i class="fas fa-drafting-compass"></i><h4>No blueprints found</h4><p>Create a new blueprint from an improvement to get started.</p></div>'
             },
-            dom: '<"row mb-3"<"col-sm-12"B>>rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
+            dom: 'rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
             buttons: [
-                { extend: 'copy', text: '<i class="fas fa-copy"></i> Copy', className: 'btn-sm' },
-                { extend: 'csv', text: '<i class="fas fa-file-csv"></i> CSV', className: 'btn-sm' },
-                { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn-sm' },
-                { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn-sm' },
-                { extend: 'print', text: '<i class="fas fa-print"></i> Print', className: 'btn-sm' },
-                { extend: 'colvis', text: '<i class="fas fa-columns"></i> Columns', className: 'btn-sm' }
-            ],
+            { extend: 'collection', text: '<i class="fas fa-download"></i> Ekspor', className: 'btn-sm sap-btn sap-btn-secondary',
+              buttons: [
+                  { extend: 'copy', text: '<i class="fas fa-copy"></i> Copy' },
+                  { extend: 'csv', text: '<i class="fas fa-file-csv"></i> CSV' },
+                  { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel' },
+                  { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i> PDF' },
+                  { extend: 'print', text: '<i class="fas fa-print"></i> Print' },
+              ]
+            },
+            { extend: 'colvis', text: '<i class="fas fa-columns"></i> Kolom', className: 'btn-sm sap-btn sap-btn-secondary' },
+        ],
             drawCallback: function () {
                 var api = this.api();
                 api.rows().every(function () {
@@ -105,6 +109,8 @@ const BlueprintMainPage = {
                 });
             }
         });
+
+        DtToolbar.relocate(table, '#blueprints-toolbar');
     },
 
     // ===========================

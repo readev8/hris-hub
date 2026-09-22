@@ -39,6 +39,8 @@ $routes->group('', ['filter' => ['cors', 'apikeyauth']], static function ($route
     $routes->post('tickets/(:any)/close',        'Tickets\Action\Tickets::close_ticket/$1');
     $routes->post('tickets/(:any)/reopen',       'Tickets\Action\Tickets::reopen_ticket/$1');
     $routes->post('tickets/(:any)/comments',     'Tickets\Action\Tickets::add_comment/$1');
+    $routes->post('tickets/(:any)/comments/(:any)/update', 'Tickets\Action\Tickets::update_comment/$1/$2');
+    $routes->post('tickets/(:any)/comments/(:any)/delete', 'Tickets\Action\Tickets::delete_comment/$1/$2');
     $routes->post('tickets/(:any)/attachments',  'Tickets\Action\Attachments::add/$1');
     $routes->get('tickets/my-taken',             'Tickets\Report\TicketList::get_my_taken_tickets');
     $routes->get('tickets/chain',                'Tickets\Data\TicketChain::get_chain');

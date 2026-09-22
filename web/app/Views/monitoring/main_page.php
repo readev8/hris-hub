@@ -104,13 +104,13 @@ $userName = esc(session('user')['full_name'] ?? 'User');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/monitoring/main_page.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/monitoring/main_page.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
-window.PageData = <?= json_encode(['stats' => $stats, 'startDate' => $start_date, 'endDate' => $end_date, 'debug' => $debug ?? false]) ?>;
+window.PageData = <?= json_encode(['stats' => $stats, 'startDate' => $start_date, 'endDate' => $end_date, 'debug' => $debug ?? false], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
-<script src="<?= base_url('public/assets/js/page/monitoring/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/monitoring/alerts.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/monitoring/main_page.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/monitoring/alerts.js') ?>"></script>
 <?= $this->endSection() ?>

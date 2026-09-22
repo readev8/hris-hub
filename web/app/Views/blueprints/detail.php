@@ -277,8 +277,8 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/vendor/summernote/0.9.1/summernote-bs5.min.css') ?>?v=<?= config('App')->assetVersion ?>">
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/blueprints/detail.css') ?>?v=<?= config('App')->assetVersion ?>">
+<link rel="stylesheet" href="<?= asset_url('public/vendor/summernote/0.9.1/summernote-bs5.min.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/blueprints/detail.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -288,11 +288,11 @@
     'currentModuleId'  => $blueprint['modules'][0]['id'] ?? null,
     'modules'          => $blueprint['modules'] ?? [],
 ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/blueprints/detail-ui.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
-<script src="<?= base_url('public/assets/js/page/blueprints/detail-dropzones.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
-<script src="<?= base_url('public/assets/js/page/blueprints/detail-crud.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
-<script src="<?= base_url('public/assets/js/page/blueprints/detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
-<script src="<?= base_url('public/vendor/html-to-pdfmake/2.5.20/html-to-pdfmake.browser.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
-<script src="<?= base_url('public/assets/js/page/blueprints/export.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
-<script src="<?= base_url('public/vendor/summernote/0.9.1/summernote-bs5.min.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/detail-ui.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/detail-dropzones.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/detail-crud.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/detail.js') ?>"></script>
+<script defer src="<?= asset_url('public/vendor/html-to-pdfmake/2.5.20/html-to-pdfmake.browser.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/export.js') ?>"></script>
+<script defer src="<?= asset_url('public/vendor/summernote/0.9.1/summernote-bs5.min.js') ?>"></script>
 <?= $this->endSection() ?>

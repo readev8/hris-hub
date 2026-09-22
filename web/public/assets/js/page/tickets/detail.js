@@ -78,6 +78,67 @@ function promptAction(action, label) {
     });
 }
 
+// ===========================
+// COMMENT EDIT / DELETE
+// ===========================
+
+function editComment(commentId, currentContent) {
+    Swal.fire({
+        title: 'Edit Comment',
+        input: 'textarea',
+        inputValue: currentContent || '',
+        inputPlaceholder: 'Edit your comment...',
+        showCancelButton: true,
+        confirmButtonText: 'Save',
+        confirmButtonColor: '#0070F2',
+        cancelButtonColor: '#758CA4',
+        inputAttributes: { style: 'border-radius:6px;font-family:Inter' },
+        preConfirm: function(value) {
+            if (!value || !value.trim()) {
+                Swal.showValidationMessage('Comment cannot be empty');
+                return false;
+            }
+            return value;
+        }
+    }).then(function(result) {
+        if (!result.isConfirmed) return;
+        $.post(API_ENDPOINTS.TICKET_BASE + token + '/comments/' + commentId + '/update', { content: result.value }, function(res) {
+            if (res.status) {
+                toastr.success(res.data.message || 'Comment updated');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                toastr.error(res.data.message || 'Failed to update comment');
+            }
+        }).fail(function(xhr) {
+            toastr.error('Gagal mengedit komentar (HTTP ' + xhr.status + ')');
+        });
+    });
+}
+
+function deleteComment(commentId) {
+    Swal.fire({
+        title: 'Delete Comment?',
+        text: 'This comment and its attachments will be removed.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        confirmButtonColor: '#AA0808',
+        cancelButtonColor: '#758CA4',
+    }).then(function(result) {
+        if (!result.isConfirmed) return;
+        $.post(API_ENDPOINTS.TICKET_BASE + token + '/comments/' + commentId + '/delete', {}, function(res) {
+            if (res.status) {
+                toastr.success(res.data.message || 'Comment deleted');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                toastr.error(res.data.message || 'Failed to delete comment');
+            }
+        }).fail(function(xhr) {
+            toastr.error('Gagal menghapus komentar (HTTP ' + xhr.status + ')');
+        });
+    });
+}
+
 function showAssignModal() {
     $.get(API_ENDPOINTS.USERS_LIST, function(res) {
         var users = res.data || [];

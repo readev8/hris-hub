@@ -295,6 +295,18 @@ const Dashboard = {
             daily_trend: data.dailyTrend
         });
         this._bindControls();
+        // Redraw charts on theme change
+        var self = this;
+        window.addEventListener('sap:theme-changed', function () {
+            self._loadTokens();
+            self._chartDefaults();
+            var data = window.PageData || {};
+            self._renderAllCharts({
+                by_status:   data.byStatus,
+                by_priority: data.byPriority,
+                daily_trend: data.dailyTrend
+            });
+        });
     },
 
     // ===========================

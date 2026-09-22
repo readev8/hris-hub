@@ -27,6 +27,7 @@ class TicketDetail extends BaseApi
             ->select(Tables::TICKETS . '.*, creator.full_name as creator_name, assignee.full_name as assignee_name,
                       ' . Tables::TICKETS . '.assignee_id as assignee_raw_id,
                       approver.full_name as approver_name,
+                      ' . Tables::TICKETS . '.approver_id as approver_raw_id,
                       ' . Tables::PAGES . '.name as page_name, ' . Tables::MODULES . '.name as module_name, ' . Tables::MASTER_PROJECTS . '.name as project_name,
                       ' . Tables::MASTER_PROJECTS . '.id as project_raw_id')
             ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')

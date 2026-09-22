@@ -127,4 +127,4 @@ _modules/*
 
 app/Config/*
 
-.env
+*.env*

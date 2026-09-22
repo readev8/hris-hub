@@ -82,11 +82,11 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/roles/permissions.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/roles/permissions.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <!-- MOVE to page JS file -->
 <script>window.PageData = <?= json_encode(['role' => $role ?? [], 'modules' => $modules ?? []], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/roles/permissions.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/roles/permissions.js') ?>"></script>
 <?= $this->endSection() ?>

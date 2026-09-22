@@ -14,7 +14,7 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/module-flows/canvas.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/module-flows/canvas.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -63,6 +63,6 @@ window.PageData = <?= json_encode([
     'userPermissions' => session('permissions') ?? [],
 ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;
 </script>
-<script src="<?= base_url('public/vendor/jsplumb/6.2.10/jsplumb.browser-ui.umd.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/module-flows/canvas.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/vendor/jsplumb/6.2.10/jsplumb.browser-ui.umd.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/module-flows/canvas.js') ?>"></script>
 <?= $this->endSection() ?>
