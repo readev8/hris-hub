@@ -25,6 +25,8 @@
     <?php endif; ?>
 </div>
 
+<div class="dt-toolbar" id="improvements-toolbar" role="toolbar" aria-label="Alat ekspor"></div>
+
 <div class="sap-card">
     <div class="sap-card-body p-0">
         <table id="improvements-table" class="sap-table mb-0" style="width:100%">
@@ -45,11 +47,13 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/improvements/main_page.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/_shared/dt-toolbar.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/improvements/main_page.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <!-- MOVE to page JS file -->
-<script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/improvements/main_page.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/badge-helpers.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/dt-toolbar.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/improvements/main_page.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -18,6 +18,7 @@
   /* ── Surfaces ────────────────────────────────────────────── */
   --sap-background:     #F8FAFC;
   --sap-surface:        #FFFFFF;
+  --sap-card-bg:        #FFFFFF;
   --sap-sidebar:        #FFFFFF;
 
   /* ── Borders ─────────────────────────────────────────────── */
@@ -116,6 +117,7 @@
   --sap-z-drawer-scrim: 1055;
   --sap-z-drawer:       1056;
   --sap-z-toast:        1080;
+  --sap-z-loader:       2000;
 
   /* ── Layout ──────────────────────────────────────────────── */
   --sap-shell-height:   56px;
@@ -134,18 +136,38 @@
 }
 
 /* Dark mode class */
+html.dark-mode,
+html[data-bs-theme="dark"],
 .dark-mode {
   --sap-background:     var(--sap-dark-bg);
   --sap-surface:        var(--sap-dark-surface);
+  --sap-card-bg:        var(--sap-dark-surface);
   --sap-sidebar:        var(--sap-dark-surface);
   --sap-text:           var(--sap-dark-text);
   --sap-text-secondary: #CBD5E1;
   --sap-text-muted:     var(--sap-dark-muted);
+  --sap-text-tertiary:  #94A3B8;
   --sap-border:         var(--sap-dark-border);
   --sap-border-light:   #475569;
   --sap-border-input:   #475569;
+  --sap-divider:        #334155;
   --sap-shell:          #0F172A;
   --sap-brand-hover:    rgba(13,148,136,0.1);
+  --sap-success-bg:     rgba(5,150,105,0.15);
+  --sap-success-border: rgba(5,150,105,0.3);
+  --sap-warning-bg:     rgba(217,119,6,0.15);
+  --sap-warning-border: rgba(217,119,6,0.3);
+  --sap-error-bg:       rgba(220,38,38,0.15);
+  --sap-error-border:   rgba(220,38,38,0.3);
+  --sap-info-bg:        rgba(13,148,136,0.15);
+  --sap-info-border:    rgba(13,148,136,0.3);
+  --sap-accent-light:   rgba(234,88,12,0.15);
+  --sap-brand-light:    rgba(13,148,136,0.15);
+  --sap-shadow-sm:      0 1px 2px rgba(0,0,0,0.2);
+  --sap-shadow:         0 1px 3px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.3);
+  --sap-shadow-lg:      0 4px 12px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.4);
+  --sap-shadow-xl:      0 8px 24px rgba(0,0,0,0.4), 0 24px 48px rgba(0,0,0,0.5);
+  color-scheme: dark;
 }
 
 /* ============================================================
@@ -1689,3 +1711,185 @@ textarea.sap-input { height: auto; min-height: 100px; }
 .dark-mode .breadcrumb-item.active { color: #F1F5F9; }
 .dark-mode .empty-state { color: #94A3B8; }
 .dark-mode .empty-state h4 { color: #CBD5E1; }
+
+/* ============================================================
+   Loading System — Preloader, Top Progress, AJAX Overlay
+   ============================================================ */
+
+/* ── Splash Preloader ─────────────────────────────────── */
+.sap-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sap-z-loader);
+  background: var(--sap-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 350ms ease-out;
+}
+.sap-page-loader.sap-loader-fade {
+  opacity: 0;
+  pointer-events: none;
+}
+.sap-loader-content {
+  text-align: center;
+}
+.sap-loader-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.sap-loader-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--sap-brand) 0%, #14B8A6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+  animation: sapLoaderPulse 1.2s ease-in-out infinite;
+}
+.sap-loader-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--sap-text);
+  letter-spacing: -0.02em;
+}
+.sap-loader-bar-track {
+  width: 200px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--sap-border);
+  overflow: hidden;
+  margin: 0 auto;
+}
+.sap-loader-bar-fill {
+  width: 40%;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--sap-brand), #14B8A6);
+  animation: sapLoaderSlide 1.2s ease-in-out infinite;
+}
+@keyframes sapLoaderPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+@keyframes sapLoaderSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+.dark-mode .sap-page-loader {
+  background: var(--sap-dark-bg);
+}
+.dark-mode .sap-loader-bar-track {
+  background: var(--sap-dark-border);
+}
+
+/* ── Top Progress Bar ─────────────────────────────────── */
+.sap-top-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: var(--sap-z-loader);
+  background: linear-gradient(90deg, var(--sap-brand), #14B8A6);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 300ms ease;
+  pointer-events: none;
+  opacity: 0;
+}
+.sap-top-progress.active {
+  opacity: 1;
+}
+
+/* ── AJAX Overlay ─────────────────────────────────────── */
+.sap-ajax-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--sap-z-loader) - 1);
+  background: rgba(2,6,23,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.sap-ajax-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sap-ajax-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: sapSpin 0.7s linear infinite;
+}
+.dark-mode .sap-ajax-overlay {
+  background: rgba(0,0,0,0.4);
+}
+.dark-mode .sap-ajax-spinner {
+  border-color: rgba(255,255,255,0.15);
+  border-top-color: #fff;
+}
+
+/* ── DataTables Processing ────────────────────────────── */
+.sap-dt-processing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  padding: 20px;
+  font-size: 13px;
+  color: var(--sap-text-muted);
+}
+.dataTables_processing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(248,250,252,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.dark-mode .dataTables_processing {
+  background: rgba(30,41,59,0.85);
+  color: #CBD5E1;
+}
+
+/* ── Button Loading (Bootstrap compat) ────────────────── */
+.spinner-border {
+  width: 15px;
+  height: 15px;
+  border-width: 2px;
+}
+.spinner-border-reverse {
+  border-top-color: rgba(255,255,255,0.35);
+  border-right-color: rgba(255,255,255,0.35);
+  border-bottom-color: #fff;
+  border-left-color: #fff;
+}
+
+/* ── Reduced Motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .sap-page-loader,
+  .sap-top-progress,
+  .sap-ajax-overlay {
+    transition-duration: 0.01ms !important;
+  }
+  .sap-loader-icon,
+  .sap-loader-bar-fill,
+  .sap-ajax-spinner {
+    animation: none !important;
+  }
+}

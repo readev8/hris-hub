@@ -48,3 +48,22 @@ if (!function_exists('priority_name')) {
         return $names[$priority] ?? 'Medium';
     }
 }
+
+if (!function_exists('asset_url')) {
+    /**
+     * Generate a versioned asset URL using filemtime.
+     * Falls back to App::$assetVersion if file not found on disk.
+     */
+    function asset_url(string $path): string
+    {
+        static $cache = [];
+        if (!isset($cache[$path])) {
+            $file = FCPATH . ltrim(preg_replace('#^public/#', '', $path), '/');
+            $v = is_file($file)
+                ? (string) filemtime($file)
+                : config('App')->assetVersion;
+            $cache[$path] = base_url($path) . '?v=' . $v;
+        }
+        return $cache[$path];
+    }
+}

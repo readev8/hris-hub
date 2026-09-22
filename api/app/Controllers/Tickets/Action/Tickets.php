@@ -491,8 +491,15 @@ class Tickets extends BaseApi
         $userId = $this->getCurrentUserId();
         if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
 
-        if (!$this->checkPermission('tickets', 'can_update')) {
+        if (!$this->checkPermission('tickets', 'can_view')) {
             return $this->JSONResponse('Anda tidak memiliki izin untuk comment', null, 403);
+        }
+
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
+        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
+
+        if (!$this->checkTicketParticipation($id)) {
+            return $this->JSONResponse('Hanya peserta ticket yang dapat memberikan komentar', null, 403);
         }
 
         $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
@@ -501,9 +508,6 @@ class Tickets extends BaseApi
         if (empty($content)) {
             return $this->JSONResponse('Komentar tidak boleh kosong', null, 400);
         }
-
-        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $id)->where('active', 0)->get()->getRowArray();
-        if (!$ticket) return $this->JSONResponse('Ticket tidak ditemukan', null, 404);
 
         $this->db()->transStart();
         $this->db()->table(Tables::TICKET_COMMENTS)->insert([
@@ -519,6 +523,85 @@ class Tickets extends BaseApi
         return $this->JSONResponse('Komentar ditambahkan', [
             'id' => $this->api->encryptId($commentId),
         ], 201);
+    }
+
+    public function update_comment(string $encryptedTicketId, string $encryptedCommentId): ResponseInterface
+    {
+        $ticketId = $this->resolveId($encryptedTicketId);
+        $commentId = $this->resolveId($encryptedCommentId);
+        if (!$ticketId || !$commentId) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('tickets', 'can_view')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengedit komentar', null, 403);
+        }
+
+        $input = $this->cleanInput($this->req->getJSON(true) ?? $this->req->getPost());
+        $content = trim($input['content'] ?? '');
+
+        if (empty($content)) {
+            return $this->JSONResponse('Komentar tidak boleh kosong', null, 400);
+        }
+
+        $comment = $this->db()->table(Tables::TICKET_COMMENTS)
+            ->where('id', $commentId)
+            ->where('ticket_id', $ticketId)
+            ->where('active', 0)
+            ->get()
+            ->getRowArray();
+        if (!$comment) return $this->JSONResponse('Komentar tidak ditemukan', null, 404);
+
+        $isAdmin = $this->getCurrentUserRole() === Enums::ADMIN;
+        if ((int) $comment['user_id'] !== $userId && !$isAdmin) {
+            return $this->JSONResponse('Hanya penulis komentar yang dapat mengedit', null, 403);
+        }
+
+        $this->db()->transStart();
+        $this->db()->table(Tables::TICKET_COMMENTS)->update([
+            'content'    => $content,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ], ['id' => $commentId]);
+        $this->audit->log($userId, 'ticket_comment', $commentId, 'update_comment', ['content' => $comment['content']], ['content' => $content]);
+        $this->db()->transComplete();
+
+        return $this->JSONResponse('Komentar berhasil diupdate');
+    }
+
+    public function delete_comment(string $encryptedTicketId, string $encryptedCommentId): ResponseInterface
+    {
+        $ticketId = $this->resolveId($encryptedTicketId);
+        $commentId = $this->resolveId($encryptedCommentId);
+        if (!$ticketId || !$commentId) return $this->JSONResponse('ID tidak valid', null, 400);
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return $this->JSONResponse('Unauthorized', null, 401);
+
+        if (!$this->checkPermission('tickets', 'can_view')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus komentar', null, 403);
+        }
+
+        $comment = $this->db()->table(Tables::TICKET_COMMENTS)
+            ->where('id', $commentId)
+            ->where('ticket_id', $ticketId)
+            ->where('active', 0)
+            ->get()
+            ->getRowArray();
+        if (!$comment) return $this->JSONResponse('Komentar tidak ditemukan', null, 404);
+
+        $isAdmin = $this->getCurrentUserRole() === Enums::ADMIN;
+        if ((int) $comment['user_id'] !== $userId && !$isAdmin) {
+            return $this->JSONResponse('Hanya penulis komentar yang dapat menghapus', null, 403);
+        }
+
+        $this->db()->transStart();
+        $this->db()->table(Tables::TICKET_COMMENTS)->update(['active' => 1], ['id' => $commentId]);
+        $this->db()->table(Tables::TICKET_ATTACHMENTS)->update(['active' => 1], ['comment_id' => $commentId]);
+        $this->audit->log($userId, 'ticket_comment', $commentId, 'delete_comment', ['content' => $comment['content']], null);
+        $this->db()->transComplete();
+
+        return $this->JSONResponse('Komentar berhasil dihapus');
     }
 
     public function move_ticket(string $encryptedId): ResponseInterface

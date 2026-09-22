@@ -13,7 +13,7 @@
 ?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/master-projects/detail.css') ?>?v=<?= config('App')->assetVersion ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/master-projects/detail.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -177,5 +177,5 @@
 <script>window.PageData = <?= json_encode([
     'projectId' => $project['id'] ?? '',
 ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/master-projects/detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/master-projects/detail.js') ?>"></script>
 <?= $this->endSection() ?>

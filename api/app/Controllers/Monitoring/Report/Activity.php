@@ -36,6 +36,9 @@ class Activity extends BaseApi
 
     public function get_activity()
     {
+        if (!$this->checkPermission('monitoring', 'can_view')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengakses monitoring', null, 403);
+        }
         try {
             $t0 = microtime(true);
             $limit = max(1, min((int) ($this->request->getGet('limit') ?? 100), 100));

@@ -2,13 +2,9 @@
 // NOTE: toastr.options dikonfigurasi di global/toastr.js (satu sumber)
 
 $.post = function (url, data, response, sender = null) {
-  var sender_text = null;
-  if (sender != null) {
-    sender_text = $(sender).html();
-    $(sender).attr("disabled", "true");
-    $(sender).html(
-      `<span style='height:15px;width:15px' class="spinner-border spinner-border-reverse align-self-center loader-sm "></span> Memproses...`,
-    );
+  var $sender = sender ? $(sender) : null;
+  if ($sender && $sender.length) {
+    setBtnLoading($sender, true);
   }
 
   var deferred = $.Deferred();
@@ -24,20 +20,14 @@ $.post = function (url, data, response, sender = null) {
           "X-CSRF-TOKEN": token[$("#i").val()],
         },
         success: (res) => {
-          if (sender != null) {
-            $(sender).attr("disabled", false);
-            $(sender).html(sender_text);
-          }
+          if ($sender && $sender.length) setBtnLoading($sender, false);
           if (typeof response === "function") {
             response(res);
           }
           deferred.resolve(res);
         },
         error: (err) => {
-          if (sender != null) {
-            $(sender).attr("disabled", false);
-            $(sender).html(sender_text);
-          }
+          if ($sender && $sender.length) setBtnLoading($sender, false);
           toastr.error(
             typeof err === "string" ? err : "Terjadi Kesalahan",
             "Error",
@@ -50,23 +40,16 @@ $.post = function (url, data, response, sender = null) {
       });
     })
     .catch(() => {
-      if (sender != null) {
-        $(sender).attr("disabled", false);
-        $(sender).html(sender_text);
-      }
+      if ($sender && $sender.length) setBtnLoading($sender, false);
       deferred.reject({ status: 0, statusText: "CSRF token regeneration failed" });
     });
 
   return deferred.promise();
 };
 $.postForm = function (url, data, response, sender = null) {
-  var sender_text = null;
-  if (sender != null) {
-    sender_text = $(sender).html();
-    $(sender).attr("disabled", "true");
-    $(sender).html(
-      `<span style='height:15px;width:15px' class="spinner-border spinner-border-reverse align-self-center loader-sm "></span> Memproses...`,
-    );
+  var $sender = sender ? $(sender) : null;
+  if ($sender && $sender.length) {
+    setBtnLoading($sender, true);
   }
 
   var deferred = $.Deferred();
@@ -84,20 +67,14 @@ $.postForm = function (url, data, response, sender = null) {
           "X-CSRF-TOKEN": token[$("#i").val()],
         },
         success: (res) => {
-          if (sender != null) {
-            $(sender).attr("disabled", false);
-            $(sender).html(sender_text);
-          }
+          if ($sender && $sender.length) setBtnLoading($sender, false);
           if (typeof response === "function") {
             response(res);
           }
           deferred.resolve(res);
         },
         error: (err) => {
-          if (sender != null) {
-            $(sender).attr("disabled", false);
-            $(sender).html(sender_text);
-          }
+          if ($sender && $sender.length) setBtnLoading($sender, false);
           toastr.error(
             typeof err === "string" ? err : "Terjadi Kesalahan",
             "Error",
@@ -107,10 +84,7 @@ $.postForm = function (url, data, response, sender = null) {
       });
     })
     .catch(() => {
-      if (sender != null) {
-        $(sender).attr("disabled", false);
-        $(sender).html(sender_text);
-      }
+      if ($sender && $sender.length) setBtnLoading($sender, false);
       deferred.reject({ status: 0, statusText: "CSRF token regeneration failed" });
     });
 

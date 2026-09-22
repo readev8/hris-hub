@@ -8,26 +8,34 @@
  * navbar scroll, dan global 403 refresh.
  *
  * Dependencies: jQuery, Toastr
- * Date: 2026-08-18
+ * Date: 2026-09-10
  */
 $(function () {
     // ===========================
     // DARK MODE TOGGLE
     // ===========================
+    var $html = $(document.documentElement);
     var darkModeToggle = $('#darkModeToggle');
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var savedTheme = localStorage.getItem('theme');
 
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        $('body').addClass('dark-mode');
+    // Theme already restored in <head> inline script (anti-flash).
+    // Sync icon state on DOM ready.
+    if ($html.hasClass('dark-mode')) {
         darkModeToggle.find('i').removeClass('fa-moon').addClass('fa-sun');
     }
 
     darkModeToggle.on('click', function () {
-        $('body').toggleClass('dark-mode');
-        var isDark = $('body').hasClass('dark-mode');
+        $html.toggleClass('dark-mode');
+        var isDark = $html.hasClass('dark-mode');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        // Sync Bootstrap 5.3 native dark mode
+        if (isDark) {
+            $html[0].dataset.bsTheme = 'dark';
+        } else {
+            delete $html[0].dataset.bsTheme;
+        }
         $(this).find('i').toggleClass('fa-moon fa-sun');
+        // Notify chart/theme subscribers
+        window.dispatchEvent(new CustomEvent('sap:theme-changed', { detail: { isDark: isDark } }));
     });
 
     // ===========================
@@ -42,8 +50,8 @@ $(function () {
     $('.dropdown-toggle').dropdown();
 
     $('#sidebarToggle').on('click', function () {
-        $(document.documentElement).toggleClass('sidebar-collapsed');
-        localStorage.setItem('sidebarCollapsed', $(document.documentElement).hasClass('sidebar-collapsed'));
+        $html.toggleClass('sidebar-collapsed');
+        localStorage.setItem('sidebarCollapsed', $html.hasClass('sidebar-collapsed'));
     });
 
     // ===========================

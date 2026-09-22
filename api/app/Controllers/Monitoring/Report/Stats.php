@@ -9,6 +9,9 @@ class Stats extends BaseApi
 {
     public function get_stats()
     {
+        if (!$this->checkPermission('monitoring', 'can_view')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengakses monitoring', null, 403);
+        }
         try {
             $t0 = microtime(true);
             $start = $this->request->getGet('start_date');

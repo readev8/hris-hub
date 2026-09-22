@@ -33,6 +33,12 @@ $canMonitoring     = !empty($perms['monitoring']['can_view']);
                         <span>Monitoring</span>
                     </a>
                 </li>
+                <li>
+                    <a href="<?= site_url('monitoring-dashboard') ?>">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Monitoring Aplikasi</span>
+                    </a>
+                </li>
             <?php endif; ?>
         </ul>
     <?php endif; ?>

@@ -176,7 +176,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/tickets/edit.css') ?>?v=<?= config('App')->assetVersion ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/tickets/edit.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -185,5 +185,5 @@
     'currentPageId'     => $ticket['page_id'] ?? '',
     'currentAssigneeId' => $ticket['assignee_raw_id'] ?? $ticket['assignee_id'] ?? '',
 ]) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/tickets/edit.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/tickets/edit.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -10,6 +10,12 @@ class TicketList extends BaseApi
 {
     public function get_list(): ResponseInterface
     {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            return $this->JSONResponse('Unauthorized', null, 401);
+        }
+        $role = $this->getCurrentUserRole();
+
         $params = $this->req->getGet();
         $page = max(1, (int) ($params['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($params['per_page'] ?? 20)));
@@ -33,6 +39,10 @@ class TicketList extends BaseApi
             ->join(Tables::USERS . ' as creator', 'creator.id = ' . Tables::TICKETS . '.creator_id', 'left')
             ->join(Tables::USERS . ' as assignee', 'assignee.id = ' . Tables::TICKETS . '.assignee_id', 'left')
             ->where(Tables::TICKETS . '.active', 0);
+
+        if ($role !== \App\Config\Enums::ADMIN) {
+            $builder->where(Tables::TICKETS . '.creator_id', $userId);
+        }
 
         if (!empty($search)) {
             $builder->groupStart()

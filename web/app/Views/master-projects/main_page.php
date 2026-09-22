@@ -43,8 +43,8 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/_shared/column-search.css?v=' . config('App')->assetVersion) ?>">
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/master-projects/main_page.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/_shared/column-search.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/master-projects/main_page.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

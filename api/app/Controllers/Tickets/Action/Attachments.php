@@ -26,7 +26,7 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Tiket tidak ditemukan', null, 404);
         }
 
-        if (!$this->checkTicketOwnership($ticketId)) {
+        if (!$this->checkTicketParticipation($ticketId)) {
             return $this->JSONResponse('Anda tidak memiliki akses ke ticket ini', null, 403);
         }
 

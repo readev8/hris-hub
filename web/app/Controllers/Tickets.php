@@ -241,7 +241,7 @@ class Tickets extends BaseController
 
     public function update(string $encryptedId)
     {
-        if (!$this->guard('can_update')) {
+        if (!$this->guard()) {
             return $this->denyResponse();
         }
         $post = $this->request->getPost();
@@ -359,7 +359,7 @@ class Tickets extends BaseController
 
     public function edit(string $encryptedId): string
     {
-        if (!$this->guard('can_update')) {
+        if (!$this->guard()) {
             return redirect()->to('/dashboard');
         }
         $result = $this->api->get_data('tickets/' . $encryptedId);
@@ -522,7 +522,7 @@ class Tickets extends BaseController
 
     public function addComment(string $encryptedId)
     {
-        if (!$this->guard('can_update')) {
+        if (!$this->guard()) {
             return $this->denyResponse();
         }
 
@@ -582,9 +582,48 @@ class Tickets extends BaseController
         }
     }
 
+    public function updateComment(string $encryptedId, string $encryptedCommentId)
+    {
+        if (!$this->guard()) {
+            return $this->denyResponse();
+        }
+
+        $content = $this->request->getPost('content');
+
+        if (empty(trim($content ?? ''))) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Comment content is required']);
+        }
+
+        $result = $this->api->post_data(
+            'tickets/' . $encryptedId . '/comments/' . $encryptedCommentId . '/update',
+            ['content' => $content]
+        );
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets updateComment API failed for ' . $encryptedCommentId . ': ' . json_encode($result));
+        }
+
+        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+    }
+
+    public function deleteComment(string $encryptedId, string $encryptedCommentId)
+    {
+        if (!$this->guard()) {
+            return $this->denyResponse();
+        }
+
+        $result = $this->api->post_data('tickets/' . $encryptedId . '/comments/' . $encryptedCommentId . '/delete');
+
+        if (!$result || !($result['status'] ?? false)) {
+            log_message('error', 'Tickets deleteComment API failed for ' . $encryptedCommentId . ': ' . json_encode($result));
+        }
+
+        return $this->response->setJSON($result ?? ['status' => false, 'message' => 'Failed to connect to server']);
+    }
+
     public function uploadAttachment(string $encryptedId)
     {
-        if (!$this->guard('can_update')) {
+        if (!$this->guard()) {
             return $this->denyResponse();
         }
 

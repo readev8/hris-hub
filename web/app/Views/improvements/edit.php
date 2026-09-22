@@ -14,7 +14,7 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/_shared/field-errors.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/_shared/field-errors.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -182,5 +182,5 @@
 <?= $this->section('scripts') ?>
 <!-- MOVE to page JS file -->
 <script>window.PageData = <?= json_encode(['token' => $token], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/improvements/edit.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/improvements/edit.js') ?>"></script>
 <?= $this->endSection() ?>

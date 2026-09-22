@@ -240,7 +240,7 @@ const UserMainPage = {
             language: {
                 emptyTable: '<div class="sap-empty" style="padding:48px 20px"><i class="fas fa-users"></i><h4>No users found</h4></div>'
             },
-            dom: '<"row mb-3"<"col-sm-12"B>>rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
+            dom: 'rt<"row mt-3"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
             buttons: [
                 { extend: 'copy', text: '<i class="fas fa-copy"></i> Copy', className: 'btn-sm' },
                 { extend: 'csv', text: '<i class="fas fa-file-csv"></i> CSV', className: 'btn-sm' },
@@ -250,6 +250,8 @@ const UserMainPage = {
                 { extend: 'colvis', text: '<i class="fas fa-columns"></i> Columns', className: 'btn-sm' },
             ]
         });
+
+    DtToolbar.relocate(table, '#users-toolbar');
 
         $('#users-table thead tr').clone(true).appendTo('#users-table thead');
         $('#users-table thead tr:last th').each(function (i) {

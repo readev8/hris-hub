@@ -10,6 +10,9 @@ class ListReport extends BaseApi
 {
     public function get_list()
     {
+        if (!$this->checkPermission('monitoring', 'can_view')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengakses monitoring', null, 403);
+        }
         try {
             $t0 = microtime(true);
             $table = (string) $this->request->getGet('table');

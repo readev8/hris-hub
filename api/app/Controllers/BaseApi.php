@@ -146,4 +146,25 @@ abstract class BaseApi extends ResourceController
 
         return false;
     }
+
+    /**
+     * Ticket participant check: creator, assignee, designated approver, or admin.
+     * Wider than checkTicketOwnership (which excludes the designated approver).
+     */
+    protected function checkTicketParticipation(int $ticketId): bool
+    {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) return false;
+
+        $ticket = $this->db()->table(Tables::TICKETS)->where('id', $ticketId)->where('active', 0)->get()->getRowArray();
+        if (!$ticket) return false;
+
+        $role = $this->getCurrentUserRole();
+        if ($role === Enums::ADMIN) return true;
+        if ((int) $ticket['creator_id'] === $userId) return true;
+        if (!empty($ticket['assignee_id']) && (int) $ticket['assignee_id'] === $userId) return true;
+        if (!empty($ticket['approver_id']) && (int) $ticket['approver_id'] === $userId) return true;
+
+        return false;
+    }
 }

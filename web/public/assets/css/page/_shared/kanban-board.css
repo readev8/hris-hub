@@ -44,7 +44,7 @@
 }
 
 .kanban-card {
-    background: #fff;
+    background: var(--sap-card-bg, #fff);
     border: 1px solid var(--sap-border, #e5e7eb);
     border-radius: 6px;
     padding: 10px;

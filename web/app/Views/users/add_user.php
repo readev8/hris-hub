@@ -4,106 +4,158 @@
  * Users - Add User
  * ============================================================================
  *
- * Description: Search HRIS user and assign a role
+ * Description: Cari pengguna HRIS dan tetapkan role (single-page minimalis)
  *
- * Required: $roles
+ * Required: $roles — array of role objects (raw_id, name, slug, description)
  * Optional: none
  * Template: template/index
  */
 ?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('content') ?>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="mb-1">Add User</h1>
-        <p class="text-secondary mb-0" style="font-size:13px">Search for an HRIS user and assign a role</p>
+        <h1 class="mb-1">Tambah Pengguna</h1>
+        <p class="text-secondary mb-0" style="font-size:13px">Cari pengguna HRIS dan tetapkan role akses</p>
     </div>
     <a href="<?= site_url('/users') ?>" class="sap-btn sap-btn-secondary">
-        <i class="fas fa-arrow-left me-1"></i> Back to Users
+        <i class="fas fa-arrow-left me-1"></i> Kembali
     </a>
 </div>
 
-<!-- Step 1: Search HRIS User -->
-<div class="sap-card mb-4">
+<div class="sap-card uw-card">
     <div class="sap-card-header">
-        <h5 class="mb-0"><i class="fas fa-search me-2"></i>Step 1 — Find HRIS User</h5>
+        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Tambah Pengguna Baru</h5>
     </div>
     <div class="sap-card-body">
-        <div class="hris-search-wrapper">
-            <label class="form-label fw-semibold">Search by name, username, or department</label>
-            <div class="hris-search-input-wrap">
-                <i class="fas fa-search hris-search-icon"></i>
-                <input type="text" class="form-control hris-search-input" id="hrisSearch" 
-                       placeholder="Type at least 2 characters..." autocomplete="off">
-                <div class="hris-search-spinner" id="hrisSpinner" style="display:none">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </div>
-            </div>
-            <div class="hris-search-hint" id="hrisHint">Ketik minimal 2 karakter untuk mencari</div>
-            <div class="hris-search-dropdown" id="hrisDropdown" style="display:none"></div>
-        </div>
 
-        <!-- Selected User Card -->
-        <div id="selectedUserCard" class="hris-selected-card" style="display:none">
-            <div class="hris-selected-header">
-                <div class="hris-selected-avatar" id="selectedAvatar">?</div>
-                <div class="hris-selected-info">
-                    <div class="hris-selected-name" id="selectedName">-</div>
-                    <div class="hris-selected-meta" id="selectedMeta">-</div>
-                </div>
-                <button type="button" class="hris-selected-remove" id="btnRemoveUser" title="Remove">
+        <!-- ════════════ Cari Pengguna ════════════ -->
+        <div class="uw-search">
+            <label class="form-label fw-semibold" for="uwSearch">Cari pengguna HRIS</label>
+            <div class="uw-search-wrap">
+                <i class="fas fa-search uw-search-icon"></i>
+                <input type="text" class="form-control uw-search-input" id="uwSearch"
+                       placeholder="Ketik nama, username, atau departemen..."
+                       autocomplete="off"
+                       role="combobox"
+                       aria-label="Cari pengguna HRIS"
+                       aria-expanded="false"
+                       aria-controls="uwPanel"
+                       aria-autocomplete="list"
+                       aria-activedescendant="">
+                <button type="button" class="uw-search-clear" id="uwBtnClear"
+                        aria-label="Hapus pencarian" style="display:none">
                     <i class="fas fa-times"></i>
                 </button>
+                <span class="uw-search-spinner" id="uwSpinner" style="display:none">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+            </div>
+            <div class="uw-hint" id="uwHint">Ketik minimal 2 karakter</div>
+            <div class="uw-count" id="uwCount" aria-live="polite"></div>
+            <div class="uw-panel" id="uwPanel" role="listbox" aria-label="Hasil pencarian" style="display:none"></div>
+        </div>
+
+        <!-- ════════════ Pengguna Terpilih (compact chip) ════════════ -->
+        <div class="uw-chip" id="uwChip" style="display:none">
+            <div class="uw-chip-avatar" id="uwChipAvatar">?</div>
+            <div class="uw-chip-info">
+                <div class="uw-chip-name" id="uwChipName">—</div>
+                <div class="uw-chip-meta">
+                    <span id="uwChipUsername"></span>
+                    <span class="uw-dot">&middot;</span>
+                    <span id="uwChipDept"></span>
+                    <span class="uw-dot">&middot;</span>
+                    <span class="uw-mono" id="uwChipId"></span>
+                </div>
+            </div>
+            <button type="button" class="uw-chip-remove" id="uwBtnRemove"
+                    title="Hapus pilihan" aria-label="Hapus pengguna yang dipilih">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="uw-exists-warn" id="uwExists" style="display:none">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                <span id="uwExistsText"></span>
             </div>
         </div>
+
+        <!-- ════════════ Divider ════════════ -->
+        <hr class="uw-divider" id="uwDivider" style="display:none">
+
+        <!-- ════════════ Pilih Role ════════════ -->
+        <div class="uw-role" id="uwRole" style="display:none">
+            <label class="form-label fw-semibold" for="uwRoleId">Role <span class="text-danger">*</span></label>
+            <select class="form-select uw-role-select" id="uwRoleId" aria-required="true"
+                    aria-describedby="uwRoleHint uwRoleError">
+                <option value="">— Pilih Role —</option>
+                <?php foreach ($roles as $r): ?>
+                    <option value="<?= esc($r['raw_id']) ?>"><?= esc($r['name']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <div class="uw-hint uw-role-hint" id="uwRoleHint"></div>
+            <div class="uw-error" id="uwRoleError" role="alert"></div>
+        </div>
+
+        <!-- ════════════ Divider ════════════ -->
+        <hr class="uw-divider" id="uwDivider2" style="display:none">
+
+        <!-- ════════════ Ringkasan ════════════ -->
+        <div class="uw-summary" id="uwSummary" style="display:none">
+            <div class="uw-summary-grid">
+                <div class="uw-summary-col">
+                    <div class="uw-summary-label">User ID</div>
+                    <div class="uw-summary-value" id="uwSumId">—</div>
+                </div>
+                <div class="uw-summary-col">
+                    <div class="uw-summary-label">Nama</div>
+                    <div class="uw-summary-value" id="uwSumName">—</div>
+                </div>
+                <div class="uw-summary-col">
+                    <div class="uw-summary-label">Email</div>
+                    <div class="uw-summary-value uw-mono" id="uwSumEmail">—</div>
+                </div>
+                <div class="uw-summary-col">
+                    <div class="uw-summary-label">Role</div>
+                    <div class="uw-summary-value" id="uwSumRole">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════ Actions ════════════ -->
+        <div class="uw-actions" id="uwActions" style="display:none">
+            <button type="button" class="sap-btn sap-btn-primary" id="uwBtnSubmit"
+                    onclick="UserAdd.submit()" disabled>
+                <i class="fas fa-plus me-1"></i> Tambah Pengguna
+            </button>
+            <button type="button" class="sap-btn sap-btn-secondary" onclick="UserAdd.reset()">
+                <i class="fas fa-times me-1"></i> Batal
+            </button>
+        </div>
+
     </div>
 </div>
 
-<!-- Step 2: Assign Role -->
-<div class="sap-card mb-4" id="assignCard" style="display:none">
-    <div class="sap-card-header">
-        <h5 class="mb-0"><i class="fas fa-user-tag me-2"></i>Step 2 — Assign Role</h5>
-    </div>
-    <div class="sap-card-body">
-        <input type="hidden" id="addUserId">
-        <input type="hidden" id="addUserName">
-        <input type="hidden" id="addUserEmail">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">User ID</label>
-                <input type="text" class="form-control" id="addUserIdDisplay" readonly style="background:var(--sap-surface)">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">Full Name</label>
-                <input type="text" class="form-control" id="addUserNameDisplay" readonly style="background:var(--sap-surface)">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">Role <span class="text-danger">*</span></label>
-                <select class="form-select" id="addRoleId">
-                    <option value="">Select Role</option>
-                    <?php foreach ($roles as $r): ?>
-                        <option value="<?= esc($r['raw_id']) ?>"><?= esc($r['name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-        </div>
-        <div class="mt-3 d-flex gap-2">
-            <button type="button" class="sap-btn sap-btn-primary" id="btnAddUser" onclick="addUser()">
-                <i class="fas fa-plus me-1"></i> Add User
-            </button>
-            <button type="button" class="sap-btn sap-btn-secondary" onclick="resetForm()">
-                <i class="fas fa-times me-1"></i> Cancel
-            </button>
-        </div>
-    </div>
-</div>
+<!-- Hidden fields for JS -->
+<input type="hidden" id="uwUserId">
+<input type="hidden" id="uwUserName">
+<input type="hidden" id="uwUserEmail">
+
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/users/add_user.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/users/add_user.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<!-- MOVE to page JS file -->
-<script src="<?= base_url('public/assets/js/page/users/add_user.js?v=' . config('App')->assetVersion) ?>"></script>
+<script>
+var UW_ROLES = <?= json_encode(array_map(fn($r) => [
+    'raw_id' => (int)$r['raw_id'],
+    'name'   => $r['name'],
+    'slug'   => $r['slug'] ?? '',
+    'description' => $r['description'] ?? '',
+    'user_count'  => (int)($r['user_count'] ?? 0),
+], $roles), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+</script>
+<script defer src="<?= asset_url('public/assets/js/page/users/add_user.js') ?>"></script>
 <?= $this->endSection() ?>

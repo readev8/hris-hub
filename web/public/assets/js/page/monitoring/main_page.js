@@ -189,7 +189,7 @@ const Monitoring = {
         else Monitoring._activityTable.draw();
         return;
       }
-      Monitoring._activityTable = $table.DataTable({
+        Monitoring._activityTable = $table.DataTable({
         data: data,
         pageLength: 10,
         lengthChange: false,
@@ -229,6 +229,7 @@ const Monitoring = {
             }
           }
         ],
+        columnDefs: [{ targets: '_all', defaultContent: '' }],
         order: [[0, 'desc']],
         language: {
           emptyTable: '<div class="sap-empty" style="padding:32px 10px"><i class="fas fa-history"></i><h4>Belum ada aktivitas</h4><p>Tidak ada aktivitas pada periode ini.</p></div>',
@@ -305,6 +306,7 @@ const Monitoring = {
             }
           }
         ],
+        columnDefs: [{ targets: '_all', defaultContent: '' }],
         order: [[3, 'desc']],
         language: {
           emptyTable: '<div class="sap-empty" style="padding:32px 10px"><i class="fas fa-sign-in-alt"></i><h4>Belum ada sesi</h4><p>Tidak ada sesi pada periode ini.</p></div>',
@@ -373,17 +375,42 @@ const Monitoring = {
     // Fetch 100 last sessions once; DataTables paginates 10/page client-side
     return Monitoring.api.loadTable('session', Monitoring.state.start, Monitoring.state.end, 100, 0)
       .done((res) => {
+        if (!res || res.status === false) {
+          MonLog.error('session API returned failure', res && res.message);
+          if (typeof toastr !== 'undefined') toastr.warning(res && res.message || 'Gagal memuat data sesi', 'Peringatan');
+          Monitoring.ui.renderSession([], true);
+          return;
+        }
         const items = res.items || [];
         MonLog.debug('session loaded', items.length);
         Monitoring.ui.renderSession(items, true);
       })
-      .fail((xhr) => { MonLog.error('session load fail', xhr.status); });
+      .fail((xhr) => {
+        MonLog.error('session load fail', xhr.status);
+        if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; return; }
+        if (typeof toastr !== 'undefined') toastr.error('Gagal memuat data sesi. Coba lagi nanti.', 'Error');
+        Monitoring.ui.renderSession([], true);
+      });
   },
 
   loadActivity() {
     return $.ajax({ url: site_url + '/monitoring/ajax-activity', method: 'GET', data: { limit: 100, domain: document.getElementById('activity-domain')?.value || '', start_date: Monitoring.state.start, end_date: Monitoring.state.end }, timeout: Monitoring.constants.TIMEOUT })
-      .done((res) => { MonLog.debug('activity loaded', (res.items || []).length); Monitoring.ui.renderActivity(res.items || []); })
-      .fail((xhr) => { MonLog.error('activity load fail', xhr.status); });
+      .done((res) => {
+        if (!res || res.status === false) {
+          MonLog.error('activity API returned failure', res && res.message);
+          if (typeof toastr !== 'undefined') toastr.warning(res && res.message || 'Gagal memuat aktivitas', 'Peringatan');
+          Monitoring.ui.renderActivity([]);
+          return;
+        }
+        MonLog.debug('activity loaded', (res.items || []).length);
+        Monitoring.ui.renderActivity(res.items || []);
+      })
+      .fail((xhr) => {
+        MonLog.error('activity load fail', xhr.status);
+        if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; return; }
+        if (typeof toastr !== 'undefined') toastr.error('Gagal memuat data aktivitas. Coba lagi nanti.', 'Error');
+        Monitoring.ui.renderActivity([]);
+      });
   },
 
   init(pageData) {
@@ -398,12 +425,28 @@ const Monitoring = {
     this.events.bind();
     Monitoring.queue.add(() => Monitoring.loadSession());
     Monitoring.queue.add(() => Monitoring.api.loadTrend('session', 14, Monitoring.state.end)
-      .done((res) => { MonLog.debug('main trend loaded', (res.items || []).length); Monitoring.ui.renderMainTrend(res.items || []); })
-      .fail((xhr) => { MonLog.error('main trend fail', xhr.status); }));
+      .done((res) => {
+        if (!res || res.status === false) {
+          MonLog.error('main trend API returned failure', res && res.message);
+          if (typeof toastr !== 'undefined') toastr.warning(res && res.message || 'Gagal memuat tren', 'Peringatan');
+          return;
+        }
+        MonLog.debug('main trend loaded', (res.items || []).length);
+        Monitoring.ui.renderMainTrend(res.items || []);
+      })
+      .fail((xhr) => {
+        MonLog.error('main trend fail', xhr.status);
+        if (xhr && xhr.status === 401) { Monitoring.poll.stop(); location.href = site_url + '/login'; return; }
+        if (typeof toastr !== 'undefined') toastr.error('Gagal memuat tren. Coba lagi nanti.', 'Error');
+      }));
     Monitoring.queue.add(() => Monitoring.loadActivity());
     this.poll.start();
     this.alerts.start();
     if (this.presets) this.presets.init();
+    // Redraw charts on theme change
+    window.addEventListener('sap:theme-changed', () => {
+      Monitoring.ui.renderDomainChart(Monitoring.state.stats);
+    });
   }
 };
 

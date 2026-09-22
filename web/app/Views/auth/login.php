@@ -11,11 +11,11 @@ Standalone: yes (bukan extends template/index)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In — HRIS-Hub</title>
-    <link rel="stylesheet" href="<?= base_url('public/vendor/fonts/plus-jakarta-sans.css?v=' . config('App')->assetVersion) ?>">
-    <link rel="stylesheet" href="<?= base_url('public/vendor/font-awesome/6.6.0/css/all.min.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= asset_url('public/vendor/fonts/plus-jakarta-sans.css') ?>">
+    <link rel="stylesheet" href="<?= asset_url('public/vendor/font-awesome/6.6.0/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/style.css') ?>">
     <link rel="stylesheet" href="<?= base_url('public/assets/css/global/animations.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('public/assets/css/page/auth/login.css?v=' . config('App')->assetVersion) ?>">
+    <link rel="stylesheet" href="<?= asset_url('public/assets/css/page/auth/login.css') ?>">
 </head>
 <body>
     <div class="auth-split-left">

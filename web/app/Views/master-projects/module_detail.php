@@ -15,7 +15,7 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/master-projects/module_detail.css') ?>?v=<?= config('App')->assetVersion ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/master-projects/module_detail.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -378,6 +378,6 @@
                             'pages'     => $module['pages'] ?? [],
                         ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;
 </script>
-<script src="<?= base_url('public/assets/js/page/master-projects/module_detail-ui.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
-<script src="<?= base_url('public/assets/js/page/master-projects/module_detail.js') ?>?v=<?= config('App')->assetVersion ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/master-projects/module_detail-ui.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/master-projects/module_detail.js') ?>"></script>
 <?= $this->endSection() ?>

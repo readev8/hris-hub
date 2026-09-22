@@ -10,6 +10,9 @@ class Alerts extends BaseApi
 {
     public function get_alerts()
     {
+        if (!$this->checkPermission('monitoring', 'can_view')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk mengakses monitoring', null, 403);
+        }
         try {
             $t0 = microtime(true);
             $cfg = new MonitoringAlerts();

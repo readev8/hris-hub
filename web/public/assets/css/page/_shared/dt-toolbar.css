@@ -1,0 +1,107 @@
+/**
+ * DataTables External Toolbar
+ * Prefix: dt-toolbar  |  Tokens: --sap-*
+ * Scope: buttons container + collection dropdown only
+ */
+
+.dt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.dt-toolbar .dt-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* ── Dropdown collection (injected at body level) ──────────────────────────── */
+.dt-button-background {
+    background: rgba(0,0,0,0.3);
+}
+.dt-button-collection {
+    background: var(--sap-card-bg);
+    border: 1px solid var(--sap-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 4px;
+    min-width: 180px;
+}
+.dt-button-collection .dt-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sap-text);
+    background: transparent;
+    cursor: pointer;
+    transition: background 150ms ease;
+    text-align: left;
+    white-space: nowrap;
+}
+.dt-button-collection .dt-button:hover,
+.dt-button-collection .dt-button:focus {
+    background: var(--sap-brand-hover);
+    color: var(--sap-brand);
+}
+.dt-button-collection .dt-button::before {
+    content: none;
+}
+.dt-button-collection .dt-button::after {
+    display: none;
+}
+.dt-button-collection .dt-button span {
+    font-size: 13px;
+}
+.dt-button-collection .dt-button i {
+    font-size: 12px;
+    width: 16px;
+    text-align: center;
+    color: var(--sap-text-muted);
+}
+.dt-button-collection .dt-button:hover i,
+.dt-button-collection .dt-button:focus i {
+    color: var(--sap-brand);
+}
+
+/* ── Dark mode ─────────────────────────────────────────────────────────────── */
+.dark-mode .dt-button-collection {
+    background: var(--sap-dark-surface);
+    border-color: var(--sap-dark-border);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.dark-mode .dt-button-collection .dt-button {
+    color: var(--sap-dark-text);
+}
+.dark-mode .dt-button-collection .dt-button:hover,
+.dark-mode .dt-button-collection .dt-button:focus {
+    background: var(--sap-dark-elevated);
+    color: var(--sap-brand);
+}
+.dark-mode .dt-button-collection .dt-button i {
+    color: var(--sap-dark-muted);
+}
+.dark-mode .dt-button-collection .dt-button:hover i,
+.dark-mode .dt-button-collection .dt-button:focus i {
+    color: var(--sap-brand);
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .dt-button-collection .dt-button { transition: none; }
+}
+
+/* ── Mobile: buttons stretch to fill ───────────────────────────────────────── */
+@media (max-width: 576px) {
+    .dt-toolbar { justify-content: stretch; }
+    .dt-toolbar .dt-buttons { flex: 1; }
+    .dt-toolbar .dt-buttons .dt-button { flex: 1; justify-content: center; }
+}

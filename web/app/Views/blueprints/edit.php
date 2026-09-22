@@ -14,8 +14,8 @@
 <?= $this->extend('template/index') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/blueprints/edit.css?v=' . config('App')->assetVersion) ?>">
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/blueprints/create.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/blueprints/edit.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/blueprints/create.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -106,6 +106,6 @@
     'currentImprovementId' => $blueprint['improvement_id'] ?? null,
     'currentImprovementName' => $blueprint['improvement_name'] ?? null,
 ], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/blueprints/edit.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/badge-helpers.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/edit.js') ?>"></script>
 <?= $this->endSection() ?>

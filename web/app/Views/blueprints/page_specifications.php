@@ -13,7 +13,7 @@
 ?>
 <?= $this->extend('template/index') ?>
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('public/assets/css/page/blueprints/page_specifications.css?v=' . config('App')->assetVersion) ?>">
+<link rel="stylesheet" href="<?= asset_url('public/assets/css/page/blueprints/page_specifications.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -131,6 +131,6 @@
 
 <?= $this->section('scripts') ?>
 <script>window.PageData = <?= json_encode(['token' => $token, 'designPage' => $designPage], JSON_HEX_TAG | JSON_HEX_APOS) ?>;</script>
-<script src="<?= base_url('public/assets/js/page/_shared/badge-helpers.js?v=' . config('App')->assetVersion) ?>"></script>
-<script src="<?= base_url('public/assets/js/page/blueprints/page_specifications.js?v=' . config('App')->assetVersion) ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/_shared/badge-helpers.js') ?>"></script>
+<script defer src="<?= asset_url('public/assets/js/page/blueprints/page_specifications.js') ?>"></script>
 <?= $this->endSection() ?>

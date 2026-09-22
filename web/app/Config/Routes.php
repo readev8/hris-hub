@@ -41,6 +41,14 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->get('/monitoring/ajax-alerts', 'Monitoring::ajaxAlerts');
     $routes->get('/monitoring/export', 'Monitoring::export');
 
+    $routes->get('/monitoring-dashboard', 'MonitoringDashboard::index');
+    $routes->get('/monitoring-dashboard/ajax-stats', 'MonitoringDashboard::ajaxStats');
+    $routes->get('/monitoring-dashboard/ajax-login-logs', 'MonitoringDashboard::ajaxLoginLogs');
+    $routes->get('/monitoring-dashboard/ajax-access-logs', 'MonitoringDashboard::ajaxAccessLogs');
+    $routes->get('/monitoring-dashboard/ajax-trend', 'MonitoringDashboard::ajaxTrend');
+    $routes->get('/monitoring-dashboard/ajax-detail', 'MonitoringDashboard::ajaxDetail');
+    $routes->get('/monitoring-dashboard/export', 'MonitoringDashboard::export');
+
     $routes->post('/auth/refresh-permissions', 'Auth::refreshPermissions');
 
     $routes->get('/tickets', 'Tickets::index');
@@ -59,6 +67,8 @@ $routes->group('', ['filter' => 'sessionAuth'], static function ($routes) {
     $routes->post('/tickets/(:any)/approve', 'Tickets::approve/$1');
     $routes->post('/tickets/(:any)/reject', 'Tickets::reject/$1');
     $routes->post('/tickets/(:any)/comments', 'Tickets::addComment/$1');
+    $routes->post('/tickets/(:any)/comments/(:any)/update', 'Tickets::updateComment/$1/$2');
+    $routes->post('/tickets/(:any)/comments/(:any)/delete', 'Tickets::deleteComment/$1/$2');
     $routes->post('/tickets/(:any)/upload-attachment', 'Tickets::uploadAttachment/$1');
     $routes->post('/attachments/(:any)/delete', 'Tickets::deleteAttachment/$1');
     $routes->get('/uploads/tickets/(:any)', 'Tickets::serveFile/$1');

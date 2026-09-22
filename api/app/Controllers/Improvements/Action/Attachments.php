@@ -20,6 +20,10 @@ class Attachments extends BaseApi
             return $this->JSONResponse('Unauthorized', null, 401);
         }
 
+        if (!$this->checkPermission('improvements', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menambah lampiran', null, 403);
+        }
+
         $project = $this->db()->table(Tables::PROJECTS)->where('id', $projectId)->where('active', 0)->get()->getRowArray();
         if (!$project) {
             return $this->JSONResponse('Proyek tidak ditemukan', null, 404);
@@ -59,6 +63,15 @@ class Attachments extends BaseApi
         $id = $this->resolveId($encryptedId);
         if (!$id) {
             return $this->JSONResponse('ID tidak valid', null, 400);
+        }
+
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            return $this->JSONResponse('Unauthorized', null, 401);
+        }
+
+        if (!$this->checkPermission('improvements', 'can_update')) {
+            return $this->JSONResponse('Anda tidak memiliki izin untuk menghapus lampiran', null, 403);
         }
 
         $attachment = $this->db()->table(Tables::PROJECT_ATTACHMENTS)->where('id', $id)->where('active', 0)->get()->getRowArray();
