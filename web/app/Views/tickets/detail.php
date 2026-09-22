@@ -393,7 +393,7 @@
                         <?php if ($status === 2): ?>
                             <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
                         <?php endif; ?>
-                        <?php if ($status === 2 && $isAssignee): ?>
+                        <?php if ($status === 2 && ($isAssignee || $isAdmin)): ?>
                             <button class="sap-btn sap-btn-success sap-btn-sm" data-bs-toggle="modal" data-bs-target="#resolveModal"><i class="fas fa-check-double"></i> Resolve</button>
                         <?php endif; ?>
                         <?php if ($status === 3 && $isCreator): ?>
@@ -407,7 +407,7 @@
                             <button class="sap-btn sap-btn-primary sap-btn-sm" onclick="doAction('take')"><i class="fas fa-hand-pointer"></i> Take Ticket</button>
                             <button class="sap-btn sap-btn-danger sap-btn-sm" onclick="promptAction('reject','Rejection note')"><i class="fas fa-times"></i> Reject</button>
                         <?php endif; ?>
-                        <?php if ($status === 2 && $isAssignee): ?>
+                        <?php if ($status === 2 && ($isAssignee || $isAdmin)): ?>
                             <button class="sap-btn sap-btn-success sap-btn-sm" data-bs-toggle="modal" data-bs-target="#resolveModal"><i class="fas fa-check-double"></i> Resolve</button>
                         <?php endif; ?>
                         <?php if ($status === 3 && $isCreator): ?>
